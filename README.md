@@ -49,7 +49,10 @@ Later exports have the same file name: replace the file in that folder and doubl
 
 ## Files
 
-- `index.html` — the whole tool, one self-contained file. It also works offline: download it and open it in Chrome.
+- `index.html` — the whole tool. No build step, no dependencies.
+- `demo-fonts.js` — the bundled sample fonts (Inter, Lora) as base64, loaded by `index.html` with a plain `<script src>`. Optional: without it the tool still works with installed or dropped fonts.
+
+To use it offline, download `index.html` and `demo-fonts.js` into the same folder and open `index.html` in Chrome.
 - `fonts/OFL.txt` — license for the bundled sample fonts (Inter, Lora; SIL Open Font License 1.1).
 
 ## License
