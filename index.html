@@ -293,6 +293,7 @@ dialog::backdrop { background: rgba(255, 255, 255, .7); }
         <div class="ctl"><label for="trackjit">Track jitter</label><output id="trackjit-o"></output><input type="range" id="trackjit" min="0" max="200" step="5"></div>
         <div class="ctl"><label for="track">Tracking</label><output id="track-o"></output><input type="range" id="track" min="-150" max="300" step="5"></div>
       </div>
+      <div class="ctl"><label for="gaps">Even gaps</label><output id="gaps-o"></output><input type="range" id="gaps" min="0" max="100" step="5"></div>
       <div class="ctl"><label>Match size</label><output></output></div>
       <div class="opts" id="match" role="group" aria-label="Match size">
         <button type="button" data-v="off">Off</button>
@@ -373,6 +374,7 @@ dialog::backdrop { background: rgba(255, 255, 255, .7); }
       <section><h4>Photoshop</h4><p><b>File › Scripts › Browse…</b>. A new 72 ppi document opens with one editable type layer you can drag into your comp.</p></section>
       <section><h4>Fonts</h4><p>Fonts are matched by family and style name, then by PostScript name. Variable fonts use their named instances (Light, Bold…), so the app shows what the preview shows. Fonts the app can't find are listed and swapped for its default; the text stays editable.</p></section>
       <section><h4>Distribution</h4><p>Ramp sets light → heavy from the start of the text to the end; Ramp per line restarts on every line. Alternate switches between the lighter and heavier half of the pool. Wave has a Period. Weight mix still decides how many letters leave the base style.</p></section>
+      <section><h4>Even gaps</h4><p>Where neighbouring letters come from different fonts, their sidebearings differ and the gaps look uneven. Even gaps adjusts the left letter's tracking so the gap moves halfway between the spacing of the two fonts it joins, instead of jumping from one to the other. It exports as tracking.</p></section>
       <section><h4>Match size</h4><p>Different families at the same point size look different sizes. x-height or Cap height scales each letter's font so its lowercase x or capital H is as tall as in the base style (limited to 60–160%). It is written as the letter's point size, so it stays editable; leading follows the nominal size.</p></section>
       <section><h4>Letter align</h4><p>Top, middle and bottom alignment are written as baseline shift values. If you change a letter or its font afterwards, export again to re-align.</p></section>
     </div>
@@ -685,7 +687,7 @@ const DEFAULTS = {
   text: SAMPLE_TEXTS[0],
   caseMode: 'orig', caseAmt: 45,
   mix: 70, dist: 'uniform', wavePeriod: 13, gran: 'glyph', valign: 'baseline',
-  size: 44, leading: 92, sizeVar: 18, baseJit: 4, trackJit: 30, track: -10, match: 'off',
+  size: 44, leading: 92, sizeVar: 18, baseJit: 4, trackJit: 30, track: -10, match: 'off', gaps: 0,
   align: 'left', seed: 1952,
 };
 const S = Object.assign({}, DEFAULTS, {
@@ -857,7 +859,8 @@ const inkCache = new Map();
 const STRETCH = [[50, 'ultra-condensed'], [62.5, 'extra-condensed'], [75, 'condensed'], [87.5, 'semi-condensed'], [100, 'normal'],
   [112.5, 'semi-expanded'], [125, 'expanded'], [150, 'extra-expanded'], [200, 'ultra-expanded']];
 const stretchKw = w => STRETCH.reduce((b, s) => Math.abs(s[0] - w) < Math.abs(b[0] - w) ? s : b)[1];
-// The glyph's ink top and bottom in em from the baseline (up is positive); null for blank glyphs.
+// The glyph's ink top and bottom in em from the baseline (up is positive), and its left / right sidebearings
+// (ink to origin, ink to advance) in em; null for blank glyphs.
 function ink(st, ch) {
   const key = st.id + '\u0001' + ch;
   if (inkCache.has(key)) return inkCache.get(key);
@@ -868,7 +871,7 @@ function ink(st, ch) {
     if ('fontStretch' in mctx) mctx.fontStretch = st.variable && st.wdth ? stretchKw(st.wdth) : 'normal';
     const m = mctx.measureText(ch);
     const a = m.actualBoundingBoxAscent, d = m.actualBoundingBoxDescent;
-    if (a || d) res = { top: a / 200, bottom: -d / 200 };
+    if (a || d) res = { top: a / 200, bottom: -d / 200, lsb: -m.actualBoundingBoxLeft / 200, rsb: (m.width - m.actualBoundingBoxRight) / 200 };
   }
   inkCache.set(key, res);
   return res;
@@ -1036,8 +1039,23 @@ function compute() {
     lines[lines.length - 1].push({ i, ch, st, size, jit, tr, va, bs: 0, ov: !!(ov && (ov.style || ov.va)) });
     pos++; linePos++;
   });
-  for (const line of lines) alignLine(line);
+  for (const line of lines) { if (S.gaps) evenGaps(line); alignLine(line); }
   return lines;
+}
+
+// Even gaps: where the style changes between two letters, move the left letter's tracking so the ink gap
+// moves toward the average of the gaps the pair would have set wholly in either neighbour's style.
+function evenGaps(line) {
+  const amt = S.gaps / 100;
+  for (let j = 0; j + 1 < line.length; j++) {
+    const a = line[j], b = line[j + 1];
+    if (a.st === b.st) continue;
+    const aa = ink(a.st, a.ch), ab = ink(a.st, b.ch), ba = ink(b.st, a.ch), bb = ink(b.st, b.ch);
+    if (!aa || !ab || !ba || !bb) continue;
+    const gap = aa.rsb * a.size + bb.lsb * b.size;
+    const want = ((aa.rsb + ba.rsb) * a.size + (ab.lsb + bb.lsb) * b.size) / 2;
+    a.tr += Math.round((want - gap) * amt / a.size * 1000);
+  }
 }
 
 // Geometric alignment: line up the ink tops, centres or bottoms of the letters in one line.
@@ -1469,7 +1487,7 @@ function exportFor(app) {
 }
 
 /* ---------------- persistence ---------------- */
-const SAVE_KEYS = ['text', 'caseMode', 'caseAmt', 'mix', 'dist', 'gran', 'valign', 'size', 'leading', 'sizeVar', 'baseJit', 'trackJit', 'track', 'align', 'seed', 'match', 'wavePeriod'];
+const SAVE_KEYS = ['text', 'caseMode', 'caseAmt', 'mix', 'dist', 'gran', 'valign', 'size', 'leading', 'sizeVar', 'baseJit', 'trackJit', 'track', 'align', 'seed', 'match', 'wavePeriod', 'gaps'];
 function save() {
   try {
     const o = {};
@@ -1604,6 +1622,7 @@ async function boot() {
   bindOpts('align', 'align');
   bindOpts('valign', 'valign');
   bindOpts('match', 'match');
+  bindRange('gaps', 'gaps', v => v + '%');
   const dist = $('#dist'); dist.value = S.dist;
   const syncPeriod = () => { $('#wave-period-wrap').hidden = S.dist !== 'wave'; };
   syncers.push(() => { dist.value = S.dist; syncPeriod(); });
