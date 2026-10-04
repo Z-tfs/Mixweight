@@ -2,7 +2,7 @@
 
 Mix the weights of your installed variable fonts letter by letter, then send the result to Illustrator, InDesign or Photoshop as live, editable text.
 
-**Open it:** https://z-tfs.github.io/mixweight/ (Chrome or Edge)
+**Open it:** https://z-tfs.github.io/Mixweight/ (Chrome or Edge)
 
 ## What it does
 
