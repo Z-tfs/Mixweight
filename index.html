@@ -255,7 +255,14 @@ dialog::backdrop { background: rgba(255, 255, 255, .7); }
           <option value="heavy">Lean heavy</option>
           <option value="light">Lean light</option>
           <option value="wave">Wave</option>
+          <option value="ramp">Ramp (light → heavy)</option>
+          <option value="rampline">Ramp per line</option>
+          <option value="alt">Alternate light / heavy</option>
         </select>
+      </div>
+      <div class="ctl" id="wave-period-wrap">
+        <label for="wave-period">Period</label><output id="wave-period-o"></output>
+        <input type="range" id="wave-period" min="3" max="60" step="1">
       </div>
       <div class="ctl"><label>Unit</label><output></output></div>
       <div class="opts" id="gran" role="group" aria-label="Mix unit">
@@ -365,6 +372,7 @@ dialog::backdrop { background: rgba(255, 255, 255, .7); }
       <section><h4>InDesign</h4><p><b>Window › Utilities › Scripts</b>. Right-click the User folder › Reveal in Finder, drop the .jsx in, then double-click it in the panel. The frame auto-sizes to the text and the whole thing is one undo.</p></section>
       <section><h4>Photoshop</h4><p><b>File › Scripts › Browse…</b>. A new 72 ppi document opens with one editable type layer you can drag into your comp.</p></section>
       <section><h4>Fonts</h4><p>Fonts are matched by family and style name, then by PostScript name. Variable fonts use their named instances (Light, Bold…), so the app shows what the preview shows. Fonts the app can't find are listed and swapped for its default; the text stays editable.</p></section>
+      <section><h4>Distribution</h4><p>Ramp sets light → heavy from the start of the text to the end; Ramp per line restarts on every line. Alternate switches between the lighter and heavier half of the pool. Wave has a Period. Weight mix still decides how many letters leave the base style.</p></section>
       <section><h4>Match size</h4><p>Different families at the same point size look different sizes. x-height or Cap height scales each letter's font so its lowercase x or capital H is as tall as in the base style (limited to 60–160%). It is written as the letter's point size, so it stays editable; leading follows the nominal size.</p></section>
       <section><h4>Letter align</h4><p>Top, middle and bottom alignment are written as baseline shift values. If you change a letter or its font afterwards, export again to re-align.</p></section>
     </div>
@@ -676,7 +684,7 @@ function pickSample(last) {
 const DEFAULTS = {
   text: SAMPLE_TEXTS[0],
   caseMode: 'orig', caseAmt: 45,
-  mix: 70, dist: 'uniform', gran: 'glyph', valign: 'baseline',
+  mix: 70, dist: 'uniform', wavePeriod: 13, gran: 'glyph', valign: 'baseline',
   size: 44, leading: 92, sizeVar: 18, baseJit: 4, trackJit: 30, track: -10, match: 'off',
   align: 'left', seed: 1952,
 };
@@ -954,13 +962,21 @@ function applyCase(t) {
   }
 }
 
-function pickFrom(pool, u, pos) {
+// at: {pos, frac, lineFrac, alt} from compute(); frac / lineFrac are 0–1 through the text / line at the unit's start.
+function pickFrom(pool, u, at) {
   let t;
   switch (S.dist) {
+    case 'ramp': t = at.frac; break;
+    case 'rampline': t = at.lineFrac; break;
+    case 'alt': {
+      // Odd picks from the lighter half, even from the heavier; the middle style of an odd pool is in both.
+      const n = pool.length, half = at.alt % 2 ? pool.slice(0, Math.ceil(n / 2)) : pool.slice(Math.floor(n / 2));
+      return half[Math.floor(clamp(u, 0, 0.99999) * half.length)];
+    }
     case 'poles': t = u < 0.5 ? 0.5 * Math.pow(2 * u, 3) : 1 - 0.5 * Math.pow(2 * (1 - u), 3); break;
     case 'heavy': t = 1 - Math.pow(1 - u, 3); break;
     case 'light': t = Math.pow(u, 3); break;
-    case 'wave': t = 0.5 + 0.5 * Math.sin(pos / 13 * Math.PI * 2 + (S.seed % 17)) + (u - 0.5) * 0.3; break;
+    case 'wave': t = 0.5 + 0.5 * Math.sin(at.pos / S.wavePeriod * Math.PI * 2 + (S.seed % 17)) + (u - 0.5) * 0.3; break;
     default: t = u;
   }
   t = clamp(t, 0, 0.99999);
@@ -984,8 +1000,13 @@ function compute() {
   if (!base) return lines;
   const seed = S.seed, mix = S.mix / 100;
   let unit = -1, segLeft = 0, prevSpace = true, segCount = 0, pos = 0;
+  // Positions for the ramps: taken at each unit's first letter so words and fragments stay whole.
+  const lineLens = chars.join('').split('\n').map(l => Array.from(l).length);
+  const total = lineLens.reduce((a, n) => a + n, 0);
+  let ln = 0, linePos = 0, lastUnit = null, lastPicked = null, picks = 0;
+  const at = { pos: 0, frac: 0, lineFrac: 0, alt: 0 };
   chars.forEach((ch, i) => {
-    if (ch === '\n') { lines.push([]); prevSpace = true; segLeft = 0; return; }
+    if (ch === '\n') { lines.push([]); prevSpace = true; segLeft = 0; ln++; linePos = 0; return; }
     const space = /\s/.test(ch);
     if (S.gran === 'glyph') unit = i;
     else if (S.gran === 'word') { if (!space && prevSpace) unit++; if (unit < 0) unit = 0; }
@@ -994,16 +1015,26 @@ function compute() {
       segLeft--;
     }
     prevSpace = space;
+    if (unit !== lastUnit) {
+      lastUnit = unit;
+      at.frac = total > 1 ? pos / (total - 1) : 0;
+      at.lineFrac = lineLens[ln] > 1 ? linePos / (lineLens[ln] - 1) : 0;
+    }
+    at.pos = pos;
     const ov = S.overrides.get(i);
     let st = base;
     if (ov && ov.style && S.styles.has(ov.style)) st = S.styles.get(ov.style);
-    else if (pool.length && rnd(seed, unit, 0) < mix) st = pickFrom(pool, rnd(seed, unit, 1), pos);
+    else if (pool.length && rnd(seed, unit, 0) < mix) {
+      if (unit !== lastPicked && !space) { lastPicked = unit; picks++; }
+      at.alt = picks;
+      st = pickFrom(pool, rnd(seed, unit, 1), at);
+    }
     const size = r1(Math.max(1, S.size * matchFactor(st, base) * (1 + S.sizeVar / 100 * (2 * rnd(seed, unit, 2) - 1))));
     const jit = r1(S.baseJit * (2 * rnd(seed, unit, 3) - 1));
     const tr = Math.round(S.track + S.trackJit * (2 * rnd(seed, unit, 4) - 1));
     const va = (ov && ov.va) || S.valign;
     lines[lines.length - 1].push({ i, ch, st, size, jit, tr, va, bs: 0, ov: !!(ov && (ov.style || ov.va)) });
-    pos++;
+    pos++; linePos++;
   });
   for (const line of lines) alignLine(line);
   return lines;
@@ -1087,7 +1118,7 @@ function corners() {
   $('#c-bl').textContent = `${glyphs} glyphs · ${used.size}/${pool.length} styles used · ${runs} runs` + (edits ? ` · ${edits} edited` : '');
   $('#seed-lbl').textContent = 'Seed ' + S.seed;
   $('#pool-count').textContent = S.styles.size ? `${pool.length} / ${S.styles.size} styles in mix` : '';
-  $('#mix-name').textContent = { uniform: 'Even', poles: 'Extremes', heavy: 'Lean heavy', light: 'Lean light', wave: 'Wave' }[S.dist];
+  $('#mix-name').textContent = { uniform: 'Even', poles: 'Extremes', heavy: 'Lean heavy', light: 'Lean light', wave: 'Wave', ramp: 'Ramp', rampline: 'Ramp per line', alt: 'Alternate' }[S.dist];
   $('#case-name').textContent = { orig: 'Original', upper: 'All caps', lower: 'All lower', title: 'Title case', sentence: 'Sentence', random: 'Random' }[S.caseMode];
 }
 
@@ -1438,7 +1469,7 @@ function exportFor(app) {
 }
 
 /* ---------------- persistence ---------------- */
-const SAVE_KEYS = ['text', 'caseMode', 'caseAmt', 'mix', 'dist', 'gran', 'valign', 'size', 'leading', 'sizeVar', 'baseJit', 'trackJit', 'track', 'align', 'seed', 'match'];
+const SAVE_KEYS = ['text', 'caseMode', 'caseAmt', 'mix', 'dist', 'gran', 'valign', 'size', 'leading', 'sizeVar', 'baseJit', 'trackJit', 'track', 'align', 'seed', 'match', 'wavePeriod'];
 function save() {
   try {
     const o = {};
@@ -1574,8 +1605,10 @@ async function boot() {
   bindOpts('valign', 'valign');
   bindOpts('match', 'match');
   const dist = $('#dist'); dist.value = S.dist;
-  syncers.push(() => { dist.value = S.dist; });
-  dist.onchange = () => { record(); S.dist = dist.value; render(); save(); };
+  const syncPeriod = () => { $('#wave-period-wrap').hidden = S.dist !== 'wave'; };
+  syncers.push(() => { dist.value = S.dist; syncPeriod(); });
+  dist.onchange = () => { record(); S.dist = dist.value; syncPeriod(); render(); save(); };
+  bindRange('wave-period', 'wavePeriod', v => v + ' letters'); syncPeriod();
   const text = $('#text'); text.value = S.text;
   syncers.push(() => { if (text.value !== S.text) text.value = S.text; });
   text.addEventListener('input', () => {

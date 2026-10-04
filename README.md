@@ -7,7 +7,7 @@ Mix the weights of your installed variable fonts letter by letter, then send the
 ## What it does
 
 - Reads the fonts installed on your computer (Chrome / Edge font access), or takes dropped `.ttf` / `.otf` / `.ttc` files. Variable fonts are split into their named instances.
-- Mixes styles across one or more families: mix amount, distribution (even, extremes, lean heavy, lean light, wave), unit (letter, fragment, word).
+- Mixes styles across one or more families: mix amount, distribution (even, extremes, lean heavy, lean light, wave with adjustable period, ramp light → heavy across the text or per line, alternate light / heavy), unit (letter, fragment, word).
 - Case: original, all caps, all lower, title case, sentence, random.
 - Size range, baseline and tracking jitter, leading, line alignment.
 - Match size: scale each font so its x-height or cap height matches the base style, so mixed families look the same size. Exported as per-letter point size.
