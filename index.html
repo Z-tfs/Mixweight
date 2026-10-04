@@ -286,13 +286,19 @@ dialog::backdrop { background: rgba(255, 255, 255, .7); }
         <div class="ctl"><label for="trackjit">Track jitter</label><output id="trackjit-o"></output><input type="range" id="trackjit" min="0" max="200" step="5"></div>
         <div class="ctl"><label for="track">Tracking</label><output id="track-o"></output><input type="range" id="track" min="-150" max="300" step="5"></div>
       </div>
+      <div class="ctl"><label>Match size</label><output></output></div>
+      <div class="opts" id="match" role="group" aria-label="Match size">
+        <button type="button" data-v="off">Off</button>
+        <button type="button" data-v="xheight">x-height</button>
+        <button type="button" data-v="cap">Cap height</button>
+      </div>
       <div class="ctl"><label>Line align</label><output></output></div>
       <div class="opts" id="align" role="group" aria-label="Line alignment">
         <button type="button" data-v="left">Left</button>
         <button type="button" data-v="center">Center</button>
         <button type="button" data-v="right">Right</button>
       </div>
-      <p class="hint">Baseline jitter only moves letters set on the baseline.</p>
+      <p class="hint">Match size scales each font so its x-height or cap height meets the base style's; it exports as per-letter size. Baseline jitter only moves letters set on the baseline.</p>
     </section>
 
     <section class="cell">
@@ -359,6 +365,7 @@ dialog::backdrop { background: rgba(255, 255, 255, .7); }
       <section><h4>InDesign</h4><p><b>Window › Utilities › Scripts</b>. Right-click the User folder › Reveal in Finder, drop the .jsx in, then double-click it in the panel. The frame auto-sizes to the text and the whole thing is one undo.</p></section>
       <section><h4>Photoshop</h4><p><b>File › Scripts › Browse…</b>. A new 72 ppi document opens with one editable type layer you can drag into your comp.</p></section>
       <section><h4>Fonts</h4><p>Fonts are matched by family and style name, then by PostScript name. Variable fonts use their named instances (Light, Bold…), so the app shows what the preview shows. Fonts the app can't find are listed and swapped for its default; the text stays editable.</p></section>
+      <section><h4>Match size</h4><p>Different families at the same point size look different sizes. x-height or Cap height scales each letter's font so its lowercase x or capital H is as tall as in the base style (limited to 60–160%). It is written as the letter's point size, so it stays editable; leading follows the nominal size.</p></section>
       <section><h4>Letter align</h4><p>Top, middle and bottom alignment are written as baseline shift values. If you change a letter or its font afterwards, export again to re-align.</p></section>
     </div>
     <footer><span></span><button class="btn solid" value="close">Close</button></footer>
@@ -670,7 +677,7 @@ const DEFAULTS = {
   text: SAMPLE_TEXTS[0],
   caseMode: 'orig', caseAmt: 45,
   mix: 70, dist: 'uniform', gran: 'glyph', valign: 'baseline',
-  size: 44, leading: 92, sizeVar: 18, baseJit: 4, trackJit: 30, track: -10,
+  size: 44, leading: 92, sizeVar: 18, baseJit: 4, trackJit: 30, track: -10, match: 'off',
   align: 'left', seed: 1952,
 };
 const S = Object.assign({}, DEFAULTS, {
@@ -960,6 +967,15 @@ function pickFrom(pool, u, pos) {
   return pool[Math.floor(t * pool.length)];
 }
 
+// Optical size matching: scale a style so its x-height (ink top of x) or cap height (ink top of H) meets the base style's.
+function matchFactor(st, base) {
+  if (S.match === 'off' || st === base) return 1;
+  const ch = S.match === 'cap' ? 'H' : 'x';
+  const own = ink(st, ch), ref = ink(base, ch);
+  if (!own || !ref || own.top <= 0 || ref.top <= 0) return 1;
+  return clamp(ref.top / own.top, 0.6, 1.6);
+}
+
 function compute() {
   const chars = Array.from(applyCase(S.text));
   const pool = poolStyles();
@@ -982,7 +998,7 @@ function compute() {
     let st = base;
     if (ov && ov.style && S.styles.has(ov.style)) st = S.styles.get(ov.style);
     else if (pool.length && rnd(seed, unit, 0) < mix) st = pickFrom(pool, rnd(seed, unit, 1), pos);
-    const size = r1(Math.max(1, S.size * (1 + S.sizeVar / 100 * (2 * rnd(seed, unit, 2) - 1))));
+    const size = r1(Math.max(1, S.size * matchFactor(st, base) * (1 + S.sizeVar / 100 * (2 * rnd(seed, unit, 2) - 1))));
     const jit = r1(S.baseJit * (2 * rnd(seed, unit, 3) - 1));
     const tr = Math.round(S.track + S.trackJit * (2 * rnd(seed, unit, 4) - 1));
     const va = (ov && ov.va) || S.valign;
@@ -1422,7 +1438,7 @@ function exportFor(app) {
 }
 
 /* ---------------- persistence ---------------- */
-const SAVE_KEYS = ['text', 'caseMode', 'caseAmt', 'mix', 'dist', 'gran', 'valign', 'size', 'leading', 'sizeVar', 'baseJit', 'trackJit', 'track', 'align', 'seed'];
+const SAVE_KEYS = ['text', 'caseMode', 'caseAmt', 'mix', 'dist', 'gran', 'valign', 'size', 'leading', 'sizeVar', 'baseJit', 'trackJit', 'track', 'align', 'seed', 'match'];
 function save() {
   try {
     const o = {};
@@ -1556,6 +1572,7 @@ async function boot() {
   bindOpts('gran', 'gran');
   bindOpts('align', 'align');
   bindOpts('valign', 'valign');
+  bindOpts('match', 'match');
   const dist = $('#dist'); dist.value = S.dist;
   syncers.push(() => { dist.value = S.dist; });
   dist.onchange = () => { record(); S.dist = dist.value; render(); save(); };
