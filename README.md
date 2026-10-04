@@ -16,15 +16,36 @@ Mix the weights of your installed variable fonts letter by letter, then send the
 
 ## Export
 
-Each export is a `.jsx` script that rebuilds the text inside the app, with every letter's font, style, size, baseline shift and tracking set. Nothing is outlined.
+Each export is a `.jsx` script. Run it inside the app and it rebuilds the text there as live type, with every letter's font, style, size, baseline shift and tracking already set. Nothing is outlined.
 
-| App | Run the script from |
-| --- | --- |
-| Illustrator | File › Scripts › Other Script… |
-| InDesign | Window › Utilities › Scripts (put the file in the User folder, then double-click) |
-| Photoshop | File › Scripts › Browse… |
+### Illustrator
 
-Fonts are matched by family and style name, then PostScript name. Variable fonts use their named instances, so the app shows what the preview shows.
+1. Open the document you want the text in. If none is open, the script makes a new one.
+2. **File › Scripts › Other Script…** (⌘F12).
+3. Pick `mixweight-illustrator.jsx`. The text lands in the middle of the active artboard, selected.
+
+### InDesign
+
+InDesign only runs scripts from its Scripts panel, so there is one extra step the first time.
+
+1. **Window › Utilities › Scripts**.
+2. Right-click the **User** folder › **Reveal in Finder**.
+3. Drop `mixweight-indesign.jsx` into that folder.
+4. Double-click it in the Scripts panel. The text goes on the current page in a frame that sizes itself to the text; one ⌘Z undoes the whole thing.
+
+Later exports have the same file name: replace the file in that folder and double-click again.
+
+### Photoshop
+
+1. **File › Scripts › Browse…**
+2. Pick `mixweight-photoshop.jsx`. A new 72 ppi document opens with one editable type layer you can drag into your comp.
+
+### After running
+
+- The type is fully editable. Change words or fonts as usual.
+- If the app says some fonts weren't found, they aren't installed on that computer; those letters fall back to the app's default font. Install the font, select those letters and reapply it. The sample fonts (Inter, Lora) only match if they are installed.
+- Fonts are matched by family and style name, then PostScript name. Variable fonts use their named instances (Light, Bold…), so the app shows what the preview shows.
+- Top / middle / bottom letter alignment is written as baseline shift values worked out for those exact glyphs. If you change a letter or its font in the app, export again from Mixweight to re-align.
 
 ## Files
 
