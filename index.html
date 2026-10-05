@@ -48,6 +48,8 @@ button { background: none; border: 0; padding: 0; cursor: pointer; }
 .sub > div + div { border-left: var(--rule); }
 .sub .grp { display: flex; align-items: center; gap: 14px; }
 .sub .muted { color: var(--g4); }
+#seed-lbl:hover { color: var(--ink); }
+#seed-in { font: inherit; width: 9ch; padding: 0 3px; border: 0; border-bottom: var(--rule); background: var(--g1); color: var(--ink); outline: 0; }
 .tbtn { text-transform: uppercase; padding: 2px 6px; margin: -2px -6px; }
 .tbtn:hover { background: var(--g1); }
 .tbtn:active { background: var(--g2); }
@@ -204,7 +206,8 @@ dialog::backdrop { background: rgba(255, 255, 255, .7); }
         <button class="tbtn" type="button" id="undo" title="⌘Z" disabled>Undo</button>
         <button class="tbtn" type="button" id="redo" title="⇧⌘Z" disabled>Redo</button>
         <button class="tbtn" type="button" id="reroll" title="Shortcut: R">Reroll ↻</button>
-        <span class="muted" id="seed-lbl"></span>
+        <button class="tbtn muted" type="button" id="seed-lbl" title="Click to type a seed"></button>
+        <span id="seed-edit" class="muted" hidden>Seed <input id="seed-in" type="text" inputmode="numeric" maxlength="9" aria-label="Seed"></span>
         <button class="tbtn" type="button" id="clear-ov">Clear edits</button>
       </span>
       <span class="grp">
@@ -377,6 +380,7 @@ dialog::backdrop { background: rgba(255, 255, 255, .7); }
       <section><h4>InDesign</h4><p><b>Window › Utilities › Scripts</b>. Right-click the User folder › Reveal in Finder, drop the .jsx in, then double-click it in the panel. The frame auto-sizes to the text and the whole thing is one undo.</p></section>
       <section><h4>Photoshop</h4><p><b>File › Scripts › Browse…</b>. A new 72 ppi document opens with one editable type layer you can drag into your comp.</p></section>
       <section><h4>Base style</h4><p>The base style is the one letters keep at 0% mix. It must be switched on in the pool: styles that are off are greyed out in the list, and switching off the base moves it to the nearest weight that is on.</p></section>
+      <section><h4>Seed</h4><p>Every random choice comes from the seed, so the same seed and settings always give the same result. Click Seed in the toolbar to type one, Enter to apply, Esc to cancel. Note a seed to get a layout back later.</p></section>
       <section><h4>Fonts</h4><p>Fonts are matched by family and style name, then by PostScript name. Variable fonts use their named instances (Light, Bold…), so the app shows what the preview shows. Fonts the app can't find are listed and swapped for its default; the text stays editable.</p></section>
       <section><h4>Family share</h4><p>Share of mix is each family's part of the letters that leave the base style. At first it follows the number of styles switched on. Drag one family and the others make room, keeping their proportions, so the total stays 100%. Styles keep their place in the light → heavy range.</p></section>
       <section><h4>Distribution</h4><p>Ramp sets light → heavy from the start of the text to the end; Ramp per line restarts on every line. Alternate switches between the lighter and heavier half of the pool. Wave has a Period. Weight mix still decides how many letters leave the base style.</p></section>
@@ -1738,6 +1742,23 @@ async function boot() {
 
   const reroll = () => { record(); S.seed = Math.floor(Math.random() * 99999); render(); save(); };
   $('#reroll').onclick = reroll;
+  // Typeable seed: click the label, Enter (or clicking away) applies, Esc cancels.
+  const seedLbl = $('#seed-lbl'), seedIn = $('#seed-in'), seedEdit = $('#seed-edit');
+  const closeSeed = apply => {
+    if (seedEdit.hidden) return;
+    const v = seedIn.value.trim();
+    seedEdit.hidden = true; seedLbl.hidden = false;
+    if (apply && /^\d{1,9}$/.test(v) && +v !== S.seed) { record(); S.seed = +v; render(); save(); }
+  };
+  seedLbl.onclick = () => { seedIn.value = S.seed; seedLbl.hidden = true; seedEdit.hidden = false; seedIn.focus(); seedIn.select(); };
+  seedIn.addEventListener('keydown', e => {
+    if (e.key === 'Enter') { e.preventDefault(); closeSeed(true); seedLbl.focus(); }
+    else if (e.key === 'Escape') { e.preventDefault(); closeSeed(false); seedLbl.focus(); }
+  });
+  seedIn.addEventListener('input', () => { const v = seedIn.value.replace(/\D/g, ''); if (v !== seedIn.value) seedIn.value = v; });
+  seedIn.addEventListener('blur', () => closeSeed(true));
+  // The proof's drag selection stops focus moving, so catch clicks outside directly too.
+  document.addEventListener('pointerdown', e => { if (e.target !== seedIn) closeSeed(true); }, true);
   $('#clear-ov').onclick = () => { if (!S.overrides.size) return; record(); S.overrides = new Map(); render(); save(); };
 
   // selection bar
@@ -1756,7 +1777,7 @@ async function boot() {
   $('#redo').onclick = redo;
   document.addEventListener('keydown', e => {
     const mod = e.metaKey || e.ctrlKey;
-    if (mod && !e.altKey && !e.target.closest('dialog')) {
+    if (mod && !e.altKey && !e.target.closest('dialog, #seed-in')) {
       const k = e.key.toLowerCase();
       if (k === 'z' && !e.shiftKey) { e.preventDefault(); undo(); return; }
       if ((k === 'z' && e.shiftKey) || k === 'y') { e.preventDefault(); redo(); return; }

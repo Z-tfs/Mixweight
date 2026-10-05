@@ -16,6 +16,7 @@ Mix the weights of your installed variable fonts letter by letter, then send the
 - Match size: scale each font so its x-height or cap height matches the base style, so mixed families look the same size. Exported as per-letter point size.
 - Letter align: baseline, or geometric top / middle / bottom measured from each glyph's actual outline.
 - Click or drag across letters to change their font, weight or alignment by hand.
+- Seed: every random choice comes from it. Reroll for a new one, or click the seed number to type one in and get an earlier result back.
 - ⌘Z / ⇧⌘Z undo and redo.
 
 ## Export
