@@ -143,7 +143,13 @@ textarea:focus { background: var(--g2); outline: none; }
 #out .g.rot { display: inline-block; }
 #out .g.stroke { color: transparent; -webkit-text-stroke-color: var(--ink); }
 #out .g.hov { background: var(--hov); }
-#out .g.sel { background: var(--g2); }
+/* Selection: crop-mark ticks at the four corners of each selected letter, drawn above the text in black with a
+   thin white halo, so they read on any fill or box. Hidden while a right-panel value is being adjusted. */
+.selmarks { position: absolute; left: 0; top: 0; overflow: visible; pointer-events: none; z-index: 2; }
+.selmarks path { fill: none; stroke-linecap: square; vector-effect: non-scaling-stroke; }
+.selmarks .halo { stroke: #fff; stroke-width: 3; }
+.selmarks .tick { stroke: #000; stroke-width: 1; }
+.sheet.adjusting .selmarks { visibility: hidden; }
 /* Boxes and guides: drawn under the text in the same coordinates (px = pt). */
 .deco { position: absolute; left: 0; top: 0; overflow: visible; pointer-events: none; z-index: 0; }
 .deco .gd { fill: none; stroke: var(--guide); stroke-width: .75; vector-effect: non-scaling-stroke; }
@@ -395,7 +401,7 @@ dialog::backdrop { background: rgba(255, 255, 255, .7); }
       <span class="corner br" id="c-br">⌘Z undo · R reroll · Esc deselect</span>
       <button type="button" class="handle" id="handle" title="Open the right panel" aria-label="Open the right panel" aria-controls="side">‹</button>
       <div class="stage" id="stage">
-        <div class="sheet" id="sheet"><svg class="deco" id="deco" aria-hidden="true"></svg><div id="out"></div></div>
+        <div class="sheet" id="sheet"><svg class="deco" id="deco" aria-hidden="true"></svg><div id="out"></div><svg class="selmarks" id="selmarks" aria-hidden="true"></svg></div>
       </div>
     </div>
   </main>
@@ -1616,6 +1622,7 @@ function render() {
   out.replaceChildren(frag);
   layout();
   drawDeco();
+  drawSelMarks();
   corners();
   renderInspector();
   refreshHover();
@@ -1790,6 +1797,26 @@ function svgPath(nodes, by) {
   nodes.forEach((nd, i) => { const nx = nodes[(i + 1) % nodes.length]; d += `C${f(nd.r)} ${f(nx.l)} ${f(nx.a)}`; });
   return d + 'Z';
 }
+// Corner ticks for the selection: around each letter's ink (its size and shift included), turned with the letter.
+// Canvas only; exports never see them.
+function drawSelMarks() {
+  const svg = $('#selmarks');
+  let d = '';
+  if (S.lb && S.lb.length) for (const g of glyphList()) {
+    if (!S.sel.has(g.i) || g.x == null) continue;
+    const e = inkExt(g) || { t: -0.7 * g.size, b: 0 };
+    const x0 = g.x - 2, x1 = g.x + g.adv + 2, y0 = e.t - 2, y1 = e.b + 2;
+    const L = Math.max(2, Math.min(7, (x1 - x0) / 3, (y1 - y0) / 3));
+    const P = pivotOf(g), by = S.lb[g.k];
+    const pt = (x, y) => { const q = g.rot ? rotPt([x, y], P, g.rot) : [x, y]; return `${r2(q[0])} ${r2(q[1] + by)}`; };
+    for (const [cx, cy, sx, sy] of [[x0, y0, 1, 1], [x1, y0, -1, 1], [x1, y1, -1, -1], [x0, y1, 1, -1]]) {
+      d += `M${pt(cx + sx * L, cy)}L${pt(cx, cy)}L${pt(cx, cy + sy * L)}`;
+    }
+  }
+  svg.setAttribute('width', Math.ceil(S.W || 0));
+  svg.setAttribute('height', Math.ceil(out.getBoundingClientRect().height / (S.zoom || 1)));
+  svg.innerHTML = d ? `<path class="halo" d="${d}"/><path class="tick" d="${d}"/>` : '';
+}
 function drawDeco() {
   const ns = 'http://www.w3.org/2000/svg', frag = document.createDocumentFragment();
   for (const sh of decoShapes()) {
@@ -1840,6 +1867,7 @@ function corners() {
 const glyphList = () => S.lines.flat();
 function paintSelection() {
   for (const sp of out.querySelectorAll('.g')) sp.classList.toggle('sel', S.sel.has(+sp.dataset.i));
+  drawSelMarks();
   // Selecting opens the right panel; deselecting closes it again unless it was opened with the handle.
   // Not mid-drag: opening narrows the canvas and the letters would move under the pointer.
   if (S.sel.size) { if (!dragging) side.open = true; }
@@ -2727,6 +2755,19 @@ async function boot() {
       editBox('cr' + row.dataset.c, st => { for (const q of qs) st.c[q].r = v; });
     });
   }
+
+  // Hide the selection ticks while a right-panel value is being adjusted: a slider drag, typing in a number
+  // field, or arrow keys on a slider. They come back when the adjustment ends.
+  const sheet = $('#sheet'), sideEl = $('#side');
+  const adjusting = on => sheet.classList.toggle('adjusting', on);
+  sideEl.addEventListener('pointerdown', e => { if (e.target.matches('input[type=range]')) adjusting(true); });
+  window.addEventListener('pointerup', () => { if (document.activeElement?.type !== 'number') adjusting(false); });
+  window.addEventListener('pointercancel', () => adjusting(false));
+  sideEl.addEventListener('keydown', e => { if (e.target.matches('input[type=range]') && /Arrow|Page|Home|End/.test(e.key)) adjusting(true); });
+  sideEl.addEventListener('keyup', e => { if (e.target.matches('input[type=range]')) adjusting(false); });
+  sideEl.addEventListener('input', e => { if (e.target.matches('input[type=number]')) adjusting(true); });
+  sideEl.addEventListener('focusout', e => { if (e.target.matches('input[type=number], input[type=range]')) adjusting(false); });
+  sideEl.addEventListener('keydown', e => { if (e.target.matches('input[type=number]') && (e.key === 'Enter' || e.key === 'Escape')) adjusting(false); });
 
   // hover info
   out.addEventListener('pointermove', e => { if (e.pointerType === 'touch') return; hoverAt(e.target.closest('.g'), e); });
