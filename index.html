@@ -249,7 +249,7 @@ dialog::backdrop { background: rgba(255, 255, 255, .7); }
         <button class="tbtn" type="button" id="reroll" title="Shortcut: R">Reroll ↻</button>
         <button class="tbtn muted" type="button" id="seed-lbl" title="Click to type a seed"></button>
         <span id="seed-edit" class="muted" hidden>Seed <input id="seed-in" type="text" inputmode="numeric" maxlength="9" aria-label="Seed"></span>
-        <button class="tbtn" type="button" id="clear-ov">Clear edits</button>
+        <button class="tbtn" type="button" id="clear-ov" title="Remove every letter edit and band. ⌘Z brings them back.">Clear edits</button>
       </span>
       <span class="grp">
         <span class="muted">Zoom</span>
@@ -414,7 +414,7 @@ dialog::backdrop { background: rgba(255, 255, 255, .7); }
         <div class="tag" id="sel-info"></div>
         <div class="acts">
           <button type="button" id="sel-reroll">Reroll</button>
-          <button type="button" id="sel-reset">Reset</button>
+          <button type="button" id="sel-reset" title="Remove every edit on the selected letters, and bands under them. ⌘Z brings them back.">Reset</button>
           <button type="button" id="sel-none">Deselect</button>
         </div>
       </section>
@@ -2698,7 +2698,11 @@ async function boot() {
   seedIn.addEventListener('blur', () => closeSeed(true));
   // The proof's drag selection stops focus moving, so catch clicks outside directly too.
   document.addEventListener('pointerdown', e => { if (e.target !== seedIn) closeSeed(true); }, true);
-  $('#clear-ov').onclick = () => { if (!S.overrides.size) return; record(); S.overrides = new Map(); render(); save(); };
+  // Clear edits: every per-letter adjustment (font, weight, align, rotation, fill, letter boxes) and every band.
+  $('#clear-ov').onclick = () => {
+    if (!S.overrides.size && !S.bands.length) return;
+    record(); S.overrides = new Map(); S.bands = []; render(); save();
+  };
 
   // selection bar
   $('#sel-fam').onchange = e => { if (e.target.value) setSelFamily(e.target.value); };
@@ -2709,7 +2713,13 @@ async function boot() {
     render(); save();
   });
   $('#sel-reroll').onclick = () => rerollGlyphs(selectedGlyphs());
-  $('#sel-reset').onclick = () => { record(); for (const i of S.sel) S.overrides.delete(i); render(); save(); };
+  // Reset: everything set on the selected letters, including bands that run under them.
+  $('#sel-reset').onclick = () => {
+    record();
+    for (const i of S.sel) S.overrides.delete(i);
+    S.bands = S.bands.filter(b => !touchesSel(b));
+    render(); save();
+  };
   $('#sel-none').onclick = () => { S.sel.clear(); paintSelection(); };
 
   // right panel
