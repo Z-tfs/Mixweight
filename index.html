@@ -103,12 +103,13 @@ textarea:focus { background: var(--g2); outline: none; }
 .fam-h .r { display: flex; gap: 10px; color: var(--g4); white-space: nowrap; }
 .fam-h .x { color: var(--g4); text-transform: uppercase; }
 .fam-h .x:hover { color: var(--ink); }
-.chips { display: flex; flex-wrap: wrap; gap: 3px 12px; }
+.chips { display: flex; flex-wrap: wrap; align-items: baseline; gap: 3px 12px; }
 .chip { font-size: var(--s-lg); color: var(--g3); padding: 1px 0; line-height: 1.2; }
 .chip[aria-pressed="true"] { color: var(--ink); }
 .chip:hover { color: var(--g4); }
-.chip.is-base { background: var(--g2); color: var(--ink); padding: 1px 6px; display: inline-flex; align-items: center; gap: 6px; }
-.chip .badge { font: var(--s-xs)/1 var(--ui); font-variation-settings: normal; letter-spacing: .04em; text-transform: uppercase; background: var(--ink); color: var(--paper); padding: 2px 4px 1px; }
+.chip.is-base { position: relative; background: var(--g2); color: var(--ink); padding: 7px 10px 3px 7px; margin-right: 16px; }
+.chip .badge { position: absolute; top: -9px; right: -18px; font: var(--s-xs)/1 var(--ui); font-variation-settings: normal; letter-spacing: .04em; text-transform: uppercase; background: var(--ink); color: var(--paper); padding: 3px 5px 2px; pointer-events: none; }
+.chips:has(.is-base) { padding-top: 6px; row-gap: 12px; }
 .fam .ctl input:disabled { opacity: .35; cursor: default; }
 .pool .empty { padding: 14px; color: var(--g4); text-transform: uppercase; }
 
