@@ -94,8 +94,8 @@ textarea:focus { background: var(--g2); outline: none; }
 
 .btns { display: flex; gap: 8px; flex-wrap: wrap; }
 .btn { text-transform: uppercase; border: var(--rule); padding: 5px 9px; background: var(--paper); }
-.btn:hover { background: var(--g1); }
-.btn:active { background: var(--g2); }
+/* Hover and keyboard focus invert. :focus-visible, not :focus, so a mouse click doesn't leave it inverted. */
+.btn:hover, .btn:focus-visible, .btn:active { background: var(--ink); color: var(--paper); }
 .btn.solid { background: var(--ink); color: var(--paper); }
 .btn.solid:hover { background: var(--g4); border-color: var(--g4); }
 
@@ -323,7 +323,7 @@ dialog::backdrop { background: rgba(255, 255, 255, .7); }
     <section class="cell">
       <div class="cell-h"><span>Export</span><span class="r">Live, editable text</span></div>
       <div class="btns">
-        <button class="btn solid" type="button" data-exp="ai">Illustrator .jsx</button>
+        <button class="btn" type="button" data-exp="ai">Illustrator .jsx</button>
         <button class="btn" type="button" data-exp="id">InDesign .jsx</button>
         <button class="btn" type="button" data-exp="ps">Photoshop .jsx</button>
       </div>
