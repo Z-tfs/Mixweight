@@ -19,6 +19,7 @@
   --rule: 1px solid var(--ink);
   --ui: "Helvetica Neue", Helvetica, Arial, "PingFang SC", sans-serif;
   --s-xs: 10px; --s-sm: 11px; --s-md: 13px; --s-lg: 15px;
+  --bar: 38px;     /* selection bar = Font pool header row, so their rules line up */
   color-scheme: light;
 }
 * { box-sizing: border-box; }
@@ -45,7 +46,7 @@ button { background: none; border: 0; padding: 0; cursor: pointer; }
 /* sub-bar */
 .sub { grid-column: 1 / -1; display: grid; grid-template-columns: 320px minmax(0, 1fr); border-bottom: var(--rule); font-size: var(--s-sm); text-transform: uppercase; }
 .sub > div { padding: 5px 14px; display: flex; align-items: center; justify-content: space-between; gap: 16px; min-width: 0; flex-wrap: wrap; }
-.sub > div + div { border-left: var(--rule); }
+.sub > div:first-child { border-right: var(--rule); } /* same x as the rail's border */
 .sub .grp { display: flex; align-items: center; gap: 14px; }
 .sub .muted { color: var(--g4); }
 #seed-lbl:hover { color: var(--ink); }
@@ -61,6 +62,9 @@ button { background: none; border: 0; padding: 0; cursor: pointer; }
 .cell { border-bottom: var(--rule); padding: 9px 14px 14px; display: grid; gap: 10px; }
 .cell-h { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; text-transform: uppercase; font-size: var(--s-sm); }
 .cell-h .r { color: var(--g4); text-align: right; }
+/* First cell: header text centred on the selection bar's text, pool rule on the bar's bottom rule. */
+.cell-pool { padding-top: 10px; }
+.cell-pool > .cell-h { height: calc(var(--bar) - 21px); align-items: center; }
 .hint { color: var(--g4); font-size: var(--s-sm); margin: 0; line-height: 1.45; }
 
 .opts { display: flex; flex-wrap: wrap; gap: 4px 14px; text-transform: uppercase; }
@@ -117,7 +121,7 @@ textarea:focus { background: var(--g2); outline: none; }
 
 /* right side */
 .main { display: grid; grid-template-rows: auto minmax(0, 1fr); min-width: 0; min-height: 0; }
-.insp { border-bottom: var(--rule); padding: 7px 14px; display: flex; flex-wrap: wrap; align-items: center; gap: 6px 22px; min-height: 38px; text-transform: uppercase; }
+.insp { border-bottom: var(--rule); padding: 7px 14px; display: flex; flex-wrap: wrap; align-items: center; gap: 6px 22px; min-height: var(--bar); text-transform: uppercase; }
 .insp .count { min-width: 9em; }
 .insp .grp { display: inline-flex; align-items: center; gap: 10px; }
 .insp .lab { color: var(--g4); }
@@ -221,7 +225,7 @@ dialog::backdrop { background: rgba(255, 255, 255, .7); }
   </div>
 
   <aside class="rail" aria-label="Controls">
-    <section class="cell">
+    <section class="cell cell-pool">
       <div class="cell-h"><span>Font pool</span><span class="r">Click a style to mix it in</span></div>
       <div class="pool" id="pool"></div>
       <div class="ctl">
