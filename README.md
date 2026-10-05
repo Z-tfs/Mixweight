@@ -7,11 +7,16 @@ Mix the weights of your installed variable fonts letter by letter, then send the
 ## What it does
 
 - Reads the fonts installed on your computer (Chrome / Edge font access), or takes dropped `.ttf` / `.otf` / `.ttc` files. Variable fonts are split into their named instances.
-- Mixes styles across one or more families: mix amount, distribution (even, extremes, lean heavy, lean light, wave), unit (letter, fragment, word).
+- Mixes styles across one or more families: mix amount, distribution (even, extremes, lean heavy, lean light, wave with adjustable period, ramp light → heavy across the text or per line, alternate light / heavy), unit (letter, fragment, word).
+- Family share of mix: set each family's % of the mixed letters; the other families adjust so the total stays 100%. A family with nine styles no longer has to drown one with two.
+- The base style is marked in the pool and must be one of the styles switched on.
 - Case: original, all caps, all lower, title case, sentence, random.
 - Size range, baseline and tracking jitter, leading, line alignment.
+- Even gaps: where neighbouring letters come from different fonts, nudge the tracking so the gap sits halfway between the two fonts' own spacing. Exported as tracking.
+- Match size: scale each font so its x-height or cap height matches the base style, so mixed families look the same size. Exported as per-letter point size.
 - Letter align: baseline, or geometric top / middle / bottom measured from each glyph's actual outline.
 - Click or drag across letters to change their font, weight or alignment by hand.
+- Seed: every random choice comes from it. Reroll for a new one, or click the seed number to type one in and get an earlier result back.
 - ⌘Z / ⇧⌘Z undo and redo.
 
 ## Export
@@ -49,7 +54,10 @@ Later exports have the same file name: replace the file in that folder and doubl
 
 ## Files
 
-- `index.html` — the whole tool, one self-contained file. It also works offline: download it and open it in Chrome.
+- `index.html` — the whole tool. No build step, no dependencies.
+- `demo-fonts.js` — the bundled sample fonts (Inter, Lora) as base64, loaded by `index.html` with a plain `<script src>`. Optional: without it the tool still works with installed or dropped fonts.
+
+To use it offline, download `index.html` and `demo-fonts.js` into the same folder and open `index.html` in Chrome.
 - `fonts/OFL.txt` — license for the bundled sample fonts (Inter, Lora; SIL Open Font License 1.1).
 
 ## License
