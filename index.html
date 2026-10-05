@@ -20,6 +20,9 @@
   --ui: "Helvetica Neue", Helvetica, Arial, "PingFang SC", sans-serif;
   --s-xs: 10px; --s-sm: 11px; --s-md: 13px; --s-lg: 15px;
   --bar: 38px;     /* selection bar = Font pool header row, so their rules line up */
+  --hov: #eeeeee;  /* hover: behind the letter */
+  --tag: #dddddd;  /* hover info tag blocks */
+  --guide: #b4b4b4;
   color-scheme: light;
 }
 * { box-sizing: border-box; }
@@ -31,7 +34,7 @@ button { background: none; border: 0; padding: 0; cursor: pointer; }
 :focus-visible { outline: 1px dashed var(--ink); outline-offset: 2px; }
 .up { text-transform: uppercase; letter-spacing: .02em; }
 
-.app { display: grid; grid-template-columns: 320px minmax(0, 1fr); grid-template-rows: auto auto minmax(0, 1fr); height: 100%; }
+.app { display: grid; grid-template-columns: 320px minmax(0, 1fr) auto; grid-template-rows: auto auto minmax(0, 1fr); height: 100%; }
 
 /* header */
 .top { grid-column: 1 / -1; display: grid; grid-template-columns: 320px minmax(0, 1fr); border-bottom: var(--rule); }
@@ -123,14 +126,7 @@ textarea:focus { background: var(--g2); outline: none; }
 .main { display: grid; grid-template-rows: auto minmax(0, 1fr); min-width: 0; min-height: 0; }
 .insp { border-bottom: var(--rule); padding: 7px 14px; display: flex; flex-wrap: wrap; align-items: center; gap: 6px 22px; min-height: var(--bar); text-transform: uppercase; }
 .insp .count { min-width: 9em; }
-.insp .grp { display: inline-flex; align-items: center; gap: 10px; }
 .insp .lab { color: var(--g4); }
-.insp select { width: auto; min-width: 9em; }
-.insp .opts { gap: 4px 12px; }
-.insp #sel-styles button { text-transform: none; font-size: var(--s-md); }
-.insp .acts { display: inline-flex; gap: 14px; margin-left: auto; }
-.insp .acts button { text-transform: uppercase; }
-.insp .acts button:hover { text-decoration: underline; }
 
 .field { position: relative; min-height: 0; }
 .corner { position: absolute; z-index: 2; text-transform: uppercase; font-size: var(--s-sm); pointer-events: none; background: var(--paper); padding: 2px 0; max-width: 46%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -141,9 +137,43 @@ textarea:focus { background: var(--g2); outline: none; }
 
 #out { white-space: pre; font-kerning: normal; font-synthesis: none; user-select: none; -webkit-user-select: none; cursor: text; }
 #out .ln { white-space: pre; }
+#out { position: relative; z-index: 1; }
+#out .bl { display: inline-block; width: 0; height: 0; vertical-align: baseline; }
 #out .g { position: relative; font-synthesis: none; }
-#out .g:hover { background: var(--g1); }
+#out .g.rot { display: inline-block; }
+#out .g.stroke { color: transparent; -webkit-text-stroke-color: var(--ink); }
+#out .g.hov { background: var(--hov); }
 #out .g.sel { background: var(--g2); }
+/* Boxes and guides: drawn under the text in the same coordinates (px = pt). */
+.deco { position: absolute; left: 0; top: 0; overflow: visible; pointer-events: none; z-index: 0; }
+.deco .gd { fill: none; stroke: var(--guide); stroke-width: .75; vector-effect: non-scaling-stroke; }
+
+/* Hover info tag: one grey block per line, hugging the text. Same look in the right panel's selection info. */
+.tag { display: grid; justify-items: start; gap: 1px; font: 11px/15px var(--ui); text-transform: uppercase; color: var(--ink); }
+.tag span { background: var(--tag); padding: 0 3px 0 2px; text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 1.5px; white-space: nowrap; }
+#hovtag { position: fixed; z-index: 70; pointer-events: none; }
+
+/* Right panel: selection or paragraph. Collapsed to a small handle on the canvas edge. */
+.side { border-left: var(--rule); overflow-y: auto; min-width: 0; min-height: 0; width: 300px; }
+.side-h { display: flex; justify-content: space-between; align-items: center; gap: 10px; min-height: var(--bar); padding: 7px 14px; border-bottom: var(--rule); text-transform: uppercase; }
+.side .acts { display: flex; gap: 14px; text-transform: uppercase; }
+.side .acts button:hover { text-decoration: underline; }
+.side #sel-styles button { text-transform: none; font-size: var(--s-md); }
+.side .row { display: grid; grid-template-columns: 1fr auto; gap: 6px 10px; align-items: baseline; }
+.side .lab { color: var(--g4); text-transform: uppercase; }
+.side .sub-h { text-transform: uppercase; color: var(--g4); }
+.numin { display: inline-flex; align-items: baseline; gap: 2px; color: var(--g4); }
+.numin input { width: 6ch; border: 0; border-bottom: var(--rule); background: transparent; text-align: right; font-variant-numeric: tabular-nums; padding: 0 2px; border-radius: 0; -moz-appearance: textfield; }
+.numin input::-webkit-inner-spin-button { -webkit-appearance: none; }
+.numin input:focus { outline: 0; background: var(--g1); }
+.corner-row { display: grid; grid-template-columns: 2.4em 1fr; gap: 4px 8px; align-items: center; }
+.corner-row .lab { font-size: var(--s-xs); }
+.btn.sm { padding: 3px 7px; }
+.btn:disabled { color: var(--g3); border-color: var(--g3); background: var(--paper); cursor: default; }
+.chk { display: inline-flex; align-items: center; gap: 7px; text-transform: uppercase; cursor: pointer; }
+.chk input { accent-color: var(--ink); margin: 0; }
+.handle { position: absolute; z-index: 3; right: 0; top: 50%; transform: translateY(-50%); width: 15px; height: 64px; border: 1px solid var(--g3); border-right: 0; background: var(--paper); color: var(--g4); font-size: var(--s-sm); display: grid; place-items: center; }
+.handle:hover { color: var(--ink); border-color: var(--ink); }
 .placeholder { font: var(--s-md)/1.5 var(--ui); color: var(--g4); max-width: 30em; white-space: normal; text-transform: uppercase; }
 
 .drop { position: fixed; inset: 10px; border: 1px dashed var(--ink); background: rgba(255,255,255,.88); display: grid; place-items: center; font-size: var(--s-lg); text-transform: uppercase; z-index: 50; pointer-events: none; }
@@ -180,6 +210,7 @@ dialog::backdrop { background: rgba(255, 255, 255, .7); }
   .sub > div + div { border-left: 0; border-top: var(--rule); }
   .nav { justify-content: flex-start; border-top: var(--rule); gap: 6px 18px; font-size: var(--s-md); }
   .rail { border-right: 0; border-bottom: var(--rule); overflow: visible; }
+  .side { width: auto; border-left: 0; border-top: var(--rule); overflow: visible; }
   .field { min-height: 75vh; }
   .stage { padding: 48px 16px; }
 }
@@ -321,13 +352,34 @@ dialog::backdrop { background: rgba(255, 255, 255, .7); }
     </section>
 
     <section class="cell">
+      <div class="cell-h"><span>Outline</span><span class="r">Solid ↔ outline</span></div>
+      <div class="pair">
+        <div class="ctl"><label for="outline">Outline ratio</label><output id="outline-o"></output><input type="range" id="outline" min="0" max="100" step="1"></div>
+        <div class="ctl"><label for="strokew">Stroke</label><output id="strokew-o"></output><input type="range" id="strokew" min="0.25" max="8" step="0.25"></div>
+      </div>
+      <div class="btns"><button class="btn sm" type="button" id="outline-re">Reroll outlines</button></div>
+      <p class="hint">Picks a share of the letters to set as outline only: no fill, black stroke. It exports as live text with a stroke. Select letters to set them by hand.</p>
+    </section>
+
+    <section class="cell">
+      <div class="cell-h"><span>Guides</span><span class="r">Base style metrics</span></div>
+      <div class="opts" id="guides" role="group" aria-label="Guides">
+        <button type="button" data-v="base">Baseline</button>
+        <button type="button" data-v="x">x-height</button>
+        <button type="button" data-v="cap">Cap height</button>
+        <button type="button" data-v="asc">Ascender</button>
+      </div>
+    </section>
+
+    <section class="cell">
       <div class="cell-h"><span>Export</span><span class="r">Live, editable text</span></div>
       <div class="btns">
         <button class="btn" type="button" data-exp="ai">Illustrator .jsx</button>
         <button class="btn" type="button" data-exp="id">InDesign .jsx</button>
         <button class="btn" type="button" data-exp="ps">Photoshop .jsx</button>
       </div>
-      <p class="hint" id="exp-note">Each script rebuilds the text inside the app with every letter's font, style, size, baseline shift and tracking set.</p>
+      <label class="chk"><input type="checkbox" id="exp-guides"> Include guides</label>
+      <p class="hint" id="exp-note">Each script rebuilds the text inside the app with every letter's font, style, size, baseline shift and tracking set. Boxes come along as editable shapes under the text; guides only when Include guides is ticked.</p>
     </section>
   </aside>
 
@@ -335,34 +387,133 @@ dialog::backdrop { background: rgba(255, 255, 255, .7); }
     <div class="insp" id="insp">
       <span class="count" id="sel-count">No selection</span>
       <span class="lab" id="sel-hint">Click a letter, or drag across letters, to edit them. Shift extends, ⌘ adds.</span>
-      <span class="grp" id="sel-ctl-fam" hidden><span class="lab">Font</span><select id="sel-fam" aria-label="Font for selection"></select></span>
-      <span class="grp" id="sel-ctl-sty" hidden><span class="lab">Weight</span><span class="opts" id="sel-styles"></span></span>
-      <span class="grp" id="sel-ctl-va" hidden><span class="lab">Align</span>
-        <span class="opts" id="sel-va">
-          <button type="button" data-v="">Auto</button>
-          <button type="button" data-v="baseline">Base</button>
-          <button type="button" data-v="top">Top</button>
-          <button type="button" data-v="middle">Mid</button>
-          <button type="button" data-v="bottom">Bottom</button>
-        </span>
-      </span>
-      <span class="acts" id="sel-acts" hidden>
-        <button type="button" id="sel-reroll">Reroll</button>
-        <button type="button" id="sel-reset">Reset</button>
-        <button type="button" id="sel-none">Deselect</button>
-      </span>
     </div>
     <div class="field">
       <span class="corner tl" id="c-tl"></span>
       <span class="corner tr" id="c-tr"></span>
       <span class="corner bl" id="c-bl"></span>
       <span class="corner br" id="c-br">⌘Z undo · R reroll · Esc deselect</span>
+      <button type="button" class="handle" id="handle" title="Open the right panel" aria-label="Open the right panel" aria-controls="side">‹</button>
       <div class="stage" id="stage">
-        <div class="sheet" id="sheet"><div id="out"></div></div>
+        <div class="sheet" id="sheet"><svg class="deco" id="deco" aria-hidden="true"></svg><div id="out"></div></div>
       </div>
     </div>
   </main>
+
+  <aside class="side" id="side" aria-label="Selection and paragraph" hidden>
+    <div class="side-h"><span id="side-title">Paragraph</span><button class="tbtn" type="button" id="side-close" aria-label="Close the right panel">Close ›</button></div>
+
+    <div id="side-sel">
+      <section class="cell">
+        <div class="tag" id="sel-info"></div>
+        <div class="acts">
+          <button type="button" id="sel-reroll">Reroll</button>
+          <button type="button" id="sel-reset">Reset</button>
+          <button type="button" id="sel-none">Deselect</button>
+        </div>
+      </section>
+
+      <section class="cell">
+        <div class="cell-h"><span>Letter</span><span class="r">Font, weight, align</span></div>
+        <div class="ctl"><label for="sel-fam">Font</label><output></output><select id="sel-fam" style="grid-column:1/-1"></select></div>
+        <div class="ctl"><label>Weight</label><output></output></div>
+        <div class="opts" id="sel-styles"></div>
+        <div class="ctl"><label>Align</label><output></output></div>
+        <div class="opts" id="sel-va" role="group" aria-label="Alignment for selection">
+          <button type="button" data-v="">Auto</button>
+          <button type="button" data-v="baseline">Base</button>
+          <button type="button" data-v="top">Top</button>
+          <button type="button" data-v="middle">Mid</button>
+          <button type="button" data-v="bottom">Bottom</button>
+        </div>
+      </section>
+
+      <section class="cell">
+        <div class="cell-h"><span>Rotate</span><span class="r">Each letter on its centre</span></div>
+        <div class="ctl"><label for="rot">Angle</label><span class="numin"><input type="number" id="rot-n" min="-180" max="180" step="1" aria-label="Angle in degrees">°</span><input type="range" id="rot" min="-180" max="180" step="1"></div>
+        <div class="ctl"><label for="rjit">Random jitter</label><output id="rjit-o"></output><input type="range" id="rjit" min="0" max="45" step="1"></div>
+        <div class="btns"><button class="btn sm" type="button" id="rjit-re">Reroll jitter</button><button class="btn sm" type="button" id="rot-reset">No rotation</button></div>
+      </section>
+
+      <section class="cell">
+        <div class="cell-h"><span>Fill</span><span class="r" id="sel-fill-r"></span></div>
+        <div class="opts" id="sel-fill" role="group" aria-label="Fill for selection">
+          <button type="button" data-v="">Auto</button>
+          <button type="button" data-v="solid">Solid</button>
+          <button type="button" data-v="outline">Outline</button>
+        </div>
+        <div class="ctl"><label for="sel-sw">Stroke</label><output id="sel-sw-o"></output><input type="range" id="sel-sw" min="0.25" max="8" step="0.25"></div>
+      </section>
+
+      <section class="cell">
+        <div class="cell-h"><span>Box</span><span class="r" id="sel-box-r"></span></div>
+        <div class="row"><span class="lab">Letter boxes</span><span class="btns"><button class="btn sm" type="button" id="lb-add">Add</button><button class="btn sm" type="button" id="lb-rm">Remove</button></span></div>
+        <div class="row"><span class="lab">Band</span><span class="btns"><button class="btn sm" type="button" id="band-add">Add</button><button class="btn sm" type="button" id="band-rm">Remove</button></span></div>
+        <div class="ctl"><label>Band height</label><output></output></div>
+        <div class="opts" id="band-fit" role="group" aria-label="Band height">
+          <button type="button" data-v="max">Tallest letter</button>
+          <button type="button" data-v="each">Each letter</button>
+        </div>
+        <div class="ctl" id="band-dh-wrap"><label for="band-dh">Adjust height</label><output id="band-dh-o"></output><input type="range" id="band-dh" min="-40" max="120" step="1"></div>
+        <div class="ctl"><label for="scat">Random letter boxes</label><output id="scat-o"></output><input type="range" id="scat" min="0" max="100" step="1"></div>
+        <div class="btns"><button class="btn sm" type="button" id="scat-re">Reroll boxes</button></div>
+      </section>
+    </div>
+
+    <div id="side-para">
+      <section class="cell">
+        <div class="cell-h"><span>Hover info</span><span class="r">Canvas only, not exported</span></div>
+        <div class="opts" id="hov" role="group" aria-label="Hover info">
+          <button type="button" data-v="on">On</button>
+          <button type="button" data-v="off">Off</button>
+        </div>
+      </section>
+
+      <section class="cell">
+        <div class="cell-h"><span>Paragraph band</span><span class="r">One band per line</span></div>
+        <div class="opts" id="para-on" role="group" aria-label="Paragraph band">
+          <button type="button" data-v="off">Off</button>
+          <button type="button" data-v="on">On</button>
+        </div>
+        <div class="opts" id="para-fit" role="group" aria-label="Paragraph band height">
+          <button type="button" data-v="max">Tallest letter</button>
+          <button type="button" data-v="each">Each letter</button>
+        </div>
+        <div class="ctl"><label for="para-dh">Adjust height</label><output id="para-dh-o"></output><input type="range" id="para-dh" min="-40" max="120" step="1"></div>
+      </section>
+
+      <section class="cell">
+        <div class="cell-h"><span>Letter boxes</span><span class="r" id="para-lb-r"></span></div>
+        <div class="ctl"><label for="pscat">Random letter boxes</label><output id="pscat-o"></output><input type="range" id="pscat" min="0" max="100" step="1"></div>
+        <div class="btns"><button class="btn sm" type="button" id="pscat-re">Reroll boxes</button><button class="btn sm" type="button" id="lb-rm-all">Remove all</button></div>
+      </section>
+    </div>
+
+    <section class="cell" id="bx-ed">
+      <div class="cell-h"><span>Box style</span><span class="r" id="bx-ed-r"></span></div>
+      <div class="opts" id="bx-tgt" role="group" aria-label="Style for">
+        <button type="button" data-v="para">Paragraph band</button>
+        <button type="button" data-v="letters">Letter boxes</button>
+      </div>
+      <div class="pair">
+        <div class="ctl"><label for="bx-fill">Fill grey</label><output id="bx-fill-o"></output><input type="range" id="bx-fill" min="0" max="100" step="1"></div>
+        <div class="ctl"><label for="bx-op">Opacity</label><output id="bx-op-o"></output><input type="range" id="bx-op" min="0" max="100" step="1"></div>
+        <div class="ctl"><label for="bx-stroke">Stroke grey</label><output id="bx-stroke-o"></output><input type="range" id="bx-stroke" min="0" max="100" step="1"></div>
+        <div class="ctl"><label for="bx-sw">Stroke</label><output id="bx-sw-o"></output><input type="range" id="bx-sw" min="0" max="8" step="0.25"></div>
+      </div>
+      <div class="ctl"><label for="bx-pad">Expand</label><output id="bx-pad-o"></output><input type="range" id="bx-pad" min="-10" max="40" step="0.5"></div>
+      <div class="row"><span class="lab">Corners</span><button type="button" class="chk" id="bx-lock" aria-pressed="true"><span id="bx-lock-t">Locked: all four</span></button></div>
+      <div id="bx-corners">
+        <div class="corner-row" data-c="all"><span class="lab">All</span><span class="opts"><button type="button" data-v="round">Round</button><button type="button" data-v="bevel">Bevel</button><button type="button" data-v="inverse">Inverse</button></span><span></span><span class="ctl"><output></output><input type="range" min="0" max="60" step="0.5" aria-label="Radius, all corners"></span></div>
+        <div class="corner-row" data-c="0"><span class="lab">TL</span><span class="opts"><button type="button" data-v="round">Round</button><button type="button" data-v="bevel">Bevel</button><button type="button" data-v="inverse">Inverse</button></span><span></span><span class="ctl"><output></output><input type="range" min="0" max="60" step="0.5" aria-label="Radius, top left"></span></div>
+        <div class="corner-row" data-c="1"><span class="lab">TR</span><span class="opts"><button type="button" data-v="round">Round</button><button type="button" data-v="bevel">Bevel</button><button type="button" data-v="inverse">Inverse</button></span><span></span><span class="ctl"><output></output><input type="range" min="0" max="60" step="0.5" aria-label="Radius, top right"></span></div>
+        <div class="corner-row" data-c="2"><span class="lab">BR</span><span class="opts"><button type="button" data-v="round">Round</button><button type="button" data-v="bevel">Bevel</button><button type="button" data-v="inverse">Inverse</button></span><span></span><span class="ctl"><output></output><input type="range" min="0" max="60" step="0.5" aria-label="Radius, bottom right"></span></div>
+        <div class="corner-row" data-c="3"><span class="lab">BL</span><span class="opts"><button type="button" data-v="round">Round</button><button type="button" data-v="bevel">Bevel</button><button type="button" data-v="inverse">Inverse</button></span><span></span><span class="ctl"><output></output><input type="range" min="0" max="60" step="0.5" aria-label="Radius, bottom left"></span></div>
+      </div>
+    </section>
+  </aside>
 </div>
+<div class="tag" id="hovtag" hidden></div>
 
 <div class="drop" id="drop" hidden>Drop to add fonts</div>
 <div class="toast" id="toast" role="status" hidden></div>
@@ -391,6 +542,10 @@ dialog::backdrop { background: rgba(255, 255, 255, .7); }
       <section><h4>Even gaps</h4><p>Where neighbouring letters come from different fonts, their sidebearings differ and the gaps look uneven. Even gaps adjusts the left letter's tracking so the gap moves halfway between the spacing of the two fonts it joins, instead of jumping from one to the other. It exports as tracking.</p></section>
       <section><h4>Match size</h4><p>Different families at the same point size look different sizes. x-height or Cap height scales each letter's font so its lowercase x or capital H is as tall as in the base style (limited to 60–160%). It is written as the letter's point size, so it stays editable; leading follows the nominal size.</p></section>
       <section><h4>Letter align</h4><p>Top, middle and bottom alignment are written as baseline shift values. If you change a letter or its font afterwards, export again to re-align.</p></section>
+      <section><h4>Right panel</h4><p>Selecting letters opens it with their font, size, shift and tracking at the top, then weight, align, <b>rotation</b>, <b>fill</b> and <b>boxes</b>. With nothing selected, the handle on the right edge opens the paragraph settings: hover info, the paragraph band, random letter boxes.</p></section>
+      <section><h4>Boxes</h4><p>Letter boxes follow each letter's ink, size and shift, and turn with it. A band runs under the selection, as tall as its tallest letter or stepping with each one; the paragraph band does the same for every line. Greys only. They export under the text as vector shapes: InDesign rectangles keep live corner options, Illustrator and Photoshop get the exact path.</p></section>
+      <section><h4>Outline and rotation</h4><p>Outline letters export as live text with no fill and a black stroke; rotation as character rotation, about the centre of the em box. Photoshop can do neither per letter inside one type layer, so those letters become their own type layers (outline as a layer-style stroke) and the main layer keeps a space of the same width.</p></section>
+      <section><h4>Guides</h4><p>Baseline, x-height, cap height and ascender of the base style at the set size. Tick Include guides to export them as plain lines on their own layer or group.</p></section>
     </div>
     <footer><span></span><button class="btn solid" value="close">Close</button></footer>
   </form>
@@ -453,6 +608,7 @@ dialog::backdrop { background: rgba(255, 255, 255, .7); }
   tf.textRange.paragraphAttributes.justification =
     D.align == 'center' ? Justification.CENTER : (D.align == 'right' ? Justification.RIGHT : Justification.LEFT);
 
+  function grey(v) { var c = new GrayColor(); c.gray = v; return c; }
   var chars = tf.textRange.characters, n = chars.length, j = 0;
   for (var k = 0; k < n && j < flat.length; k++) {
     var c = chars[k], cc = c.contents;
@@ -462,6 +618,8 @@ dialog::backdrop { background: rgba(255, 255, 255, .7); }
     if (g[2] !== D.size) ca.size = g[2];
     if (g[3] !== 0) ca.baselineShift = g[3];
     if (g[4] !== D.track) ca.tracking = g[4];
+    if (g[5]) ca.rotation = g[5];
+    if (g[6]) { ca.fillColor = new NoColor(); ca.strokeColor = grey(100); ca.strokeWeight = g[6]; }
   }
 
   try {
@@ -470,6 +628,41 @@ dialog::backdrop { background: rgba(255, 255, 255, .7); }
     tf.translate((ab[0] + ab[2]) / 2 - (gb[0] + gb[2]) / 2, (ab[1] + ab[3]) / 2 - (gb[1] + gb[3]) / 2);
   } catch (e) {}
   tf.name = 'Mixweight';
+
+  // Boxes and guides. Their numbers are x from the text block's left edge and y down from line k's baseline;
+  // the anchor is the start of the first baseline, and the block's left edge sits align × width to its left.
+  var an = tf.anchor, fx = D.align == 'center' ? 0.5 : (D.align == 'right' ? 1 : 0);
+  function pt(x, y, k) { return [an[0] - fx * D.W + x, an[1] - k * D.lead - y]; }
+  if (D.shapes.length) {
+    var grp = doc.groupItems.add();
+    grp.name = 'Mixweight boxes';
+    for (var b = 0; b < D.shapes.length; b++) {
+      var sh = D.shapes[b], pa = grp.pathItems.add();
+      for (var q = 0; q < sh.p.length; q++) {
+        var v = sh.p[q], pp = pa.pathPoints.add();
+        pp.anchor = pt(v[0], v[1], sh.k);
+        pp.leftDirection = pt(v[2], v[3], sh.k);
+        pp.rightDirection = pt(v[4], v[5], sh.k);
+        pp.pointType = PointType.CORNER;
+      }
+      pa.closed = true;
+      pa.filled = true; pa.fillColor = grey(sh.f);
+      if (sh.sw > 0) { pa.stroked = true; pa.strokeColor = grey(sh.s); pa.strokeWidth = sh.sw; } else pa.stroked = false;
+      if (sh.op < 100) pa.opacity = sh.op;
+      pa.name = sh.n;
+    }
+    grp.move(tf, ElementPlacement.PLACEAFTER);
+  }
+  if (D.guides.length) {
+    var gl = doc.layers.add();
+    gl.name = 'Mixweight guides';
+    for (var u = 0; u < D.guides.length; u++) {
+      var G = D.guides[u], li = gl.pathItems.add();
+      li.setEntirePath([pt(G.x0, G.y, G.k), pt(G.x1, G.y, G.k)]);
+      li.filled = false; li.stroked = true; li.strokeColor = grey(35); li.strokeWidth = 0.5;
+      li.name = G.n;
+    }
+  }
   try { doc.selection = null; tf.selected = true; } catch (e) {}
   if (missing.length) alert(MSG.missing + '\n\n' + missing.join('\n'));
 })();
@@ -543,15 +736,19 @@ dialog::backdrop { background: rgba(255, 255, 255, .7); }
     all.tracking = D.track;
     try { all.fillColor = doc.swatches.itemByName('Black'); } catch (e) {}
 
-    var chars = st.characters.everyItem().getElements(), j = 0;
+    var sw = doc.swatches;
+    var chars = st.characters.everyItem().getElements(), j = 0, refs = [];
     for (var c = 0; c < chars.length && j < flat.length; c++) {
       var ch = chars[c], cc = ch.contents;
       if (typeof cc !== 'string' || cc === '\r' || cc === '\n') continue;
-      var g = flat[j++];
+      var g = flat[j];
+      refs[j++] = ch;
       if (g[1] !== 0 && resolved[g[1]]) ch.appliedFont = resolved[g[1]];
       if (g[2] !== D.size) ch.pointSize = g[2];
       if (g[3] !== 0) ch.baselineShift = g[3];
       if (g[4] !== D.track) ch.tracking = g[4];
+      if (g[5]) ch.characterRotation = g[5];
+      if (g[6]) { ch.fillColor = sw.itemByName('None'); ch.strokeColor = sw.itemByName('Black'); ch.strokeWeight = g[6]; }
     }
 
     try {
@@ -561,6 +758,77 @@ dialog::backdrop { background: rgba(255, 255, 255, .7); }
       tp.autoSizingType = AutoSizingTypeEnum.HEIGHT_AND_WIDTH;
     } catch (e) {}
     tf.name = 'Mixweight';
+    try { st.recompose(); } catch (e) {}
+
+    // Boxes and guides hang on the composed letters: x from the letter's own position (its x in the data is ox),
+    // y down from the baseline of its line.
+    function at(o) { var r = refs[o.j]; return [r.horizontalOffset - o.ox, r.lines[0].baseline]; }
+    function grey(it, prop, v) {
+      if (v <= 0) it[prop + 'Color'] = sw.itemByName('Paper');
+      else { it[prop + 'Color'] = sw.itemByName('Black'); it[prop + 'Tint'] = v; }
+    }
+    var CO = { round: CornerOptions.ROUNDED_CORNER, bevel: CornerOptions.BEVEL_CORNER, inverse: CornerOptions.INVERSE_ROUNDED_CORNER };
+    var CN = ['topLeft', 'topRight', 'bottomRight', 'bottomLeft'];
+    // A rectangle with InDesign's own corner options, so the corners stay editable there.
+    function nativeRect(sh, o) {
+      var R = sh.r, rc = page.rectangles.add({ geometricBounds: [o[1] + R.y0, o[0] + R.x0, o[1] + R.y1, o[0] + R.x1] });
+      try {
+        for (var q = 0; q < 4; q++) {
+          var cr = R.c[q];
+          if (cr[1] > 0) { rc[CN[q] + 'CornerOption'] = CO[cr[0]]; rc[CN[q] + 'CornerRadius'] = cr[1]; }
+          else rc[CN[q] + 'CornerOption'] = CornerOptions.NONE;
+        }
+        if (R.rot) {
+          rc.transform(CoordinateSpaces.PASTEBOARD_COORDINATES, AnchorPoint.CENTER_ANCHOR,
+            app.transformationMatrices.add({ counterclockwiseRotationAngle: R.rot }));
+          rc.move(undefined, [R.dx, R.dy]);
+        }
+      } catch (e) { rc.remove(); throw e; }
+      return rc;
+    }
+    function pathShape(sh, o) {
+      var pg = page.polygons.add(), pts = [];
+      for (var q = 0; q < sh.p.length; q++) {
+        var v = sh.p[q];
+        pts.push([[o[0] + v[2], o[1] + v[3]], [o[0] + v[0], o[1] + v[1]], [o[0] + v[4], o[1] + v[5]]]);
+      }
+      pg.paths[0].entirePath = pts;
+      pg.paths[0].pathType = PathType.CLOSED_PATH;
+      return pg;
+    }
+    var boxes = [];
+    for (var bi = 0; bi < D.shapes.length; bi++) {
+      var sh = D.shapes[bi], o = at(sh), it = null;
+      if (sh.r) { try { it = nativeRect(sh, o); } catch (e) { it = null; } }
+      if (!it) it = pathShape(sh, o);
+      grey(it, 'fill', sh.f);
+      if (sh.sw > 0) {
+        grey(it, 'stroke', sh.s);
+        it.strokeWeight = sh.sw;
+        try { it.strokeAlignment = StrokeAlignment.CENTER_ALIGNMENT; } catch (e) {}
+      } else { it.strokeColor = sw.itemByName('None'); it.strokeWeight = 0; }
+      if (sh.op < 100) it.transparencySettings.blendingSettings.opacity = sh.op;
+      it.name = sh.n;
+      boxes.push(it);
+    }
+    if (boxes.length) {
+      var bg = boxes.length > 1 ? page.groups.add(boxes) : boxes[0];
+      if (boxes.length > 1) bg.name = 'Mixweight boxes';
+      try { bg.sendToBack(tf); } catch (e) { try { bg.sendToBack(); } catch (e2) {} }
+    }
+    if (D.guides.length) {
+      var gl = doc.layers.itemByName('Mixweight guides');
+      if (!gl.isValid) gl = doc.layers.add({ name: 'Mixweight guides' });
+      var gls = [];
+      for (var u = 0; u < D.guides.length; u++) {
+        var G = D.guides[u], go = at(G), ln = page.graphicLines.add({ itemLayer: gl });
+        ln.paths[0].entirePath = [[go[0] + G.x0, go[1] + G.y], [go[0] + G.x1, go[1] + G.y]];
+        ln.strokeWeight = 0.5; ln.strokeColor = sw.itemByName('Black'); ln.strokeTint = 35;
+        ln.name = G.n;
+        gls.push(ln);
+      }
+      if (gls.length > 1) page.groups.add(gls, gl).name = 'Mixweight guides';
+    }
     try { tf.select(); } catch (e) {}
     if (missing.length) alert(MSG.missing + '\n\n' + missing.join('\n'));
   }
@@ -666,7 +934,155 @@ dialog::backdrop { background: rgba(255, 255, 255, .7); }
 
     desc.putObject(c2t('Usng'), s2t('textLayer'), td);
     executeAction(c2t('Mk  '), desc, DialogModes.NO);
-    try { doc.activeLayer.name = 'Mixweight'; } catch (e) {}
+    var main = doc.activeLayer;
+    try { main.name = 'Mixweight'; } catch (e) {}
+
+    // Positions: x from the text block's left edge, y down from line k's baseline (72 ppi, so px = pt).
+    var fx = D.align == 'center' ? 0.5 : (D.align == 'right' ? 1 : 0);
+    var ax = px / 100 * D.w - fx * D.W, ay = D.m + D.size;
+    function rgb(v) {
+      var c = new ActionDescriptor(), x = Math.round(255 * (1 - v / 100));
+      c.putDouble(c2t('Rd  '), x); c.putDouble(c2t('Grn '), x); c.putDouble(c2t('Bl  '), x);
+      return c;
+    }
+    // A layer-style stroke on the active layer: for outline letters, and for boxes if a vector stroke fails.
+    function fxStroke(w, v) {
+      var d = new ActionDescriptor(), r = new ActionReference();
+      r.putProperty(c2t('Prpr'), c2t('Lefx'));
+      r.putEnumerated(c2t('Lyr '), c2t('Ordn'), c2t('Trgt'));
+      d.putReference(c2t('null'), r);
+      var fxd = new ActionDescriptor(), st = new ActionDescriptor();
+      fxd.putUnitDouble(c2t('Scl '), c2t('#Prc'), 100);
+      st.putBoolean(c2t('enab'), true);
+      st.putEnumerated(c2t('Styl'), c2t('FStl'), c2t('CtrF'));
+      st.putEnumerated(c2t('PntT'), c2t('FrFl'), c2t('SClr'));
+      st.putEnumerated(c2t('Md  '), c2t('BlnM'), c2t('Nrml'));
+      st.putUnitDouble(c2t('Opct'), c2t('#Prc'), 100);
+      st.putUnitDouble(c2t('Sz  '), c2t('#Pxl'), Math.max(1, Math.round(w)));
+      st.putObject(c2t('Clr '), c2t('RGBC'), rgb(v));
+      fxd.putObject(c2t('FrFX'), c2t('FrFX'), st);
+      d.putObject(c2t('T   '), c2t('Lefx'), fxd);
+      executeAction(c2t('setd'), d, DialogModes.NO);
+    }
+    // A shape layer (solid fill + vector mask) from subpaths of [ax, ay, inX, inY, outX, outY] points.
+    function shape(subs, fill, name) {
+      var infos = [];
+      for (var i = 0; i < subs.length; i++) {
+        var pts = [];
+        for (var q = 0; q < subs[i].length; q++) {
+          var v = subs[i][q], pp = new PathPointInfo();
+          pp.kind = PointKind.CORNERPOINT;
+          pp.anchor = [v[0], v[1]]; pp.leftDirection = [v[2], v[3]]; pp.rightDirection = [v[4], v[5]];
+          pts.push(pp);
+        }
+        var sp = new SubPathInfo();
+        sp.closed = true; sp.operation = ShapeOperation.SHAPEADD; sp.entireSubPath = pts;
+        infos.push(sp);
+      }
+      var pi = doc.pathItems.add('Mixweight path', infos);
+      pi.select();
+      var d = new ActionDescriptor(), r = new ActionReference();
+      r.putClass(s2t('contentLayer'));
+      d.putReference(c2t('null'), r);
+      var cl = new ActionDescriptor(), t = new ActionDescriptor();
+      t.putObject(c2t('Clr '), c2t('RGBC'), rgb(fill));
+      cl.putObject(c2t('Type'), s2t('solidColorLayer'), t);
+      d.putObject(c2t('Usng'), s2t('contentLayer'), cl);
+      executeAction(c2t('Mk  '), d, DialogModes.NO);
+      try { pi.remove(); } catch (e) {}
+      var L = doc.activeLayer;
+      L.name = name;
+      return L;
+    }
+    function shapeStroke(w, v) {
+      try {
+        var d = new ActionDescriptor(), r = new ActionReference();
+        r.putEnumerated(s2t('contentLayer'), c2t('Ordn'), c2t('Trgt'));
+        d.putReference(c2t('null'), r);
+        var ss = new ActionDescriptor(), sc = new ActionDescriptor(), t = new ActionDescriptor();
+        ss.putInteger(s2t('strokeStyleVersion'), 2);
+        ss.putBoolean(s2t('strokeEnabled'), true);
+        ss.putBoolean(s2t('fillEnabled'), true);
+        ss.putUnitDouble(s2t('strokeStyleLineWidth'), c2t('#Pnt'), w);
+        ss.putEnumerated(s2t('strokeStyleLineAlignment'), s2t('strokeStyleLineAlignment'), s2t('strokeStyleAlignCenter'));
+        sc.putObject(c2t('Clr '), c2t('RGBC'), rgb(v));
+        ss.putObject(s2t('strokeStyleContent'), s2t('solidColorLayer'), sc);
+        t.putObject(s2t('strokeStyle'), s2t('strokeStyle'), ss);
+        d.putObject(c2t('T   '), s2t('shapeStyle'), t);
+        executeAction(c2t('setd'), d, DialogModes.NO);
+      } catch (e) { fxStroke(w, v); }
+    }
+    function place(v, k) {
+      var y0 = ay + k * D.lead;
+      return [ax + v[0], y0 + v[1], ax + v[2], y0 + v[3], ax + v[4], y0 + v[5]];
+    }
+
+    // Boxes: one shape layer each, in a group under the text.
+    if (D.shapes.length) {
+      var boxSet = doc.layerSets.add();
+      boxSet.name = 'Mixweight boxes';
+      for (var b = D.shapes.length - 1; b >= 0; b--) {
+        var sh = D.shapes[b], pts = [];
+        for (var q = 0; q < sh.p.length; q++) pts.push(place(sh.p[q], sh.k));
+        var L = shape([pts], sh.f, sh.n);
+        if (sh.sw > 0) shapeStroke(sh.sw, sh.s);
+        if (sh.op < 100) L.opacity = sh.op;
+        L.move(boxSet, ElementPlacement.PLACEATEND);
+      }
+      try { boxSet.move(doc.layers[doc.layers.length - 1], ElementPlacement.PLACEBEFORE); } catch (e) {}
+    }
+
+    // Rotated and outline letters: their own type layers, above the main one.
+    if (D.sp.length) {
+      var black = new SolidColor();
+      black.rgb.red = 0; black.rgb.green = 0; black.rgb.blue = 0;
+      for (var u = 0; u < D.sp.length; u++) {
+        var G = D.sp[u];
+        doc.activeLayer = main;
+        var T = doc.artLayers.add();
+        T.kind = LayerKind.TEXT;
+        var ti = T.textItem;
+        ti.contents = G.ch;
+        ti.font = resolved[G.f];
+        ti.size = G.size;
+        ti.color = black;
+        if (G.tr) ti.tracking = G.tr;
+        if (G.bs) ti.baselineShift = G.bs;
+        var by = ay + G.k * D.lead;
+        ti.position = [ax + G.x, by];
+        T.name = G.ch;
+        if (G.rot) {
+          // Rotate about the letter's em-box centre: rotate about the layer's centre, then move by the difference.
+          var bb = T.bounds, cx = (bb[0].as('px') + bb[2].as('px')) / 2, cy = (bb[1].as('px') + bb[3].as('px')) / 2;
+          var PX = ax + G.px, PY = by + G.py, a = G.rot * Math.PI / 180, co = Math.cos(a), si = Math.sin(a);
+          var vx = PX - cx, vy = PY - cy;
+          T.rotate(-G.rot, AnchorPosition.MIDDLECENTER);
+          T.translate(vx - (vx * co + vy * si), vy - (-vx * si + vy * co));
+        }
+        if (G.sw) { T.fillOpacity = 0; fxStroke(G.sw, 100); }
+      }
+    }
+
+    // Guides: one shape layer per kind (1 px lines), in a group on top.
+    if (D.guides.length) {
+      var kinds = {}, order = [];
+      for (var gi = 0; gi < D.guides.length; gi++) {
+        var g = D.guides[gi], nm = g.n.replace(/ \d+$/, ''), y = ay + g.k * D.lead + g.y;
+        if (!kinds[nm]) { kinds[nm] = []; order.push(nm); }
+        var x0 = ax + g.x0, x1 = ax + g.x1, t0 = y - 0.5, t1 = y + 0.5;
+        kinds[nm].push([[x0, t0, x0, t0, x0, t0], [x1, t0, x1, t0, x1, t0], [x1, t1, x1, t1, x1, t1], [x0, t1, x0, t1, x0, t1]]);
+      }
+      doc.activeLayer = main;
+      var gSet = doc.layerSets.add();
+      gSet.name = 'Mixweight guides';
+      for (var o = 0; o < order.length; o++) {
+        doc.activeLayer = main;
+        var GL = shape(kinds[order[o]], 45, order[o]);
+        GL.move(gSet, ElementPlacement.PLACEATEND);
+      }
+      try { gSet.move(doc.layers[0], ElementPlacement.PLACEBEFORE); } catch (e) {}
+    }
+    try { doc.activeLayer = main; } catch (e) {}
   } finally {
     app.preferences.rulerUnits = oldRuler;
     app.preferences.typeUnits = oldType;
@@ -703,13 +1119,38 @@ const DEFAULTS = {
   mix: 70, dist: 'uniform', wavePeriod: 13, gran: 'glyph', valign: 'baseline',
   size: 44, leading: 92, sizeVar: 18, baseJit: 4, trackJit: 30, track: -10, match: 'off', gaps: 0,
   align: 'left', seed: 1952,
+  outlineAmt: 0, outlineSeed: 7, strokeW: 1,
+  guides: { base: false, x: false, cap: false, asc: false },
+  hoverInfo: true,
+  boxAmt: 30, boxSeed: 11,
+  boxStyle: defaultBoxStyle(),            // style for new boxes; follows the last box style edit
+  bandFit: 'max',                         // height for new bands: 'max' (tallest letter) or 'each'
+  bands: [],                              // {a, b, fit, dh, st}: a–b are letter indices, inclusive
+  para: { on: false, fit: 'max', dh: 0, st: defaultBoxStyle() },
 };
-const S = Object.assign({}, DEFAULTS, {
+// Box style. Greys are ink %: 0 white, 100 black. Corners run TL, TR, BR, BL; s is round, bevel or inverse.
+function defaultBoxStyle() {
+  return { fill: 13, stroke: 0, sw: 0, op: 100, pad: 2, lock: true, c: [0, 1, 2, 3].map(() => ({ s: 'round', r: 0 })) };
+}
+function normStyle(o) {
+  const d = defaultBoxStyle();
+  if (!o || typeof o !== 'object') return d;
+  for (const k of ['fill', 'stroke', 'sw', 'op', 'pad']) if (typeof o[k] === 'number' && isFinite(o[k])) d[k] = o[k];
+  d.lock = o.lock !== false;
+  if (Array.isArray(o.c)) o.c.slice(0, 4).forEach((c, q) => {
+    if (c && ['round', 'bevel', 'inverse'].includes(c.s)) d.c[q].s = c.s;
+    if (c && typeof c.r === 'number' && isFinite(c.r)) d.c[q].r = Math.max(0, c.r);
+  });
+  return d;
+}
+const S = Object.assign(structuredClone(DEFAULTS), {
   zoom: 1,
   styles: new Map(),      // id -> style
   families: [],           // {name, ids:[], on:Set, source, variable}
   baseId: null,
-  overrides: new Map(),   // glyph index -> {style?: id, va?: 'baseline'|'top'|'middle'|'bottom'}
+  // glyph index -> {style?: id, va?: 'baseline'|'top'|'middle'|'bottom', fill?: 'solid'|'outline', sw?: pt,
+  //                 rot?: deg, ra?: jitter deg, ru?: jitter unit −1…1, box?: box style}
+  overrides: new Map(),
   sel: new Set(),
   anchor: null,
   lines: [],
@@ -956,7 +1397,7 @@ function removeFamily(name) {
   record();
   for (const id of fam.ids) S.styles.delete(id);
   S.families = S.families.filter(f => f !== fam);
-  for (const [k, v0] of [...S.overrides]) if (v0.style && !S.styles.has(v0.style)) { const v = Object.assign({}, v0); delete v.style; if (v.va) S.overrides.set(k, v); else S.overrides.delete(k); }
+  for (const [k, v0] of [...S.overrides]) if (v0.style && !S.styles.has(v0.style)) { const v = Object.assign({}, v0); delete v.style; if (!ovEmpty(v)) S.overrides.set(k, v); else S.overrides.delete(k); }
   if (!S.styles.has(S.baseId)) S.baseId = pickDefaultBase();
   refreshAll();
 }
@@ -1083,7 +1524,12 @@ function compute() {
     const jit = r1(S.baseJit * (2 * rnd(seed, unit, 3) - 1));
     const tr = Math.round(S.track + S.trackJit * (2 * rnd(seed, unit, 4) - 1));
     const va = (ov && ov.va) || S.valign;
-    lines[lines.length - 1].push({ i, ch, st, size, jit, tr, va, bs: 0, ov: !!(ov && (ov.style || ov.va)) });
+    // Outline: the letter's own setting, else a share of letters picked by the outline seed.
+    const outl = !space && (ov && ov.fill ? ov.fill === 'outline' : S.outlineAmt > 0 && rnd(S.outlineSeed, i, 8) < S.outlineAmt / 100);
+    const sw = outl ? Math.max(0.25, (ov && typeof ov.sw === 'number') ? ov.sw : S.strokeW) : 0;
+    const rot = ov ? r1((ov.rot || 0) + (ov.ra || 0) * (ov.ru || 0)) : 0;
+    const box = !space && ov && ov.box ? ov.box : null;
+    lines[lines.length - 1].push({ i, ch, st, size, jit, tr, va, bs: 0, sw, rot, box, ov: !ovEmpty(ov) });
     pos++; linePos++;
   });
   for (const line of lines) { if (S.gaps) evenGaps(line); alignLine(line); }
@@ -1126,14 +1572,20 @@ function alignLine(line) {
 }
 
 /* ---------------- render ---------------- */
-const out = $('#out');
+const out = $('#out'), deco = $('#deco');
+// Rotated letters turn on the centre of their em box: half the advance across, 0.38 em above the baseline
+// (Adobe's em box runs −0.12 … 0.88 em). The same point is used on the canvas, for boxes and in all three exports.
+const ROT_PIVOT = 0.38;
+const r2 = v => Math.round(v * 100) / 100;
 function render() {
   const lines = compute();
   S.lines = lines;
+  S.gmap = new Map(lines.flat().map(g => [g.i, g]));
   const lead = r1(S.size * S.leading / 100);
   out.style.textAlign = S.align;
   if (!S.styles.size) {
     out.innerHTML = '<p class="placeholder">Add fonts to start: Installed fonts in the top bar, or drop font files on the page.</p>';
+    S.lb = []; deco.replaceChildren();
     corners(); renderInspector(); return;
   }
   const frag = document.createDocumentFragment();
@@ -1142,9 +1594,12 @@ function render() {
     div.className = 'ln';
     div.style.height = lead + 'px';
     div.style.lineHeight = lead + 'px';
+    const bl = document.createElement('i'); // zero-size marker: its bottom is the line's baseline
+    bl.className = 'bl';
+    div.appendChild(bl);
     for (const g of line) {
       const sp = document.createElement('span');
-      sp.className = 'g' + (g.ov ? ' ov' : '') + (S.sel.has(g.i) ? ' sel' : '');
+      sp.className = 'g' + (g.ov ? ' ov' : '') + (S.sel.has(g.i) ? ' sel' : '') + (g.rot ? ' rot' : '') + (g.sw ? ' stroke' : '');
       sp.textContent = g.ch;
       sp.dataset.i = g.i;
       const st = sp.style;
@@ -1153,14 +1608,208 @@ function render() {
       st.fontSize = g.size + 'px';
       st.letterSpacing = (g.tr / 1000) + 'em';
       if (g.bs) st.top = (-g.bs) + 'px';
-      sp.title = `${g.st.family} ${g.st.style} · ${g.size} pt` + (g.bs ? ` · shift ${g.bs}` : '') + (g.tr ? ` · tracking ${g.tr}` : '') + (g.va !== 'baseline' ? ` · ${g.va}` : '');
+      if (g.sw) st.webkitTextStrokeWidth = g.sw + 'px';
       div.appendChild(sp);
     }
     frag.appendChild(div);
   }
   out.replaceChildren(frag);
+  layout();
+  drawDeco();
   corners();
   renderInspector();
+  refreshHover();
+}
+
+// Measure every letter as laid out (unzoomed px = pt): x from the text block's left edge, its advance, its line's
+// baseline. Boxes, guides and the exports all work from these numbers. Rotation is applied after measuring.
+function layout() {
+  const z = S.zoom || 1, o = out.getBoundingClientRect();
+  S.W = o.width / z; S.lb = []; S.lw = [];
+  [...out.querySelectorAll('.ln')].forEach((ln, k) => {
+    S.lb[k] = (ln.firstChild.getBoundingClientRect().bottom - o.top) / z;
+    let x0 = Infinity, x1 = -Infinity;
+    for (const sp of ln.querySelectorAll('.g')) {
+      const g = S.gmap.get(+sp.dataset.i), r = sp.getBoundingClientRect();
+      g.k = k;
+      g.x = (r.left - o.left) / z;
+      g.w = r.width / z;
+      g.adv = g.w - g.tr / 1000 * g.size;
+      g.y = (r.top - o.top) / z;
+      x0 = Math.min(x0, g.x); x1 = Math.max(x1, g.x + g.w);
+    }
+    S.lw[k] = x1 > x0 ? x1 - x0 : 0;
+  });
+  for (const sp of out.querySelectorAll('.g.rot')) {
+    const g = S.gmap.get(+sp.dataset.i);
+    sp.style.transformOrigin = `${r2(g.adv / 2)}px ${r2(S.lb[g.k] - g.bs - ROT_PIVOT * g.size - g.y)}px`;
+    sp.style.transform = `rotate(${-g.rot}deg)`; // positive = counterclockwise, as in Illustrator and InDesign
+  }
+}
+
+/* ---------------- boxes and guides: geometry ---------------- */
+// All shapes are in block coordinates: x from the text block's left edge, y down from the baseline of line k.
+// A path is a list of nodes {a, l, r}: anchor, incoming and outgoing handle, each [x, y].
+const KAPPA = 0.5523;
+const greyRGB = v => Math.round(255 * (1 - clamp(v, 0, 100) / 100));
+const greyHex = v => { const c = greyRGB(v).toString(16).padStart(2, '0'); return '#' + c + c + c; };
+// The letter's ink, top and bottom, y down from the baseline, baseline shift included. null for blank glyphs.
+const inkExt = g => g.inkTop == null ? null : { t: -(g.inkTop + g.bs), b: -(g.inkBot + g.bs) };
+const pivotOf = g => [g.x + g.adv / 2, -(g.bs + ROT_PIVOT * g.size)];
+function rotPt(p, P, deg) {
+  const a = deg * Math.PI / 180, c = Math.cos(a), s = Math.sin(a), dx = p[0] - P[0], dy = p[1] - P[1];
+  return [P[0] + dx * c + dy * s, P[1] - dx * s + dy * c]; // counterclockwise on screen (y down)
+}
+// verts: [{x, y, c: {s, r} | null}], closed. Corners are cut back along both edges (at most half of each).
+function cornerPath(verts) {
+  const n = verts.length, nodes = [];
+  verts.forEach((v, i) => {
+    const pv = verts[(i + n - 1) % n], nv = verts[(i + 1) % n];
+    const lin = Math.hypot(v.x - pv.x, v.y - pv.y), lout = Math.hypot(nv.x - v.x, nv.y - v.y);
+    const r = v.c ? Math.min(v.c.r, lin / 2, lout / 2) : 0;
+    const V = [v.x, v.y];
+    if (!(r > 0.01) || !lin || !lout) { nodes.push({ a: V, l: V, r: V }); return; }
+    const di = [(v.x - pv.x) / lin, (v.y - pv.y) / lin], dout = [(nv.x - v.x) / lout, (nv.y - v.y) / lout];
+    const P1 = [v.x - di[0] * r, v.y - di[1] * r], P2 = [v.x + dout[0] * r, v.y + dout[1] * r];
+    const k = r * KAPPA;
+    if (v.c.s === 'bevel') { nodes.push({ a: P1, l: P1, r: P1 }, { a: P2, l: P2, r: P2 }); return; }
+    // Round: a quarter circle inside the corner. Inverse: a quarter circle centred on the corner point.
+    const h1 = v.c.s === 'inverse' ? dout : di, h2 = v.c.s === 'inverse' ? di : dout;
+    nodes.push({ a: P1, l: P1, r: [P1[0] + h1[0] * k, P1[1] + h1[1] * k] },
+               { a: P2, l: [P2[0] - h2[0] * k, P2[1] - h2[1] * k], r: P2 });
+  });
+  return nodes;
+}
+function rectVerts(x0, y0, x1, y1, c) {
+  return [{ x: x0, y: y0, c: c[0] }, { x: x1, y: y0, c: c[1] }, { x: x1, y: y1, c: c[2] }, { x: x0, y: y1, c: c[3] }];
+}
+// A rectangle, kept as such for InDesign's own corner options. rot / dx / dy: rotate about the rectangle's centre,
+// then move by (dx, dy), which is the same as rotating about the letter's pivot.
+function rectShape(k, g, st, x0, y0, x1, y1, name, rot, P) {
+  if (x1 - x0 < 0.1 || y1 - y0 < 0.1) return null;
+  const w = x1 - x0, h = y1 - y0;
+  let pts = cornerPath(rectVerts(x0, y0, x1, y1, st.c));
+  const rect = { x0, y0, x1, y1, c: st.c.map(c => [c.s, r2(Math.min(c.r, w / 2, h / 2))]), rot: 0, dx: 0, dy: 0 };
+  if (rot) {
+    pts = pts.map(nd => ({ a: rotPt(nd.a, P, rot), l: rotPt(nd.l, P, rot), r: rotPt(nd.r, P, rot) }));
+    const C = [(x0 + x1) / 2, (y0 + y1) / 2], RC = rotPt(C, P, rot);
+    Object.assign(rect, { rot, dx: RC[0] - C[0], dy: RC[1] - C[1] });
+  }
+  return { k, g, st, pts, rect, n: name };
+}
+function letterShape(g, st) {
+  const e = inkExt(g);
+  if (!e) return null;
+  const p = st.pad;
+  return rectShape(g.k, g, st, g.x - p, e.t - p, g.x + g.adv + p, e.b + p, 'Box ' + g.ch, g.rot, pivotOf(g));
+}
+// A straight band under a run of letters on one line. fit 'max': one rectangle as tall as the tallest letter;
+// 'each': steps up and down with each letter's own height. dh adds height, half above and half below.
+function bandShape(gs, fit, dh, st, name) {
+  const inked = gs.filter(g => g.inkTop != null);
+  if (!inked.length) return null;
+  const run = gs.slice(gs.indexOf(inked[0]), gs.indexOf(inked[inked.length - 1]) + 1);
+  const p = st.pad, first = run[0], last = run[run.length - 1];
+  const x0 = first.x - p, x1 = last.x + last.adv + p;
+  if (fit !== 'each') {
+    const ext = inked.map(inkExt);
+    const t = Math.min(...ext.map(e => e.t)) - p - dh / 2, b = Math.max(...ext.map(e => e.b)) + p + dh / 2;
+    return rectShape(first.k, first, st, x0, t, x1, b, name);
+  }
+  const cols = [];
+  let e = null;
+  run.forEach((g, q) => {
+    e = inkExt(g) || e;
+    const cx0 = q === 0 ? x0 : Math.max(g.x, cols.length ? cols[cols.length - 1].x1 : x0);
+    const cx1 = q === run.length - 1 ? x1 : Math.max(cx0, run[q + 1].x);
+    const t = e.t - p - dh / 2, b = e.b + p + dh / 2;
+    const prev = cols[cols.length - 1];
+    if (prev && Math.abs(prev.t - t) < 0.01 && Math.abs(prev.b - b) < 0.01) prev.x1 = cx1;
+    else if (cx1 > cx0 + 0.01 || !prev) cols.push({ x0: cx0, x1: cx1, t, b });
+    else prev.x1 = Math.max(prev.x1, cx1);
+  });
+  for (const c of cols) if (c.b - c.t < 0.1) return null;
+  const L = cols[cols.length - 1], v = [];
+  v.push({ x: cols[0].x0, y: cols[0].t, c: st.c[0] });
+  cols.forEach((c, q) => {
+    if (q > 0) v.push({ x: c.x0, y: cols[q - 1].t }, { x: c.x0, y: c.t });
+  });
+  v.push({ x: L.x1, y: L.t, c: st.c[1] }, { x: L.x1, y: L.b, c: st.c[2] });
+  for (let q = cols.length - 1; q > 0; q--) v.push({ x: cols[q].x0, y: cols[q].b }, { x: cols[q].x0, y: cols[q - 1].b });
+  v.push({ x: cols[0].x0, y: cols[0].b, c: st.c[3] });
+  // Drop repeated points and straight-through points; corners stay.
+  const clean = [];
+  for (const pnt of v) {
+    const q = clean[clean.length - 1];
+    if (q && Math.abs(q.x - pnt.x) < 0.01 && Math.abs(q.y - pnt.y) < 0.01) { q.c = q.c || pnt.c; continue; }
+    clean.push(Object.assign({}, pnt));
+  }
+  const vs = clean.filter((pnt, i) => {
+    if (pnt.c) return true;
+    const a = clean[(i + clean.length - 1) % clean.length], b = clean[(i + 1) % clean.length];
+    return !((Math.abs(a.x - pnt.x) < 0.01 && Math.abs(b.x - pnt.x) < 0.01) || (Math.abs(a.y - pnt.y) < 0.01 && Math.abs(b.y - pnt.y) < 0.01));
+  });
+  return { k: first.k, g: first, st, pts: cornerPath(vs), rect: null, n: name };
+}
+// Every box, bottom to top: paragraph band, bands, letter boxes.
+function decoShapes() {
+  const res = [];
+  if (!S.lb || !S.lb.length) return res;
+  const add = sh => { if (sh) res.push(sh); };
+  if (S.para.on) S.lines.forEach((line, k) => add(bandShape(line, S.para.fit, S.para.dh, S.para.st, 'Paragraph band ' + (k + 1))));
+  for (const b of S.bands) for (const line of S.lines) {
+    const gs = line.filter(g => g.i >= b.a && g.i <= b.b);
+    if (gs.length) add(bandShape(gs, b.fit, b.dh, b.st, 'Band'));
+  }
+  for (const line of S.lines) for (const g of line) if (g.box) add(letterShape(g, g.box));
+  return res;
+}
+const GUIDES = [
+  { key: 'base', name: 'Baseline', ch: null, dash: '' },
+  { key: 'x', name: 'x-height', ch: 'x', dash: '3 3' },
+  { key: 'cap', name: 'Cap height', ch: 'H', dash: '1 3' },
+  { key: 'asc', name: 'Ascender', ch: 'd', dash: '6 3' },
+];
+// Guides use the base style at the set size, one set per line with text, across the whole text block.
+function guideLines() {
+  const base = S.styles.get(S.baseId), res = [];
+  if (!base || !S.lb || !S.lb.length) return res;
+  for (const G of GUIDES) {
+    if (!S.guides[G.key]) continue;
+    let y = 0;
+    if (G.ch) { const k = ink(base, G.ch); if (!k) continue; y = -k.top * S.size; }
+    S.lines.forEach((line, k) => {
+      if (line.length) res.push({ k, g: line[0], y, x0: -6, x1: S.W + 6, n: `${G.name} ${k + 1}`, dash: G.dash });
+    });
+  }
+  return res;
+}
+function svgPath(nodes, by) {
+  const f = p => `${r2(p[0])} ${r2(p[1] + by)}`;
+  let d = 'M' + f(nodes[0].a);
+  nodes.forEach((nd, i) => { const nx = nodes[(i + 1) % nodes.length]; d += `C${f(nd.r)} ${f(nx.l)} ${f(nx.a)}`; });
+  return d + 'Z';
+}
+function drawDeco() {
+  const ns = 'http://www.w3.org/2000/svg', frag = document.createDocumentFragment();
+  for (const sh of decoShapes()) {
+    const el = document.createElementNS(ns, 'path'), st = sh.st;
+    el.setAttribute('d', svgPath(sh.pts, S.lb[sh.k]));
+    el.setAttribute('fill', greyHex(st.fill));
+    if (st.op < 100) el.setAttribute('opacity', st.op / 100);
+    if (st.sw > 0) { el.setAttribute('stroke', greyHex(st.stroke)); el.setAttribute('stroke-width', st.sw); }
+    frag.appendChild(el);
+  }
+  for (const gl of guideLines()) {
+    const el = document.createElementNS(ns, 'line'), y = r2(S.lb[gl.k] + gl.y);
+    el.setAttribute('class', 'gd');
+    el.setAttribute('x1', gl.x0); el.setAttribute('x2', r2(gl.x1)); el.setAttribute('y1', y); el.setAttribute('y2', y);
+    if (gl.dash) el.setAttribute('stroke-dasharray', gl.dash);
+    frag.appendChild(el);
+  }
+  deco.setAttribute('width', Math.ceil(S.W || 0));
+  deco.setAttribute('height', Math.ceil(out.getBoundingClientRect().height / (S.zoom || 1)));
+  deco.replaceChildren(frag);
 }
 
 function corners() {
@@ -1179,7 +1828,7 @@ function corners() {
   $('#c-tl').textContent = S.families.map(f => f.name).join(' + ') || 'No fonts';
   $('#c-tr').textContent = `${S.size} / ${r1(S.size * S.leading / 100)} pt · ${S.valign}`;
   let edits = 0;
-  for (const v of S.overrides.values()) if (v.style || v.va) edits++;
+  for (const v of S.overrides.values()) if (!ovEmpty(v)) edits++;
   $('#c-bl').textContent = `${glyphs} glyphs · ${used.size}/${pool.length} styles used · ${runs} runs` + (edits ? ` · ${edits} edited` : '');
   $('#seed-lbl').textContent = 'Seed ' + S.seed;
   $('#pool-count').textContent = S.styles.size ? `${pool.length} / ${S.styles.size} styles in mix` : '';
@@ -1191,6 +1840,10 @@ function corners() {
 const glyphList = () => S.lines.flat();
 function paintSelection() {
   for (const sp of out.querySelectorAll('.g')) sp.classList.toggle('sel', S.sel.has(+sp.dataset.i));
+  // Selecting opens the right panel; deselecting closes it again unless it was opened with the handle.
+  // Not mid-drag: opening narrows the canvas and the letters would move under the pointer.
+  if (S.sel.size) { if (!dragging) side.open = true; }
+  else if (!side.pinned) side.open = false;
   renderInspector();
 }
 function selectRange(a, b) {
@@ -1199,16 +1852,107 @@ function selectRange(a, b) {
 }
 function selectedGlyphs() { return glyphList().filter(g => S.sel.has(g.i)); }
 function ovFor(i) { const v = Object.assign({}, S.overrides.get(i) || {}); S.overrides.set(i, v); return v; }
-function cleanOv(i) { const v = S.overrides.get(i); if (v && !v.style && !v.va) S.overrides.delete(i); }
+function ovEmpty(v) { return !v || !Object.keys(v).some(k => v[k] !== undefined && v[k] !== null); }
+function cleanOv(i) {
+  const v = S.overrides.get(i);
+  if (!v) return;
+  for (const k of Object.keys(v)) if (v[k] === undefined || v[k] === null) delete v[k];
+  if (!v.ra) { delete v.ra; delete v.ru; }
+  if (!v.rot) delete v.rot;
+  if (ovEmpty(v)) S.overrides.delete(i);
+}
 
-let selFamily = null;
+let selFamily = null, dragging = false;
+const side = { open: false, pinned: false };
+function syncSide() {
+  const sel = S.sel.size > 0;
+  $('#side').hidden = !side.open;
+  $('#handle').hidden = side.open;
+  $('#side-sel').hidden = !sel;
+  $('#side-para').hidden = sel;
+  $('#side-title').textContent = sel ? 'Selection' : 'Paragraph';
+}
 function renderInspector() {
   const gs = selectedGlyphs();
   const on = gs.length > 0;
   $('#sel-count').textContent = on ? `${gs.length} letter${gs.length > 1 ? 's' : ''} selected` : 'No selection';
-  $('#sel-hint').hidden = on;
-  ['#sel-ctl-fam', '#sel-ctl-sty', '#sel-ctl-va', '#sel-acts'].forEach(s => { $(s).hidden = !on; });
-  if (!on) return;
+  $('#sel-hint').textContent = on ? 'Edit them in the right panel. Esc deselects.' : 'Click a letter, or drag across letters, to edit them. Shift extends, ⌘ adds.';
+  syncSide();
+  if (!side.open) return;
+  if (on) renderSelPanel(gs); else renderParaPanel();
+  renderBoxEditor(gs);
+}
+
+/* ---------------- hover info / selection info ---------------- */
+const sgn = (v, d) => (v > 0 ? '+' : '') + (d ? v.toFixed(d) : String(v));
+function tagRows(gs) {
+  const one = (f, fmt) => {
+    const vs = gs.map(f), lo = Math.min(...vs), hi = Math.max(...vs);
+    return lo === hi ? fmt(lo) : `${fmt(lo)} – ${fmt(hi)}`;
+  };
+  const same = f => { const v = new Set(gs.map(f)); return v.size === 1 ? [...v][0] : 'Mixed'; };
+  return [
+    same(g => g.st.family),
+    same(g => g.st.style),
+    one(g => g.size, v => v.toFixed(1)) + ' pt',
+    'Shift ' + one(g => g.bs, v => sgn(v, 1)),
+    'Track ' + one(g => g.tr, v => sgn(v)),
+  ];
+}
+function fillTag(el, rows) {
+  el.replaceChildren(...rows.map(t => { const s = document.createElement('span'); s.textContent = t; return s; }));
+}
+const hovtag = $('#hovtag');
+let hovI = null, hovPt = null;
+function hideTag() {
+  hovtag.hidden = true;
+  if (hovI != null) { const sp = out.querySelector(`.g[data-i="${hovI}"]`); if (sp) sp.classList.remove('hov'); }
+  hovI = null;
+}
+function placeTag() {
+  if (!hovPt) return;
+  const w = hovtag.offsetWidth, h = hovtag.offsetHeight;
+  let x = hovPt[0] + 13, y = hovPt[1] + 16; // below right of the pointer, as in the reference
+  if (x + w > innerWidth - 4) x = Math.max(4, hovPt[0] - 6 - w);
+  if (y + h > innerHeight - 4) y = Math.max(4, hovPt[1] - 8 - h);
+  hovtag.style.left = x + 'px'; hovtag.style.top = y + 'px';
+}
+function hoverAt(sp, e) {
+  const g = sp && S.gmap && S.gmap.get(+sp.dataset.i);
+  if (!S.hoverInfo || !g || /\s/.test(g.ch)) { hideTag(); return; }
+  hovPt = [e.clientX, e.clientY];
+  if (hovI !== g.i) {
+    hideTag();
+    hovI = g.i;
+    sp.classList.add('hov');
+    fillTag(hovtag, tagRows([g]));
+    hovtag.hidden = false;
+  }
+  placeTag();
+}
+// After a re-render, keep the tag on the same letter with its new values.
+function refreshHover() {
+  if (hovI == null) return;
+  const g = S.gmap.get(hovI), sp = out.querySelector(`.g[data-i="${hovI}"]`);
+  if (!S.hoverInfo || !g || !sp) { hovI = null; hovtag.hidden = true; return; }
+  sp.classList.add('hov');
+  fillTag(hovtag, tagRows([g]));
+  placeTag();
+}
+
+/* ---------------- right panel ---------------- */
+const press = (sel, v) => $$(sel + ' button').forEach(b => b.setAttribute('aria-pressed', b.dataset.v === v));
+const ovOf = g => S.overrides.get(g.i) || {};
+const selIdx = () => [...S.sel];
+const touchesSel = b => selIdx().some(i => i >= b.a && i <= b.b);
+const selBands = () => S.bands.filter(touchesSel);
+const setRange = (id, v, txt) => { const el = $('#' + id); if (document.activeElement !== el || el.type === 'range') el.value = v; const o = $('#' + id + '-o'); if (o && txt != null) o.textContent = txt; };
+const ptTxt = v => (v === 0 ? '0' : v) + ' pt';
+const dhTxt = v => (v > 0 ? '+' : '') + v + ' pt';
+let jitAmt = 6;
+
+function renderSelPanel(gs) {
+  fillTag($('#sel-info'), tagRows(gs));
   const fams = new Set(gs.map(g => g.st.family));
   const famSel = $('#sel-fam');
   famSel.innerHTML = '';
@@ -1231,8 +1975,97 @@ function renderInspector() {
     b.onclick = () => { record(); for (const g of selectedGlyphs()) ovFor(g.i).style = id; render(); save(); };
     host.appendChild(b);
   }
-  const vas = new Set(gs.map(g => (S.overrides.get(g.i) || {}).va || ''));
-  $$('#sel-va button').forEach(b => b.setAttribute('aria-pressed', vas.size === 1 && vas.has(b.dataset.v)));
+  const vas = new Set(gs.map(g => ovOf(g).va || ''));
+  press('#sel-va', vas.size === 1 ? [...vas][0] : null);
+
+  // rotate
+  const rots = new Set(gs.map(g => ovOf(g).rot || 0)), rot0 = ovOf(gs[0]).rot || 0;
+  $('#rot').value = rot0;
+  const rn = $('#rot-n');
+  if (document.activeElement !== rn) { rn.value = rots.size === 1 ? rot0 : ''; rn.placeholder = rots.size === 1 ? '' : 'Mixed'; }
+  const ra = gs.map(g => ovOf(g).ra || 0).find(v => v) || 0;
+  setRange('rjit', ra || jitAmt, '±' + (ra || 0) + '°');
+
+  // fill
+  const fills = new Set(gs.map(g => ovOf(g).fill || ''));
+  press('#sel-fill', fills.size === 1 ? [...fills][0] : null);
+  const nOut = gs.filter(g => g.sw).length;
+  $('#sel-fill-r').textContent = nOut ? `${nOut} outline` : 'All solid';
+  const swg = gs.find(g => g.sw);
+  setRange('sel-sw', swg ? swg.sw : S.strokeW, ptTxt(swg ? swg.sw : S.strokeW));
+
+  // box
+  const nBox = gs.filter(g => g.box).length, bands = selBands();
+  $('#sel-box-r').textContent = `${nBox} letter box${nBox === 1 ? '' : 'es'} · ${bands.length} band${bands.length === 1 ? '' : 's'}`;
+  $('#lb-rm').disabled = !nBox;
+  $('#band-rm').disabled = !bands.length;
+  const fit = bands.length ? (new Set(bands.map(b => b.fit)).size === 1 ? bands[0].fit : null) : S.bandFit;
+  press('#band-fit', fit);
+  $('#band-dh-wrap').hidden = !bands.length;
+  if (bands.length) setRange('band-dh', bands[0].dh, dhTxt(bands[0].dh));
+  setRange('scat', S.boxAmt, S.boxAmt + '%');
+}
+
+function renderParaPanel() {
+  press('#hov', S.hoverInfo ? 'on' : 'off');
+  press('#para-on', S.para.on ? 'on' : 'off');
+  press('#para-fit', S.para.fit);
+  setRange('para-dh', S.para.dh, dhTxt(S.para.dh));
+  setRange('pscat', S.boxAmt, S.boxAmt + '%');
+  const n = glyphList().filter(g => g.box).length;
+  $('#para-lb-r').textContent = n ? `${n} on the canvas` : 'None yet';
+  $('#lb-rm-all').disabled = !n;
+}
+
+// Which box styles the style controls edit. Selection: the boxes and bands on the selected letters.
+// Paragraph: the paragraph band, or every letter box. With none, they set the style new boxes get.
+let bxTarget = 'para';
+function boxTargets(gs) {
+  const uniq = list => [...new Set(list)];
+  if (gs.length) {
+    const list = uniq([...gs.filter(g => g.box).map(g => g.box), ...selBands().map(b => b.st)]);
+    return list.length ? { list, label: `${list.length} in selection` } : { list: [S.boxStyle], label: 'For new boxes' };
+  }
+  if (bxTarget === 'para') return { list: [S.para.st], label: S.para.on ? 'Paragraph band' : 'Paragraph band (off)' };
+  const list = uniq(glyphList().filter(g => g.box).map(g => g.box));
+  return list.length ? { list, label: `All ${list.length} letter boxes` } : { list: [S.boxStyle], label: 'For new boxes' };
+}
+function renderBoxEditor(gs) {
+  $('#bx-tgt').hidden = gs.length > 0;
+  press('#bx-tgt', bxTarget);
+  const st = boxTargets(gs).list[0];
+  $('#bx-ed-r').textContent = boxTargets(gs).label;
+  setRange('bx-fill', st.fill, st.fill + '%');
+  setRange('bx-op', st.op, st.op + '%');
+  setRange('bx-stroke', st.stroke, st.stroke + '%');
+  setRange('bx-sw', st.sw, st.sw > 0 ? st.sw + ' pt' : 'None');
+  setRange('bx-pad', st.pad, ptTxt(st.pad));
+  $('#bx-lock').setAttribute('aria-pressed', st.lock);
+  $('#bx-lock-t').textContent = st.lock ? 'Locked: all four' : 'Unlocked: each corner';
+  for (const row of $$('#bx-corners .corner-row')) {
+    const all = row.dataset.c === 'all';
+    row.hidden = all ? !st.lock : st.lock;
+    const c = st.c[all ? 0 : +row.dataset.c];
+    row.querySelectorAll('.opts button').forEach(b => b.setAttribute('aria-pressed', b.dataset.v === c.s));
+    row.querySelector('input').value = c.r;
+    row.querySelector('output').textContent = c.r ? c.r + ' pt' : 'Square';
+  }
+}
+function editBox(key, fn) {
+  const T = boxTargets(selectedGlyphs());
+  record('bx:' + key);
+  for (const st of T.list) fn(st);
+  S.boxStyle = structuredClone(T.list[0]);
+  render(); save();
+}
+// Random letter boxes: the seed picks which letters, the ratio how many. Applies to the given letters only.
+function scatterBoxes(gs) {
+  for (const g of gs) {
+    if (g.inkTop == null) continue;
+    const want = rnd(S.boxSeed, g.i, 9) < S.boxAmt / 100, v = S.overrides.get(g.i);
+    if (want && !(v && v.box)) ovFor(g.i).box = structuredClone(S.boxStyle);
+    if (!want && v && v.box) { delete ovFor(g.i).box; cleanOv(g.i); }
+  }
 }
 
 function setSelFamily(name) {
@@ -1505,18 +2338,21 @@ async function openPicker() {
 
 /* ---------------- export ---------------- */
 function measure() {
-  let w = 0;
-  const z = S.zoom || 1;
-  for (const ln of out.querySelectorAll('.ln')) {
-    let lw = 0;
-    for (const g of ln.children) lw += g.getBoundingClientRect().width;
-    w = Math.max(w, lw / z);
-  }
   const lead = S.size * S.leading / 100;
-  return { tw: Math.ceil(w), th: Math.ceil(lead * Math.max(1, S.lines.length)) };
+  return { tw: Math.ceil(S.W || 0), th: Math.ceil(lead * Math.max(1, S.lines.length)) };
 }
 
-function buildData() {
+// Advance of a space in a style, in em, from the same measuring canvas as ink().
+function spaceEm(st) {
+  if (st.variable && st.mcss !== st.css) mctx.font = `${Math.round(st.weight)} 200px "${st.mcss}"`;
+  else mctx.font = `200px "${st.css}"`;
+  if ('fontStretch' in mctx) mctx.fontStretch = st.variable && st.wdth ? stretchKw(st.wdth) : 'normal';
+  return mctx.measureText(' ').width / 200;
+}
+
+// What the scripts need. Shapes and guides are in block coordinates (see decoShapes) with the letter they hang on:
+// j is its index among the exported letters, ox its x, so InDesign can place them on its own composed letters.
+function buildData(app) {
   const base = S.styles.get(S.baseId);
   const idx = new Map(), fonts = [];
   const fi = st => {
@@ -1524,21 +2360,43 @@ function buildData() {
     return idx.get(st.id);
   };
   fi(base);
+  const flat = S.lines.flat(), jOf = new Map(flat.map((g, j) => [g.i, j]));
+  // Photoshop has no per-letter rotation or outline in one type layer: those letters become their own type layers,
+  // and the main layer keeps a space there, tracked to the letter's width so the rest stays in place.
+  const own = app === 'ps' ? (g => !!(g.rot || g.sw)) : (() => false);
+  const sp = [];
   const lines = S.lines.map(line => {
     const runs = [];
     for (const g of line) {
-      const f = fi(g.st), last = runs[runs.length - 1];
-      if (last && last[1] === f && last[2] === g.size && last[3] === g.bs && last[4] === g.tr) last[0] += g.ch;
-      else runs.push([g.ch, f, g.size, g.bs, g.tr]);
+      const f = fi(g.st);
+      let ch = g.ch, tr = g.tr, rot = g.rot, sw = g.sw;
+      if (own(g)) {
+        const P = pivotOf(g);
+        sp.push({ ch: g.ch, f, size: g.size, bs: g.bs, tr: g.tr, rot: g.rot, sw: g.sw, k: g.k, x: r2(g.x), px: r2(P[0]), py: r2(P[1]) });
+        tr = Math.round(g.tr + (g.adv / g.size - spaceEm(g.st)) * 1000);
+        ch = ' '; rot = 0; sw = 0;
+      }
+      const last = runs[runs.length - 1];
+      if (last && last[1] === f && last[2] === g.size && last[3] === g.bs && last[4] === tr && last[5] === rot && last[6] === sw) last[0] += ch;
+      else runs.push([ch, f, g.size, g.bs, tr, rot, sw]);
     }
     return runs;
   });
+  const P = p => [r2(p[0]), r2(p[1])];
+  const shapes = decoShapes().map(sh => ({
+    k: sh.k, j: jOf.get(sh.g.i), ox: r2(sh.g.x), n: sh.n,
+    p: sh.pts.map(nd => [...P(nd.a), ...P(nd.l), ...P(nd.r)]),
+    r: sh.rect && Object.assign({}, sh.rect, { x0: r2(sh.rect.x0), y0: r2(sh.rect.y0), x1: r2(sh.rect.x1), y1: r2(sh.rect.y1), dx: r2(sh.rect.dx), dy: r2(sh.rect.dy) }),
+    f: sh.st.fill, s: sh.st.stroke, sw: sh.st.sw, op: sh.st.op,
+  }));
+  const guides = $('#exp-guides').checked ? guideLines().map(gl => ({ k: gl.k, j: jOf.get(gl.g.i), ox: r2(gl.g.x), y: r2(gl.y), x0: gl.x0, x1: r2(gl.x1), n: gl.n })) : [];
   const { tw, th } = measure();
   const m = Math.round(Math.max(36, S.size * 1.2));
   return {
     fonts, lines,
     size: S.size, lead: r1(S.size * S.leading / 100), track: S.track, align: S.align,
     tw, th, m, w: tw + m * 2, h: th + m * 2,
+    W: r2(S.W || 0), shapes, guides, sp,
   };
 }
 
@@ -1556,13 +2414,14 @@ const RUN_HINT = {
 const esc = s => s.replace(/[\u007f-￿]/g, c => '\\u' + c.charCodeAt(0).toString(16).padStart(4, '0'));
 
 function buildScript(app) {
-  const D = buildData();
+  const D = buildData(app);
   const body = document.getElementById('jsx-' + app).textContent;
   const head = [
     `#target ${TARGET[app]}`,
     `// Mixweight -> ${APP_NAME[app]}`,
     `// Generated ${new Date().toISOString().slice(0, 16).replace('T', ' ')} | fonts: ${D.fonts.length} | runs: ${D.lines.reduce((a, l) => a + l.length, 0)}`,
-    `// Creates live, editable text with per-character font, size, baseline shift and tracking.`,
+    `// Creates live, editable text with per-character font, size, baseline shift, tracking, rotation and outline.`,
+    `// Boxes and guides are drawn as editable vector shapes.`,
     ``,
     `var D = ${JSON.stringify(D)};`,
     `var MSG = ${JSON.stringify(MSG)};`,
@@ -1582,11 +2441,27 @@ function exportFor(app) {
   $('#exp-note').textContent = `Saved ${name}. ${RUN_HINT[app]}`;
   const used = new Set(S.lines.flat().map(g => g.st.family));
   const demo = S.families.some(f => f.source === 'demo' && used.has(f.name));
-  toast(`Saved ${name}` + (demo ? '. Sample fonts (Inter, Lora) only match if they are installed.' : ''));
+  const noGuides = $('#exp-guides').checked && !Object.values(S.guides).some(Boolean);
+  toast(`Saved ${name}` + (demo ? '. Sample fonts (Inter, Lora) only match if they are installed.' : '') +
+    (noGuides ? '. Include guides is on, but no guides are switched on under Guides.' : ''));
 }
 
 /* ---------------- persistence ---------------- */
-const SAVE_KEYS = ['text', 'caseMode', 'caseAmt', 'mix', 'dist', 'gran', 'valign', 'size', 'leading', 'sizeVar', 'baseJit', 'trackJit', 'track', 'align', 'seed', 'match', 'wavePeriod', 'gaps'];
+const SAVE_KEYS = ['text', 'caseMode', 'caseAmt', 'mix', 'dist', 'gran', 'valign', 'size', 'leading', 'sizeVar', 'baseJit', 'trackJit', 'track', 'align', 'seed', 'match', 'wavePeriod', 'gaps',
+  'outlineAmt', 'outlineSeed', 'strokeW', 'guides', 'boxAmt', 'boxSeed', 'boxStyle', 'bandFit', 'bands', 'para'];
+// Saved state from older versions, or edited by hand: keep only well-formed decoration settings.
+function fixDeco() {
+  const g = S.guides && typeof S.guides === 'object' ? S.guides : {};
+  S.guides = { base: !!g.base, x: !!g.x, cap: !!g.cap, asc: !!g.asc };
+  S.boxStyle = normStyle(S.boxStyle);
+  const pa = S.para && typeof S.para === 'object' ? S.para : {};
+  S.para = { on: !!pa.on, fit: pa.fit === 'each' ? 'each' : 'max', dh: typeof pa.dh === 'number' ? pa.dh : 0, st: normStyle(pa.st) };
+  S.bandFit = S.bandFit === 'each' ? 'each' : 'max';
+  S.bands = (Array.isArray(S.bands) ? S.bands : [])
+    .filter(b => b && Number.isInteger(b.a) && Number.isInteger(b.b) && b.b >= b.a)
+    .map(b => ({ a: b.a, b: b.b, fit: b.fit === 'each' ? 'each' : 'max', dh: typeof b.dh === 'number' ? b.dh : 0, st: normStyle(b.st) }));
+  for (const [k, v] of S.overrides) if (v.box) S.overrides.set(k, Object.assign({}, v, { box: normStyle(v.box) }));
+}
 function save() {
   try {
     const o = {};
@@ -1598,6 +2473,7 @@ function save() {
     for (const fam of S.families) for (const id of fam.ids) if (!fam.on.has(id)) o.off.push(id);
     o.shares = Object.fromEntries(S.families.filter(f => f.share !== 100).map(f => [f.name, f.share]));
     o.overrides = [...S.overrides.entries()];
+    o.hoverInfo = S.hoverInfo;
     localStorage.setItem('mixweight', JSON.stringify(o));
   } catch (e) { /* storage unavailable */ }
 }
@@ -1618,6 +2494,10 @@ function remapOverrides(oldT, newT) {
     else if (k >= a.length - s) next.set(k + delta, v);
   }
   S.overrides = next;
+  // Bands keep their ends; an end inside the edit moves to the edge of the new text.
+  const lo = k => k < p ? k : k >= a.length - s ? k + delta : p;
+  const hi = k => k < p ? k : k >= a.length - s ? k + delta : b.length - s - 1;
+  S.bands = S.bands.map(bd => Object.assign({}, bd, { a: lo(bd.a), b: hi(bd.b) })).filter(bd => bd.b >= bd.a);
 }
 
 /* ---------------- undo / redo ---------------- */
@@ -1626,10 +2506,10 @@ function snapshot() {
   const v = {};
   for (const k of SAVE_KEYS) v[k] = S[k];
   return {
-    v, baseId: S.baseId,
+    v: structuredClone(v), baseId: S.baseId,
     fams: S.families.map(f => Object.assign({}, f, { ids: [...f.ids], on: [...f.on] })),
     styles: [...S.styles.entries()],
-    ov: [...S.overrides].map(([k, o]) => [k, Object.assign({}, o)]),
+    ov: structuredClone([...S.overrides]),
   };
 }
 // Call before a change. Repeated calls with the same key inside 800 ms (a slider drag, a typing burst) make one step.
@@ -1643,11 +2523,11 @@ function record(key) {
   syncHistoryButtons();
 }
 function restore(snap) {
-  Object.assign(S, snap.v);
+  Object.assign(S, structuredClone(snap.v));
   S.baseId = snap.baseId;
   S.families = snap.fams.map(f => Object.assign({}, f, { ids: [...f.ids], on: new Set(f.on) }));
   S.styles = new Map(snap.styles);
-  S.overrides = new Map(snap.ov.map(([k, o]) => [k, Object.assign({}, o)]));
+  S.overrides = new Map(structuredClone(snap.ov));
   syncControls();
   renderPool();
   render();
@@ -1700,6 +2580,7 @@ async function boot() {
     S.restoredOff = new Set(saved.off || []);
     if (saved.shares && typeof saved.shares === 'object') S.restoredShares = saved.shares;
     if (Array.isArray(saved.overrides)) S.overrides = new Map(saved.overrides.filter(e => e && e[1] && typeof e[1] === 'object'));
+    if (typeof saved.hoverInfo === 'boolean') S.hoverInfo = saved.hoverInfo;
   }
   // Your own text stays; a built-in sample is swapped for a different one on each open.
   if (!saved || !S.text || SAMPLE_TEXTS.includes(S.text) || OLD_SAMPLES.includes(S.text)) {
@@ -1707,7 +2588,9 @@ async function boot() {
     S.text = SAMPLE_TEXTS[i];
     S.sample = i;
     S.overrides = new Map();
+    S.bands = [];
   }
+  fixDeco();
 
   bindRange('case-amt', 'caseAmt', v => v + '%');
   bindRange('mix', 'mix', v => v + '%');
@@ -1724,6 +2607,8 @@ async function boot() {
   bindOpts('valign', 'valign');
   bindOpts('match', 'match');
   bindRange('gaps', 'gaps', v => v + '%');
+  bindRange('outline', 'outlineAmt', v => v + '%');
+  bindRange('strokew', 'strokeW', v => v + ' pt');
   const dist = $('#dist'); dist.value = S.dist;
   const syncPeriod = () => { $('#wave-period-wrap').hidden = S.dist !== 'wave'; };
   syncers.push(() => { dist.value = S.dist; syncPeriod(); });
@@ -1734,7 +2619,7 @@ async function boot() {
   text.addEventListener('input', () => {
     record('text');
     remapOverrides(S.text, text.value);
-    S.text = text.value; S.sel.clear(); render(); save();
+    S.text = text.value; S.sel.clear(); if (!side.pinned) side.open = false; render(); save();
   });
   $('#base').onchange = e => { record(); S.baseId = e.target.value; renderPool(); render(); save(); };
 
@@ -1777,6 +2662,83 @@ async function boot() {
   $('#sel-reset').onclick = () => { record(); for (const i of S.sel) S.overrides.delete(i); render(); save(); };
   $('#sel-none').onclick = () => { S.sel.clear(); paintSelection(); };
 
+  // right panel
+  const sideRender = () => { syncSide(); renderInspector(); };
+  $('#handle').onclick = () => { side.open = true; side.pinned = true; sideRender(); };
+  $('#side-close').onclick = () => { side.open = false; side.pinned = false; sideRender(); };
+  const eachSel = fn => { for (const g of selectedGlyphs()) { fn(ovFor(g.i), g); cleanOv(g.i); } render(); save(); };
+  const optClick = (sel, fn) => $(sel).addEventListener('click', e => { const b = e.target.closest('button'); if (b) fn(b.dataset.v, b); });
+  // rotate
+  const setRot = v => { if (!isFinite(v)) return; v = clamp(Math.round(v * 10) / 10, -360, 360); record('rot'); eachSel(o => { o.rot = v; }); };
+  $('#rot').addEventListener('input', e => setRot(+e.target.value));
+  $('#rot-n').addEventListener('input', e => { if (e.target.value.trim() !== '' && e.target.value !== '-') setRot(+e.target.value); });
+  $('#rot-n').addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === 'Escape') e.target.blur(); });
+  $('#rjit').addEventListener('input', e => {
+    jitAmt = +e.target.value; record('rjit');
+    eachSel(o => { o.ra = jitAmt; if (typeof o.ru !== 'number') o.ru = Math.random() * 2 - 1; });
+  });
+  $('#rjit-re').onclick = () => { record(); eachSel(o => { o.ra = o.ra || jitAmt || 6; o.ru = Math.random() * 2 - 1; }); };
+  $('#rot-reset').onclick = () => { record(); eachSel(o => { delete o.rot; delete o.ra; delete o.ru; }); };
+  // fill
+  optClick('#sel-fill', v => { record(); eachSel(o => { if (v) o.fill = v; else delete o.fill; }); });
+  $('#sel-sw').addEventListener('input', e => { record('sel-sw'); const v = +e.target.value; eachSel(o => { o.sw = v; }); });
+  // boxes
+  $('#lb-add').onclick = () => { record(); eachSel((o, g) => { if (g.inkTop != null && !o.box) o.box = structuredClone(S.boxStyle); }); };
+  $('#lb-rm').onclick = () => { record(); eachSel(o => { delete o.box; }); };
+  $('#band-add').onclick = () => {
+    const ix = selIdx(); if (!ix.length) return;
+    record();
+    S.bands.push({ a: Math.min(...ix), b: Math.max(...ix), fit: S.bandFit, dh: 0, st: structuredClone(S.boxStyle) });
+    render(); save();
+  };
+  $('#band-rm').onclick = () => { record(); S.bands = S.bands.filter(b => !touchesSel(b)); render(); save(); };
+  optClick('#band-fit', v => { record(); S.bandFit = v; for (const b of selBands()) b.fit = v; render(); save(); });
+  $('#band-dh').addEventListener('input', e => { record('band-dh'); for (const b of selBands()) b.dh = +e.target.value; render(); save(); });
+  const scatter = (id, all) => $(id).addEventListener('input', e => {
+    record('scat'); S.boxAmt = +e.target.value; scatterBoxes(all ? glyphList() : selectedGlyphs()); render(); save();
+  });
+  scatter('#scat', false); scatter('#pscat', true);
+  const rescatter = all => { record(); S.boxSeed = Math.floor(Math.random() * 99999); scatterBoxes(all ? glyphList() : selectedGlyphs()); render(); save(); };
+  $('#scat-re').onclick = () => rescatter(false);
+  $('#pscat-re').onclick = () => rescatter(true);
+  $('#lb-rm-all').onclick = () => { record(); for (const g of glyphList()) if (g.box) { delete ovFor(g.i).box; cleanOv(g.i); } render(); save(); };
+  // paragraph
+  optClick('#hov', v => { S.hoverInfo = v === 'on'; if (!S.hoverInfo) hideTag(); renderInspector(); save(); });
+  optClick('#para-on', v => { record(); S.para.on = v === 'on'; render(); save(); });
+  optClick('#para-fit', v => { record(); S.para.fit = v; render(); save(); });
+  $('#para-dh').addEventListener('input', e => { record('para-dh'); S.para.dh = +e.target.value; render(); save(); });
+  // box style
+  optClick('#bx-tgt', v => { bxTarget = v; renderInspector(); });
+  for (const [id, key] of [['bx-fill', 'fill'], ['bx-op', 'op'], ['bx-stroke', 'stroke'], ['bx-sw', 'sw'], ['bx-pad', 'pad']]) {
+    $('#' + id).addEventListener('input', e => { const v = +e.target.value; editBox(key, st => { st[key] = v; }); });
+  }
+  $('#bx-lock').onclick = () => {
+    const lock = !boxTargets(selectedGlyphs()).list[0].lock;
+    editBox('lock', st => { st.lock = lock; if (lock) st.c = st.c.map(() => Object.assign({}, st.c[0])); });
+  };
+  for (const row of $$('#bx-corners .corner-row')) {
+    const qs = row.dataset.c === 'all' ? [0, 1, 2, 3] : [+row.dataset.c];
+    row.querySelector('.opts').addEventListener('click', e => {
+      const b = e.target.closest('button'); if (!b) return;
+      editBox('cs' + row.dataset.c, st => { for (const q of qs) st.c[q].s = b.dataset.v; });
+    });
+    row.querySelector('input').addEventListener('input', e => {
+      const v = +e.target.value;
+      editBox('cr' + row.dataset.c, st => { for (const q of qs) st.c[q].r = v; });
+    });
+  }
+
+  // hover info
+  out.addEventListener('pointermove', e => { if (e.pointerType === 'touch') return; hoverAt(e.target.closest('.g'), e); });
+  out.addEventListener('pointerleave', hideTag);
+  $('#stage').addEventListener('scroll', hideTag, { passive: true });
+
+  // left: outline mix, guides
+  $('#outline-re').onclick = () => { record(); S.outlineSeed = Math.floor(Math.random() * 99999); render(); save(); };
+  const syncGuides = () => $$('#guides button').forEach(b => b.setAttribute('aria-pressed', !!S.guides[b.dataset.v]));
+  syncGuides(); syncers.push(syncGuides);
+  optClick('#guides', v => { record(); S.guides[v] = !S.guides[v]; syncGuides(); render(); save(); });
+
   $('#undo').onclick = undo;
   $('#redo').onclick = redo;
   document.addEventListener('keydown', e => {
@@ -1786,13 +2748,12 @@ async function boot() {
       if (k === 'z' && !e.shiftKey) { e.preventDefault(); undo(); return; }
       if ((k === 'z' && e.shiftKey) || k === 'y') { e.preventDefault(); redo(); return; }
     }
-    if (e.target.closest('input, textarea, select, dialog') || e.metaKey || e.ctrlKey || e.altKey) return;
+    if (e.target.closest('input:not([type=range]):not([type=checkbox]), textarea, select, dialog') || e.metaKey || e.ctrlKey || e.altKey) return;
     if (e.key === 'r' || e.key === 'R') { S.sel.size ? rerollGlyphs(selectedGlyphs()) : reroll(); }
     if (e.key === 'Escape' && S.sel.size) { S.sel.clear(); paintSelection(); }
   });
 
   // click / drag selection on the proof
-  let dragging = false;
   out.addEventListener('pointerdown', e => {
     const sp = e.target.closest('.g'); if (!sp || e.button !== 0) return;
     const i = +sp.dataset.i;
@@ -1808,7 +2769,7 @@ async function boot() {
     selectRange(S.anchor, +sp.dataset.i);
     paintSelection();
   });
-  window.addEventListener('pointerup', () => { dragging = false; });
+  window.addEventListener('pointerup', () => { if (dragging) { dragging = false; paintSelection(); } });
   $('#stage').addEventListener('pointerdown', e => {
     if (e.target.closest('.g') || e.button !== 0) return;
     if (S.sel.size) { S.sel.clear(); paintSelection(); }
