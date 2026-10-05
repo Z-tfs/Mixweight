@@ -8,7 +8,8 @@ Mix the weights of your installed variable fonts letter by letter, then send the
 
 - Reads the fonts installed on your computer (Chrome / Edge font access), or takes dropped `.ttf` / `.otf` / `.ttc` files. Variable fonts are split into their named instances.
 - Mixes styles across one or more families: mix amount, distribution (even, extremes, lean heavy, lean light, wave with adjustable period, ramp light → heavy across the text or per line, alternate light / heavy), unit (letter, fragment, word).
-- Family share: give each family in the pool more or less of the mix, so a family with nine styles doesn't drown one with two.
+- Family share of mix: set each family's % of the mixed letters; the other families adjust so the total stays 100%. A family with nine styles no longer has to drown one with two.
+- The base style is marked in the pool and must be one of the styles switched on.
 - Case: original, all caps, all lower, title case, sentence, random.
 - Size range, baseline and tracking jitter, leading, line alignment.
 - Even gaps: where neighbouring letters come from different fonts, nudge the tracking so the gap sits halfway between the two fonts' own spacing. Exported as tracking.

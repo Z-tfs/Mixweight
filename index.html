@@ -107,7 +107,9 @@ textarea:focus { background: var(--g2); outline: none; }
 .chip { font-size: var(--s-lg); color: var(--g3); padding: 1px 0; line-height: 1.2; }
 .chip[aria-pressed="true"] { color: var(--ink); }
 .chip:hover { color: var(--g4); }
-.chip.is-base { text-decoration: underline 1px; text-underline-offset: 3px; }
+.chip.is-base { background: var(--g2); color: var(--ink); padding: 1px 6px; display: inline-flex; align-items: center; gap: 6px; }
+.chip .badge { font: var(--s-xs)/1 var(--ui); font-variation-settings: normal; letter-spacing: .04em; text-transform: uppercase; background: var(--ink); color: var(--paper); padding: 2px 4px 1px; }
+.fam .ctl input:disabled { opacity: .35; cursor: default; }
 .pool .empty { padding: 14px; color: var(--g4); text-transform: uppercase; }
 
 /* right side */
@@ -373,8 +375,9 @@ dialog::backdrop { background: rgba(255, 255, 255, .7); }
       <section><h4>Illustrator</h4><p><b>File › Scripts › Other Script…</b> and pick the file. With a document open, the text lands in the middle of the active artboard; otherwise a new document is made.</p></section>
       <section><h4>InDesign</h4><p><b>Window › Utilities › Scripts</b>. Right-click the User folder › Reveal in Finder, drop the .jsx in, then double-click it in the panel. The frame auto-sizes to the text and the whole thing is one undo.</p></section>
       <section><h4>Photoshop</h4><p><b>File › Scripts › Browse…</b>. A new 72 ppi document opens with one editable type layer you can drag into your comp.</p></section>
+      <section><h4>Base style</h4><p>The base style is the one letters keep at 0% mix. It must be switched on in the pool: styles that are off are greyed out in the list, and switching off the base moves it to the nearest weight that is on.</p></section>
       <section><h4>Fonts</h4><p>Fonts are matched by family and style name, then by PostScript name. Variable fonts use their named instances (Light, Bold…), so the app shows what the preview shows. Fonts the app can't find are listed and swapped for its default; the text stays editable.</p></section>
-      <section><h4>Family share</h4><p>Each family in the pool has a Share. At 100 for every family, each style is equally likely, so a family with many styles shows up more. Turn a family down to give its styles a narrower slice of the light → heavy range; the % shows its part of the mixed letters.</p></section>
+      <section><h4>Family share</h4><p>Share of mix is each family's part of the letters that leave the base style. At first it follows the number of styles switched on. Drag one family and the others make room, keeping their proportions, so the total stays 100%. Styles keep their place in the light → heavy range.</p></section>
       <section><h4>Distribution</h4><p>Ramp sets light → heavy from the start of the text to the end; Ramp per line restarts on every line. Alternate switches between the lighter and heavier half of the pool. Wave has a Period. Weight mix still decides how many letters leave the base style.</p></section>
       <section><h4>Even gaps</h4><p>Where neighbouring letters come from different fonts, their sidebearings differ and the gaps look uneven. Even gaps adjusts the left letter's tracking so the gap moves halfway between the spacing of the two fonts it joins, instead of jumping from one to the other. It exports as tracking.</p></section>
       <section><h4>Match size</h4><p>Different families at the same point size look different sizes. x-height or Cap height scales each letter's font so its lowercase x or capital H is as tall as in the base style (limited to 60–160%). It is written as the letter's point size, so it stays editable; leading follows the nominal size.</p></section>
@@ -909,10 +912,13 @@ function addStyles(list, source) {
   if (!S.baseId || !S.styles.has(S.baseId)) S.baseId = pickDefaultBase();
 }
 
+const isOn = id => S.families.some(f => f.on.has(id));
 function pickDefaultBase() {
+  const anyOn = S.families.some(f => f.on.size);
   for (const fam of S.families) {
     let best = null, bd = Infinity;
     for (const id of fam.ids) {
+      if (anyOn && !fam.on.has(id)) continue;
       const s = S.styles.get(id);
       const d = Math.abs(s.weight - 400) + (s.italic ? 1000 : 0);
       if (d < bd) { bd = d; best = id; }
@@ -920,6 +926,19 @@ function pickDefaultBase() {
     if (best) return best;
   }
   return null;
+}
+
+// The base style must be switched on: otherwise move it to the nearest weight that is, same family first.
+function ensureBaseOn() {
+  if (S.baseId && S.styles.has(S.baseId) && isOn(S.baseId)) return;
+  const old = S.styles.get(S.baseId);
+  let best = null, bd = Infinity;
+  if (old) for (const fam of S.families) for (const id of fam.on) {
+    const s = S.styles.get(id);
+    const d = Math.abs(s.weight - old.weight) + (s.family === old.family ? 0 : 10000) + (s.italic !== old.italic ? 1000 : 0);
+    if (d < bd) { bd = d; best = id; }
+  }
+  S.baseId = best || pickDefaultBase();
 }
 
 function removeFamily(name) {
@@ -1246,14 +1265,14 @@ function renderPool() {
     const box = document.createElement('div');
     box.className = 'fam';
     const src = fam.source === 'demo' ? 'Sample' : fam.source === 'system' ? 'Installed' : 'File';
-    box.innerHTML = `<div class="fam-h"><span class="nm"></span><span class="r"><span>${fam.variable ? 'Var · ' : ''}${src} · ${fam.on.size}/${fam.ids.length}</span><button class="x" type="button">Remove</button></span></div><div class="chips"></div><div class="ctl"><label>Share</label><output class="share-o"></output><input type="range" min="0" max="100" step="5"></div>`;
+    box.innerHTML = `<div class="fam-h"><span class="nm"></span><span class="r"><span>${fam.variable ? 'Var · ' : ''}${src} · ${fam.on.size}/${fam.ids.length}</span><button class="x" type="button">Remove</button></span></div><div class="chips"></div><div class="ctl"><label>Share of mix</label><output class="share-o"></output><input type="range" min="0" max="100" step="1"></div>`;
     box.querySelector('.nm').textContent = fam.name;
     box.querySelector('.x').onclick = () => removeFamily(fam.name);
     box.querySelector('.x').setAttribute('aria-label', 'Remove ' + fam.name);
     const range = box.querySelector('input');
-    range.value = fam.share;
-    range.setAttribute('aria-label', 'Share of ' + fam.name);
-    range.addEventListener('input', () => { record('share:' + fam.name); fam.share = +range.value; syncShares(); render(); save(); });
+    range.setAttribute('aria-label', 'Share of mix for ' + fam.name);
+    range.addEventListener('input', () => { record('share:' + fam.name); setShare(fam, +range.value, range); render(); save(); });
+    range.addEventListener('change', () => { range._start = null; });
     const chips = box.querySelector('.chips');
     for (const id of fam.ids) {
       const s = S.styles.get(id);
@@ -1261,11 +1280,19 @@ function renderPool() {
       b.type = 'button';
       b.className = 'chip' + (id === S.baseId ? ' is-base' : '');
       b.textContent = s.style;
+      if (id === S.baseId) { const t = document.createElement('span'); t.className = 'badge'; t.textContent = 'Base'; b.appendChild(t); }
       b.style.fontFamily = `"${s.css}", sans-serif`;
       b.style.fontVariationSettings = s.fvs;
       b.title = `${s.family} ${s.style} · ${s.ps}${s.variable ? ' · ' + s.fvs : ''}${id === S.baseId ? ' · base style' : ''}`;
       b.setAttribute('aria-pressed', fam.on.has(id));
-      b.onclick = () => { record(); fam.on.has(id) ? fam.on.delete(id) : fam.on.add(id); renderPool(); render(); save(); };
+      b.onclick = () => {
+        record();
+        fam.on.has(id) ? fam.on.delete(id) : fam.on.add(id);
+        const was = S.baseId;
+        ensureBaseOn();
+        if (S.baseId !== was) { const nb = S.styles.get(S.baseId); toast(`Base style is now ${nb.family} ${nb.style}.`); }
+        renderPool(); render(); save();
+      };
       chips.appendChild(b);
     }
     host.appendChild(box);
@@ -1278,6 +1305,7 @@ function renderPool() {
     for (const id of fam.ids) {
       const o = document.createElement('option');
       o.value = id; o.textContent = fam.name + ' ' + S.styles.get(id).style;
+      o.disabled = !fam.on.has(id); // only styles in the mix can be the base
       og.appendChild(o);
     }
     sel.appendChild(og);
@@ -1287,16 +1315,41 @@ function renderPool() {
   syncShares();
 }
 
-// Each family's share setting and the part of the mixed letters it gets.
+// Each family's part of the mixed letters in %, from its share (a weight per style) and its styles that are on.
+function familyPcts() {
+  const n = new Map(S.families.map(f => [f.name, 0]));
+  for (const st of poolStyles()) n.set(st.family, n.get(st.family) + 1);
+  const eq = S.families.every(f => f.share === S.families[0].share);
+  const got = S.families.map(f => n.get(f.name) * (eq ? 1 : f.share));
+  const total = got.reduce((a, x) => a + x, 0);
+  return { n, pct: got.map(x => total ? x / total * 100 : 0) };
+}
+// Set one family's % of the mix; the others keep their proportions (as at the start of the drag) and fill the rest.
+function setShare(fam, p, range) {
+  const { n, pct } = familyPcts();
+  const k = S.families.indexOf(fam);
+  if (!range._start) range._start = pct.slice();
+  const start = range._start;
+  const others = S.families.map((f, i) => i !== k && n.get(f.name) ? i : -1).filter(i => i >= 0);
+  if (!others.length || !n.get(fam.name)) { syncShares(); return; }
+  let rest = others.reduce((a, i) => a + start[i], 0);
+  const next = S.families.map(() => 0);
+  next[k] = p;
+  for (const i of others) next[i] = rest > 0 ? start[i] / rest * (100 - p) : n.get(S.families[i].name) / others.reduce((a, j) => a + n.get(S.families[j].name), 0) * (100 - p);
+  const w = S.families.map((f, i) => n.get(f.name) ? next[i] / n.get(f.name) : null);
+  const max = Math.max(...w.filter(x => x != null));
+  S.families.forEach((f, i) => { if (w[i] != null) f.share = max > 0 ? Math.round(w[i] / max * 100000) / 1000 : 100; });
+  syncShares();
+}
 function syncShares() {
-  const pool = poolStyles(), w = poolWidths(pool) || pool.map(() => 1);
-  const total = w.reduce((a, x) => a + x, 0);
-  const boxes = $$('#pool .fam');
+  const { n, pct } = familyPcts();
+  const boxes = $$('#pool .fam'), live = [...n.values()].filter(Boolean).length;
   S.families.forEach((fam, k) => {
-    const o = boxes[k] && boxes[k].querySelector('.share-o');
-    if (!o) return;
-    const got = pool.reduce((a, st, i) => a + (st.family === fam.name ? w[i] : 0), 0);
-    o.textContent = `${fam.share} · ${total ? Math.round(got / total * 100) : 0}% of mix`;
+    const box = boxes[k]; if (!box) return;
+    const v = Math.round(pct[k]), r = box.querySelector('input[type=range]');
+    box.querySelector('.share-o').textContent = v + '%';
+    if (!r._start) r.value = v;
+    r.disabled = !n.get(fam.name) || live < 2;
   });
 }
 
@@ -1760,6 +1813,7 @@ async function boot() {
   }
   if (!restored) await loadDemo();
   if (saved && saved.baseId && S.styles.has(saved.baseId)) S.baseId = saved.baseId;
+  ensureBaseOn();
   S.restoredOff = null;
   S.restoredShares = null;
   setZoom(1);
