@@ -19,6 +19,8 @@
   --rule: 1px solid var(--ink);
   --ui: "Helvetica Neue", Helvetica, Arial, "PingFang SC", sans-serif;
   --s-xs: 10px; --s-sm: 11px; --s-md: 13px; --s-lg: 15px;
+  --h-size: var(--s-md); --h-weight: 700; /* group titles (left and right panels): 2pt over the options */
+  --h-space: 14px; /* room above a group title, more than the 10px between the options under it */
   --bar: 38px;     /* selection bar = Font pool header row, so their rules line up */
   --hov: #eeeeee;  /* hover: behind the letter */
   --tag: #dddddd;  /* hover info tag blocks */
@@ -62,9 +64,10 @@ button { background: none; border: 0; padding: 0; cursor: pointer; }
 
 /* rail */
 .rail { border-right: var(--rule); overflow-y: auto; min-width: 0; min-height: 0; }
-.cell { border-bottom: var(--rule); padding: 9px 14px 14px; display: grid; gap: 10px; }
+.cell { border-bottom: var(--rule); padding: var(--h-space) 14px 14px; display: grid; gap: 10px; }
 .cell-h { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; text-transform: uppercase; font-size: var(--s-sm); }
-.cell-h .r { color: var(--g4); text-align: right; }
+.cell-h > :first-child { font-size: var(--h-size); font-weight: var(--h-weight); letter-spacing: .03em; }
+.cell-h .r { color: var(--g4); text-align: right; font-weight: 400; }
 /* First cell: header text centred on the selection bar's text, pool rule on the bar's bottom rule. */
 .cell-pool { padding-top: 10px; }
 .cell-pool > .cell-h { height: calc(var(--bar) - 21px); align-items: center; }
