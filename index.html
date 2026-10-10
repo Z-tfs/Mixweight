@@ -163,6 +163,7 @@ textarea:focus { background: var(--g2); outline: none; }
 .side { border-left: var(--rule); overflow-y: auto; min-width: 0; min-height: 0; width: 300px; }
 .side-h { display: flex; justify-content: space-between; align-items: center; gap: 10px; min-height: var(--bar); padding: 7px 14px; border-bottom: var(--rule); text-transform: uppercase; }
 .side .acts { display: flex; gap: 14px; text-transform: uppercase; }
+.side-h .grp { display: flex; align-items: center; gap: 18px; }
 .side .acts button:hover { text-decoration: underline; }
 .side #sel-styles button { text-transform: none; font-size: var(--s-md); }
 .side .row { display: grid; grid-template-columns: 1fr auto; gap: 6px 10px; align-items: baseline; }
@@ -241,7 +242,7 @@ dialog::backdrop { background: rgba(255, 255, 255, .7); }
   </header>
 
   <div class="sub">
-    <div><span>Controls</span><span class="muted" id="pool-count"></span></div>
+    <div><span>Controls</span><span class="grp"><span class="muted" id="pool-count"></span><button class="tbtn" type="button" id="clear-left" title="Reset the left panel's settings (case, mix, align, setting, outline, guides) to their defaults. Text, fonts and edits in the right panel stay. ⌘Z brings them back.">Clear</button></span></div>
     <div>
       <span class="grp">
         <button class="tbtn" type="button" id="undo" title="⌘Z" disabled>Undo</button>
@@ -249,7 +250,6 @@ dialog::backdrop { background: rgba(255, 255, 255, .7); }
         <button class="tbtn" type="button" id="reroll" title="Shortcut: R">Reroll ↻</button>
         <button class="tbtn muted" type="button" id="seed-lbl" title="Click to type a seed"></button>
         <span id="seed-edit" class="muted" hidden>Seed <input id="seed-in" type="text" inputmode="numeric" maxlength="9" aria-label="Seed"></span>
-        <button class="tbtn" type="button" id="clear-ov" title="Remove every letter edit and band. ⌘Z brings them back.">Clear edits</button>
       </span>
       <span class="grp">
         <span class="muted">Zoom</span>
@@ -407,7 +407,7 @@ dialog::backdrop { background: rgba(255, 255, 255, .7); }
   </main>
 
   <aside class="side" id="side" aria-label="Selection and paragraph" hidden>
-    <div class="side-h"><span id="side-title">Paragraph</span><button class="tbtn" type="button" id="side-close" aria-label="Close the right panel">Close ›</button></div>
+    <div class="side-h"><span id="side-title">Paragraph</span><span class="grp"><button class="tbtn" type="button" id="clear-ov" title="Remove every right-panel edit: letter font, weight, align, rotation, fill, letter boxes, bands and the paragraph band. Left-panel settings stay. ⌘Z brings them back.">Clear edits</button><button class="tbtn" type="button" id="side-close" aria-label="Close the right panel">Close ›</button></span></div>
 
     <div id="side-sel">
       <section class="cell">
@@ -2496,6 +2496,9 @@ function exportFor(app) {
 }
 
 /* ---------------- persistence ---------------- */
+// Settings that live in the left panel and change how the text looks (Clear there resets these).
+const LEFT_KEYS = ['caseMode', 'caseAmt', 'mix', 'dist', 'wavePeriod', 'gran', 'valign', 'size', 'leading', 'sizeVar', 'baseJit',
+  'trackJit', 'track', 'gaps', 'match', 'align', 'outlineAmt', 'outlineSeed', 'strokeW', 'guides'];
 const SAVE_KEYS = ['text', 'caseMode', 'caseAmt', 'mix', 'dist', 'gran', 'valign', 'size', 'leading', 'sizeVar', 'baseJit', 'trackJit', 'track', 'align', 'seed', 'match', 'wavePeriod', 'gaps',
   'outlineAmt', 'outlineSeed', 'strokeW', 'guides', 'boxAmt', 'boxSeed', 'boxStyle', 'bandFit', 'bands', 'para'];
 // Saved state from older versions, or edited by hand: keep only well-formed decoration settings.
@@ -2698,10 +2701,20 @@ async function boot() {
   seedIn.addEventListener('blur', () => closeSeed(true));
   // The proof's drag selection stops focus moving, so catch clicks outside directly too.
   document.addEventListener('pointerdown', e => { if (e.target !== seedIn) closeSeed(true); }, true);
-  // Clear edits: every per-letter adjustment (font, weight, align, rotation, fill, letter boxes) and every band.
+  // Clear edits (right panel): every per-letter adjustment (font, weight, align, rotation, fill, letter boxes),
+  // every band and the paragraph band. Left-panel settings stay as they are.
   $('#clear-ov').onclick = () => {
-    if (!S.overrides.size && !S.bands.length) return;
-    record(); S.overrides = new Map(); S.bands = []; render(); save();
+    if (!S.overrides.size && !S.bands.length && !S.para.on) return;
+    record(); S.overrides = new Map(); S.bands = []; S.para.on = false; render(); save();
+  };
+  // Clear (left panel): its visual settings back to their defaults. Text, font pool, base style, seed and every
+  // right-panel edit stay.
+  $('#clear-left').onclick = () => {
+    const keys = LEFT_KEYS.filter(k => JSON.stringify(S[k]) !== JSON.stringify(DEFAULTS[k]));
+    if (!keys.length) return;
+    record();
+    for (const k of keys) S[k] = structuredClone(DEFAULTS[k]);
+    syncControls(); render(); save();
   };
 
   // selection bar

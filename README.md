@@ -23,6 +23,7 @@ Mix the weights of your installed variable fonts letter by letter, then send the
 - Rotation: angle (slider or number) and random jitter + reroll for the selected letters, each turning on its own centre.
 - Guides: baseline, x-height, cap height and ascender of the base style, each on its own switch.
 - Seed: every random choice comes from it. Reroll for a new one, or click the seed number to type one in and get an earlier result back.
+- Clear: the one above the left panel resets the left panel's look (case, mix, align, setting, outline, guides) to defaults; Clear edits in the right panel removes every right-panel edit (letter changes, boxes, bands, the paragraph band) and keeps the left-panel settings. Both undo.
 - ⌘Z / ⇧⌘Z undo and redo.
 
 ## Export
