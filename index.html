@@ -115,6 +115,17 @@ textarea:focus { background: var(--g2); outline: none; }
 .fam-h .r { display: flex; gap: 10px; color: var(--g4); white-space: nowrap; }
 .fam-h .x { color: var(--g4); text-transform: uppercase; }
 .fam-h .x:hover { color: var(--ink); }
+/* Collapsible family: the header row opens and closes the style list. Share of mix stays out either way. */
+.fam-h { cursor: pointer; }
+.fam-h .tg { display: flex; align-items: baseline; gap: 6px; min-width: 0; text-transform: uppercase; text-align: left; }
+.fam-h .tg::before { content: "▾"; width: 9px; flex: none; color: var(--g4); }
+.fam.closed .fam-h .tg::before { content: "▸"; }
+.fam-h:hover .tg::before { color: var(--ink); }
+.fam-h .bm { color: var(--ink); overflow: hidden; text-overflow: ellipsis; max-width: 11em; }
+.fam:not(.closed) .fam-h .bm { display: none; }
+.fam.closed .chips { display: none; }
+.cell-pool .cell-h .tbtn { color: var(--g4); }
+.cell-pool .cell-h .tbtn:hover { color: var(--ink); }
 .chips { display: flex; flex-wrap: wrap; align-items: baseline; gap: 3px 12px; }
 .chip { font-size: var(--s-lg); color: var(--g3); padding: 1px 0; line-height: 1.2; }
 .chip[aria-pressed="true"] { color: var(--ink); }
@@ -266,13 +277,13 @@ dialog::backdrop { background: rgba(255, 255, 255, .7); }
 
   <aside class="rail" aria-label="Controls">
     <section class="cell cell-pool">
-      <div class="cell-h"><span>Font pool</span><span class="r">Click a style to mix it in</span></div>
+      <div class="cell-h"><span>Font pool</span><button class="tbtn r" type="button" id="fold-all" title="Fold or open every family's style list. Share of mix stays visible.">Collapse all</button></div>
       <div class="pool" id="pool"></div>
       <div class="ctl">
         <label for="base">Base style</label><output>Used at 0% mix</output>
         <select id="base" style="grid-column:1/-1"></select>
       </div>
-      <p class="hint">Variable fonts are split into their named instances. Drop .ttf, .otf or .ttc files anywhere on the page to add them.</p>
+      <p class="hint">Click a style to mix it in; click a family's name to fold its styles away. Variable fonts are split into their named instances. Drop .ttf, .otf or .ttc files anywhere on the page to add them.</p>
     </section>
 
     <section class="cell">
@@ -1131,6 +1142,7 @@ const DEFAULTS = {
   outlineAmt: 0, outlineSeed: 7, strokeW: 1,
   guides: { base: false, x: false, cap: false, asc: false },
   hoverInfo: true,
+  collapsed: new Set(), // family names whose style list is folded; view state, not in undo
   boxAmt: 30, boxSeed: 11,
   boxStyle: defaultBoxStyle(),            // style for new boxes; follows the last box style edit
   bandFit: 'max',                         // height for new bands: 'max' (tallest letter) or 'each'
@@ -1406,6 +1418,7 @@ function removeFamily(name) {
   record();
   for (const id of fam.ids) S.styles.delete(id);
   S.families = S.families.filter(f => f !== fam);
+  S.collapsed.delete(name); // added again later, it comes back open
   for (const [k, v0] of [...S.overrides]) if (v0.style && !S.styles.has(v0.style)) { const v = Object.assign({}, v0); delete v.style; if (!ovEmpty(v)) S.overrides.set(k, v); else S.overrides.delete(k); }
   if (!S.styles.has(S.baseId)) S.baseId = pickDefaultBase();
   refreshAll();
@@ -2157,10 +2170,15 @@ function renderPool() {
   if (!S.families.length) host.innerHTML = '<div class="empty">The pool is empty</div>';
   for (const fam of S.families) {
     const box = document.createElement('div');
-    box.className = 'fam';
+    box.className = 'fam' + (S.collapsed.has(fam.name) ? ' closed' : '');
     const src = fam.source === 'demo' ? 'Sample' : fam.source === 'system' ? 'Installed' : 'File';
-    box.innerHTML = `<div class="fam-h"><span class="nm"></span><span class="r"><span>${fam.variable ? 'Var · ' : ''}${src} · ${fam.on.size}/${fam.ids.length}</span><button class="x" type="button">Remove</button></span></div><div class="chips"></div><div class="ctl"><label>Share of mix</label><output class="share-o"></output><input type="range" min="0" max="100" step="1"></div>`;
+    box.innerHTML = `<div class="fam-h"><button class="tg" type="button"><span class="nm"></span></button><span class="r"><span class="bm"></span><span>${fam.variable ? 'Var · ' : ''}${src} · ${fam.on.size}/${fam.ids.length}</span><button class="x" type="button">Remove</button></span></div><div class="chips"></div><div class="ctl"><label>Share of mix</label><output class="share-o"></output><input type="range" min="0" max="100" step="1"></div>`;
     box.querySelector('.nm').textContent = fam.name;
+    const tg = box.querySelector('.tg');
+    tg.setAttribute('aria-expanded', !S.collapsed.has(fam.name));
+    tg.setAttribute('aria-label', fam.name + ' styles');
+    box.querySelector('.fam-h').onclick = e => { if (!e.target.closest('.x')) foldFamily(fam.name, !S.collapsed.has(fam.name)); };
+    if (fam.ids.includes(S.baseId)) box.querySelector('.bm').textContent = 'Base · ' + S.styles.get(S.baseId).style;
     box.querySelector('.x').onclick = () => removeFamily(fam.name);
     box.querySelector('.x').setAttribute('aria-label', 'Remove ' + fam.name);
     const range = box.querySelector('input');
@@ -2207,6 +2225,19 @@ function renderPool() {
   if (S.baseId) sel.value = S.baseId;
   sel.disabled = !S.styles.size;
   syncShares();
+  syncFoldAll();
+}
+// Folding is view state only: saved with the page, never an undo step.
+function foldFamily(name, closed) {
+  closed ? S.collapsed.add(name) : S.collapsed.delete(name);
+  const k = S.families.findIndex(f => f.name === name), box = $$('#pool .fam')[k];
+  if (box) { box.classList.toggle('closed', closed); box.querySelector('.tg').setAttribute('aria-expanded', !closed); }
+  syncFoldAll(); save();
+}
+function syncFoldAll() {
+  const b = $('#fold-all'), open = S.families.some(f => !S.collapsed.has(f.name));
+  b.textContent = open ? 'Collapse all' : 'Expand all';
+  b.disabled = !S.families.length;
 }
 
 // Each family's part of the mixed letters in %, from its share (a weight per style) and its styles that are on.
@@ -2529,6 +2560,7 @@ function save() {
     o.shares = Object.fromEntries(S.families.filter(f => f.share !== 100).map(f => [f.name, f.share]));
     o.overrides = [...S.overrides.entries()];
     o.hoverInfo = S.hoverInfo;
+    o.collapsed = [...S.collapsed]; // all of it: installed families may not be loaded back yet when this runs
     localStorage.setItem('mixweight', JSON.stringify(o));
   } catch (e) { /* storage unavailable */ }
 }
@@ -2637,6 +2669,7 @@ async function boot() {
     if (saved.shares && typeof saved.shares === 'object') S.restoredShares = saved.shares;
     if (Array.isArray(saved.overrides)) S.overrides = new Map(saved.overrides.filter(e => e && e[1] && typeof e[1] === 'object'));
     if (typeof saved.hoverInfo === 'boolean') S.hoverInfo = saved.hoverInfo;
+    if (Array.isArray(saved.collapsed)) S.collapsed = new Set(saved.collapsed.filter(n => typeof n === 'string'));
   }
   // Your own text stays; a built-in sample is swapped for a different one on each open.
   if (!saved || !S.text || SAMPLE_TEXTS.includes(S.text) || OLD_SAMPLES.includes(S.text)) {
@@ -2779,6 +2812,7 @@ async function boot() {
   $('#pscat-re').onclick = () => rescatter(true);
   $('#lb-rm-all').onclick = () => { record(); for (const g of glyphList()) if (g.box) { delete ovFor(g.i).box; cleanOv(g.i); } render(); save(); };
   // paragraph
+  $('#fold-all').onclick = () => { const close = S.families.some(f => !S.collapsed.has(f.name)); for (const f of S.families) foldFamily(f.name, close); };
   optClick('#hov', v => { S.hoverInfo = v === 'on'; if (!S.hoverInfo) hideTag(); renderInspector(); save(); });
   optClick('#para-on', v => { record(); S.para.on = v === 'on'; render(); save(); });
   optClick('#para-fit', v => { record(); S.para.fit = v; render(); save(); });
