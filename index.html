@@ -21,6 +21,8 @@
   --s-xs: 10px; --s-sm: 11px; --s-md: 13px; --s-lg: 15px;
   --h-size: var(--s-md); --h-weight: 700; /* group titles (left and right panels): 2pt over the options */
   --h-space: 14px; /* room above a group title, more than the 10px between the options under it */
+  --lw: 320px;    /* left panel width: rail, and the first column of the header and sub-bar */
+  --rw: 300px;    /* right panel width */
   --bar: 38px;     /* selection bar = Font pool header row, so their rules line up */
   --hov: #eeeeee;  /* hover: behind the letter */
   --tag: #dddddd;  /* hover info tag blocks */
@@ -36,10 +38,10 @@ button { background: none; border: 0; padding: 0; cursor: pointer; }
 :focus-visible { outline: 1px dashed var(--ink); outline-offset: 2px; }
 .up { text-transform: uppercase; letter-spacing: .02em; }
 
-.app { display: grid; grid-template-columns: 320px minmax(0, 1fr) auto; grid-template-rows: auto auto minmax(0, 1fr); height: 100%; }
+.app { display: grid; grid-template-columns: var(--lw) minmax(0, 1fr) auto; grid-template-rows: auto auto minmax(0, 1fr); height: 100%; }
 
 /* header */
-.top { grid-column: 1 / -1; display: grid; grid-template-columns: 320px minmax(0, 1fr); border-bottom: var(--rule); }
+.top { grid-column: 1 / -1; display: grid; grid-template-columns: var(--lw) minmax(0, 1fr); border-bottom: var(--rule); }
 .brand { padding: 12px 14px; font-size: var(--s-lg); letter-spacing: .04em; display: flex; align-items: center; gap: 12px; }
 .nav { display: flex; align-items: center; justify-content: flex-end; flex-wrap: wrap; gap: 6px 28px; padding: 10px 14px; font-size: var(--s-lg); text-transform: uppercase; }
 .nav button { color: var(--ink); text-transform: uppercase; display: inline-flex; align-items: center; gap: 6px; }
@@ -49,7 +51,7 @@ button { background: none; border: 0; padding: 0; cursor: pointer; }
 .dot::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--ink); display: inline-block; }
 
 /* sub-bar */
-.sub { grid-column: 1 / -1; display: grid; grid-template-columns: 320px minmax(0, 1fr); border-bottom: var(--rule); font-size: var(--s-sm); text-transform: uppercase; }
+.sub { grid-column: 1 / -1; display: grid; grid-template-columns: var(--lw) minmax(0, 1fr); border-bottom: var(--rule); font-size: var(--s-sm); text-transform: uppercase; }
 .sub > div { padding: 5px 14px; display: flex; align-items: center; justify-content: space-between; gap: 16px; min-width: 0; flex-wrap: wrap; }
 .sub > div:first-child { border-right: var(--rule); } /* same x as the rail's border */
 .sub .grp { display: flex; align-items: center; gap: 14px; }
@@ -137,7 +139,7 @@ textarea:focus { background: var(--g2); outline: none; }
 .pool .empty { padding: 14px; color: var(--g4); text-transform: uppercase; }
 
 /* right side */
-.main { display: grid; grid-template-rows: auto minmax(0, 1fr); min-width: 0; min-height: 0; }
+.main { position: relative; display: grid; grid-template-rows: auto minmax(0, 1fr); min-width: 0; min-height: 0; }
 .insp { border-bottom: var(--rule); padding: 7px 14px; display: flex; flex-wrap: wrap; align-items: center; gap: 6px 22px; min-height: var(--bar); text-transform: uppercase; }
 .insp .count { min-width: 9em; }
 .insp .lab { color: var(--g4); }
@@ -174,7 +176,7 @@ textarea:focus { background: var(--g2); outline: none; }
 #hovtag { position: fixed; z-index: 70; pointer-events: none; }
 
 /* Right panel: selection or paragraph. Collapsed to a small handle on the canvas edge. */
-.side { border-left: var(--rule); overflow-y: auto; min-width: 0; min-height: 0; width: 300px; }
+.side { border-left: var(--rule); overflow-y: auto; min-width: 0; min-height: 0; width: var(--rw); }
 .side-h { display: flex; justify-content: space-between; align-items: center; gap: 10px; min-height: var(--bar); padding: 7px 14px; border-bottom: var(--rule); text-transform: uppercase; }
 .side .acts { display: flex; gap: 14px; text-transform: uppercase; }
 .side-h .grp { display: flex; align-items: center; gap: 18px; }
@@ -225,7 +227,19 @@ dialog::backdrop { background: rgba(255, 255, 255, .7); }
 .help p { margin: 0; color: var(--g4); font-size: var(--s-md); line-height: 1.45; }
 .help p b { color: var(--ink); font-weight: 400; }
 
+/* Panel splitters: sit on the rules either side of the canvas. Drag to resize, double-click for the default width. */
+.split { position: absolute; top: 0; bottom: 0; width: 7px; z-index: 6; cursor: col-resize; touch-action: none; }
+.split.l { left: -4px; }
+.split.r { right: -3px; }
+.split::after { content: ""; position: absolute; top: 0; bottom: 0; left: 3px; width: 1px; background: var(--ink); opacity: 0; }
+.split.l::after { left: 2px; width: 2px; }
+.split.r::after { left: 3px; width: 2px; }
+.split:hover::after, .split.on::after { opacity: 1; }
+body.resizing, body.resizing * { cursor: col-resize !important; user-select: none !important; -webkit-user-select: none !important; }
+.tbtn[aria-pressed="true"] { text-decoration: underline; text-underline-offset: 3px; }
+
 @media (max-width: 900px) {
+  .split { display: none; }
   .app { grid-template-columns: 1fr; grid-template-rows: auto; height: auto; }
   .top, .sub { grid-template-columns: 1fr; }
   .sub > div + div { border-left: 0; border-top: var(--rule); }
@@ -270,7 +284,7 @@ dialog::backdrop { background: rgba(255, 255, 255, .7); }
         <button class="tbtn" type="button" id="zoom-out" aria-label="Zoom out">−</button>
         <span class="num" id="zoom-v">100%</span>
         <button class="tbtn" type="button" id="zoom-in" aria-label="Zoom in">+</button>
-        <button class="tbtn" type="button" id="zoom-fit">Fit</button>
+        <button class="tbtn" type="button" id="zoom-fit" aria-pressed="false" title="Fit the text to the canvas. Stays fitted while panels are resized, until you zoom by hand.">Fit</button>
       </span>
     </div>
   </div>
@@ -404,6 +418,8 @@ dialog::backdrop { background: rgba(255, 255, 255, .7); }
   </aside>
 
   <main class="main">
+    <div class="split l" id="split-l" role="separator" aria-orientation="vertical" aria-label="Resize the left panel" title="Drag to resize · double-click for the default width"></div>
+    <div class="split r" id="split-r" role="separator" aria-orientation="vertical" aria-label="Resize the right panel" title="Drag to resize · double-click for the default width"></div>
     <div class="insp" id="insp">
       <span class="count" id="sel-count">No selection</span>
       <span class="lab" id="sel-hint">Click a letter, or drag across letters, to edit them. Shift extends, ⌘ adds.</span>
@@ -1142,6 +1158,7 @@ const DEFAULTS = {
   outlineAmt: 0, outlineSeed: 7, strokeW: 1,
   guides: { base: false, x: false, cap: false, asc: false },
   hoverInfo: true,
+  panelW: { l: 320, r: 300 }, // panel widths in px; view state, not in undo
   collapsed: new Set(), // family names whose style list is folded; view state, not in undo
   boxAmt: 30, boxSeed: 11,
   boxStyle: defaultBoxStyle(),            // style for new boxes; follows the last box style edit
@@ -1933,6 +1950,8 @@ function syncSide() {
   const sel = S.sel.size > 0;
   $('#side').hidden = !side.open;
   $('#handle').hidden = side.open;
+  $('#split-r').hidden = !side.open;
+  applyPanelWidths(); // reopens at the width it was dragged to; the left panel gives way if the window is narrow
   $('#side-sel').hidden = !sel;
   $('#side-para').hidden = sel;
   $('#side-title').textContent = sel ? 'Selection' : 'Paragraph';
@@ -2560,6 +2579,7 @@ function save() {
     o.shares = Object.fromEntries(S.families.filter(f => f.share !== 100).map(f => [f.name, f.share]));
     o.overrides = [...S.overrides.entries()];
     o.hoverInfo = S.hoverInfo;
+    o.panelW = S.panelW;
     o.collapsed = [...S.collapsed]; // all of it: installed families may not be loaded back yet when this runs
     localStorage.setItem('mixweight', JSON.stringify(o));
   } catch (e) { /* storage unavailable */ }
@@ -2642,7 +2662,12 @@ const syncers = [];
 function syncControls() { for (const f of syncers) f(); }
 
 /* ---------------- zoom ---------------- */
-function setZoom(z) {
+// Fit is a mode: while it is on, the zoom follows the canvas size (panel resizes, the right panel opening).
+// Zooming by hand turns it off and keeps that zoom as the canvas changes size.
+let zoomFit = false;
+function setZoom(z, fit = false) {
+  zoomFit = fit;
+  $('#zoom-fit').setAttribute('aria-pressed', fit);
   S.zoom = clamp(Math.round(z * 100) / 100, 0.25, 4);
   $('#sheet').style.zoom = S.zoom;
   $('#zoom-v').textContent = Math.round(S.zoom * 100) + '%';
@@ -2651,7 +2676,39 @@ function setZoom(z) {
 function fitZoom() {
   const stage = $('#stage'), sheet = $('#sheet');
   const w = sheet.getBoundingClientRect().width / (S.zoom || 1);
-  setZoom(clamp((stage.clientWidth - 96) / w, 0.25, 2));
+  setZoom(clamp((stage.clientWidth - 96) / w, 0.25, 2), true);
+}
+
+/* ---------------- panel widths ---------------- */
+// Drag the rules either side of the canvas. Widths are kept with the page; they are not undo steps.
+const PANEL = { l: { def: 320, min: 280, max: 560 }, r: { def: 300, min: 260, max: 520 } };
+const MIN_CANVAS = 360;
+function panelWidth(k, w) {
+  const other = k === 'l' ? S.panelW.r : S.panelW.l;
+  const room = window.innerWidth - MIN_CANVAS - (k === 'l' ? (side.open ? other : 0) : other);
+  return Math.round(clamp(w, PANEL[k].min, Math.max(PANEL[k].min, Math.min(PANEL[k].max, room))));
+}
+function applyPanelWidths() {
+  const root = document.documentElement.style;
+  root.setProperty('--lw', panelWidth('l', S.panelW.l) + 'px');
+  root.setProperty('--rw', panelWidth('r', S.panelW.r) + 'px');
+}
+function bindSplit(k) {
+  const el = $('#split-' + k);
+  el.addEventListener('pointerdown', e => {
+    if (e.button !== 0) return;
+    e.preventDefault();
+    el.setPointerCapture(e.pointerId);
+    el.classList.add('on'); document.body.classList.add('resizing'); hideTag();
+    const move = ev => { S.panelW[k] = panelWidth(k, k === 'l' ? ev.clientX : window.innerWidth - ev.clientX); applyPanelWidths(); };
+    const up = () => {
+      el.classList.remove('on'); document.body.classList.remove('resizing');
+      el.removeEventListener('pointermove', move); el.removeEventListener('pointerup', up); el.removeEventListener('pointercancel', up);
+      save();
+    };
+    el.addEventListener('pointermove', move); el.addEventListener('pointerup', up); el.addEventListener('pointercancel', up);
+  });
+  el.addEventListener('dblclick', () => { S.panelW[k] = PANEL[k].def; applyPanelWidths(); save(); });
 }
 
 /* ---------------- boot ---------------- */
@@ -2669,6 +2726,7 @@ async function boot() {
     if (saved.shares && typeof saved.shares === 'object') S.restoredShares = saved.shares;
     if (Array.isArray(saved.overrides)) S.overrides = new Map(saved.overrides.filter(e => e && e[1] && typeof e[1] === 'object'));
     if (typeof saved.hoverInfo === 'boolean') S.hoverInfo = saved.hoverInfo;
+    if (saved.panelW) for (const k of ['l', 'r']) if (Number.isFinite(saved.panelW[k])) S.panelW[k] = saved.panelW[k];
     if (Array.isArray(saved.collapsed)) S.collapsed = new Set(saved.collapsed.filter(n => typeof n === 'string'));
   }
   // Your own text stays; a built-in sample is swapped for a different one on each open.
@@ -2901,6 +2959,11 @@ async function boot() {
   $('#zoom-in').onclick = () => setZoom(S.zoom * 1.25);
   $('#zoom-out').onclick = () => setZoom(S.zoom / 1.25);
   $('#zoom-fit').onclick = fitZoom;
+  bindSplit('l'); bindSplit('r');
+  window.addEventListener('resize', applyPanelWidths);
+  // The text's layout never depends on the canvas size (lines break only where the text does), so a resize
+  // only changes what is visible; in Fit mode the zoom follows.
+  new ResizeObserver(() => { if (zoomFit) fitZoom(); }).observe($('#stage'));
 
   // drag & drop font files
   let depth = 0;
@@ -2926,6 +2989,7 @@ async function boot() {
   ensureBaseOn();
   S.restoredOff = null;
   S.restoredShares = null;
+  applyPanelWidths();
   setZoom(1);
   renderPool();
   render();
