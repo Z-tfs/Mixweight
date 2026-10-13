@@ -1,0 +1,276 @@
+<style>
+/* V3.2 demo layer. Everything here is scoped to html.v32 so "Before" shows the live tool untouched. */
+.mwc-only { display: none; }
+.v32 .mwc-only { display: initial; }
+.v32 .rail > .cell > .cell-h { align-items: center; min-width: 0; flex-wrap: nowrap; }
+.v32 .rail > .cell { min-width: 0; }
+.v32 .rail .cell-h .mwc-h { display: inline-flex; align-items: center; gap: 8px; flex: none; }
+.v32 .rail .cell-h .mwc-fold { font-weight: 700; font-size: 13px; letter-spacing: .01em; text-transform: uppercase; display: inline-flex; align-items: center; gap: 6px; padding: 0; color: var(--ink); white-space: nowrap; }
+.v32 .rail .cell-h .mwc-fold::before { content: ""; width: 0; height: 0; border-left: 4px solid transparent; border-right: 4px solid transparent; border-top: 5px solid var(--ink); transition: transform .12s; }
+.v32 .rail .cell.mwc-c .cell-h .mwc-fold::before { transform: rotate(-90deg); }
+.v32 .rail .cell-h .mwc-q { width: 15px; height: 15px; border: 1px solid var(--g4); border-radius: 50%; font-size: 10px; line-height: 13px; text-align: center; color: var(--g4); padding: 0; }
+.v32 .rail .cell-h .mwc-q:hover, .v32 .rail .cell.mwc-help .cell-h .mwc-q { background: var(--ink); border-color: var(--ink); color: var(--paper); }
+.v32 .rail .cell-h .r { color: var(--g4); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; flex: 1 1 0; text-align: right; }
+.v32 .rail > .cell.mwc-c { padding-bottom: 9px; }
+.v32 .rail > .cell.mwc-c > :not(.cell-h) { display: none !important; }
+.v32 .rail > .cell:not(.mwc-help) > p.hint { display: none; }
+.v32 .rail > .cell[data-mwc-export], .v32 .rail > .cell[data-mwc-gone] { display: none; }
+/* Base style folded into Font pool: one compact row, a sub-label instead of a group title. */
+.v32 .cell-pool > .ctl.mwc-base { grid-template-columns: auto 1fr; align-items: baseline; gap: 12px; }
+.v32 .cell-pool > .ctl.mwc-base > label { background: var(--ink); color: var(--paper); font-size: var(--s-xs); letter-spacing: .04em; padding: 3px 6px 2px; align-self: center; line-height: 1; }
+.v32 .cell-pool > .ctl.mwc-base > select { font-size: var(--s-md); }
+.v32 .cell-pool .mwc-basehint { margin: -4px 0 0; color: var(--g4); }
+.mwc-menu { position: fixed; z-index: 120; background: var(--paper); border: var(--rule); min-width: 170px; font-size: var(--s-sm); text-transform: uppercase; }
+.mwc-menu .t { padding: 6px 10px 5px; border-bottom: var(--rule); color: var(--g4); text-transform: none; white-space: nowrap; }
+.mwc-menu button { display: block; width: 100%; text-align: left; padding: 6px 10px; text-transform: uppercase; }
+.mwc-menu button:hover, .mwc-menu button:focus-visible { background: var(--ink); color: var(--paper); }
+.mwc-menu button:disabled { color: var(--g3); background: none; cursor: default; }
+.v32 .cell-pool > .ctl.mwc-base > output { display: none; }
+.v32 .cell-pool > .ctl.mwc-base > select { grid-column: auto !important; }
+.v32 .cell-pool > .cell-h .r.mwc-r { text-transform: none; }
+
+/* Demo card */
+#mwc-card { position: fixed; z-index: 90; right: 18px; bottom: 34px; width: 268px; background: var(--paper); border: var(--rule); font-size: var(--s-sm); }
+#mwc-card .hd { display: flex; justify-content: space-between; align-items: center; padding: 7px 10px; border-bottom: var(--rule); text-transform: uppercase; }
+#mwc-card .hd b { font-weight: 700; }
+#mwc-card .bd { padding: 9px 10px 10px; display: grid; gap: 9px; }
+#mwc-card .seg { display: flex; gap: 14px; text-transform: uppercase; }
+#mwc-card .seg button { color: var(--g4); display: inline-flex; align-items: center; gap: 5px; padding: 0; }
+#mwc-card .seg button[aria-pressed="true"] { color: var(--ink); }
+#mwc-card .seg button[aria-pressed="true"]::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--ink); }
+#mwc-card p { margin: 0; color: var(--g4); line-height: 1.45; }
+#mwc-card .meter { display: grid; gap: 4px; }
+#mwc-card .meter .row { display: flex; justify-content: space-between; text-transform: uppercase; font-variant-numeric: tabular-nums; }
+#mwc-card .bar { position: relative; height: 6px; border: 1px solid var(--ink); }
+#mwc-card .bar i { position: absolute; left: 0; top: 0; bottom: 0; background: var(--ink); }
+#mwc-card .bar u { position: absolute; top: -4px; bottom: -4px; width: 0; border-left: 1px dashed var(--ink); }
+#mwc-card .acts { display: flex; gap: 6px; flex-wrap: wrap; }
+#mwc-card .acts .btn { padding: 4px 8px; font-size: var(--s-xs); }
+#mwc-card .min { padding: 0; color: var(--g4); text-transform: uppercase; }
+#mwc-card.small .bd { display: none; }
+@media (max-width: 900px) { #mwc-card { position: static; width: auto; margin: 16px; } }
+</style>
+
+<div id="mwc-card" role="region" aria-label="V3.2 demo">
+  <div class="hd"><b>V3.2 demo</b><button type="button" class="min" id="mwc-min">Hide</button></div>
+  <div class="bd">
+    <div class="seg" role="group" aria-label="Compare">
+      <button type="button" data-v="before" aria-pressed="false">Before</button>
+      <button type="button" data-v="after" aria-pressed="true">After</button>
+    </div>
+    <p>Click a group title in the left panel to fold it; the right side of the title keeps a summary of its settings. <b style="color:var(--ink);font-weight:400">?</b> opens the group's note.</p>
+    <p>Base is a black-label row in Font pool. <b style="color:var(--ink);font-weight:400">Right-click any style</b> to make it the base. Order: Pool, Text, Mix, Type, Letter align, Jitter, Guidelines. Export lives in the top bar only.</p>
+    <p>Outline moved to the right panel as <b style="color:var(--ink);font-weight:400">Fill</b>, next to Random letter boxes. Open it with the handle on the canvas edge, or here.</p>
+    <div class="meter">
+      <div class="row"><span>Left panel</span><span id="mwc-h"></span></div>
+      <div class="bar"><i id="mwc-bar"></i><u id="mwc-win"></u></div>
+      <div class="row"><span style="color:var(--g4)">Dashed = this window</span><span id="mwc-w" style="color:var(--g4)"></span></div>
+    </div>
+    <div class="acts"><button class="btn" type="button" id="mwc-para">Paragraph panel</button><button class="btn" type="button" id="mwc-fold-all">Fold all</button><button class="btn" type="button" id="mwc-open-all">Unfold all</button></div>
+  </div>
+</div>
+
+<script>
+(() => {
+  const $ = (s, r = document) => r.querySelector(s), $$ = (s, r = document) => [...r.querySelectorAll(s)];
+  const root = document.documentElement;
+  const rail = $('.rail');
+  const store = { get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }, set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} } };
+  const txt = el => (el ? el.textContent.trim() : '');
+  const pressed = sel => $$(sel + ' button[aria-pressed="true"]').map(b => b.textContent.trim());
+  const selTxt = sel => { const s = $(sel); return s && s.selectedOptions[0] ? s.selectedOptions[0].textContent.trim() : ''; };
+
+  // --- find the groups ---
+  const cells = $$('.rail > section.cell');
+  const byTitle = t => cells.find(c => txt($('.cell-h > span', c)).toLowerCase() === t);
+  const pool = $('.rail > .cell-pool'), text = byTitle('text'), mix = byTitle('mix'), align = byTitle('letter align'),
+        setting = byTitle('setting'), outline = byTitle('outline'), guides = byTitle('guides'), exp = byTitle('export');
+  if (exp) exp.dataset.mwcExport = '1';
+
+  // --- Setting -> Type + Jitter (moves nodes; Before puts them back) ---
+  const jitter = document.createElement('section');
+  jitter.className = 'cell mwc-jitter';
+  jitter.innerHTML = '<div class="cell-h"><span>Jitter</span><span class="r"></span></div><div class="pair"></div><p class="hint">Size range, base jitter and track jitter add a random amount to each letter, picked from the seed. Baseline jitter only moves letters set on the baseline.</p>';
+  const jpair = $('.pair', jitter);
+  const jitterCtl = ['sizevar', 'basejit', 'trackjit'].map(id => document.getElementById(id).closest('.ctl'));
+  const home = jitterCtl.map(el => ({ el, parent: el.parentNode, next: el.nextSibling }));
+  const gapsCtl = document.getElementById('gaps').closest('.ctl');
+  const gapsHome = { parent: gapsCtl.parentNode, next: gapsCtl.nextSibling };
+  // Include guides checkbox -> Guidelines
+  const inc = $('#exp-guides') && $('#exp-guides').closest('label');
+  const incHome = inc && { parent: inc.parentNode, next: inc.nextSibling, html: inc.lastChild.textContent };
+  const baseRow = $('#base').closest('.ctl');
+  const baseLabel = $('label', baseRow), baseLabelOrig = baseLabel.textContent;
+  const baseHint = document.createElement('p');
+  baseHint.className = 'mwc-basehint mwc-only';
+  baseHint.textContent = 'Right-click any style above to make it the base.';
+  baseRow.after(baseHint);
+  const origOrder = $$('.rail > section.cell');
+
+  // --- headers: fold button, ? button, summary slot ---
+  const all = () => $$('.rail > section.cell').filter(c => !c.dataset.mwcExport && !c.dataset.mwcGone);
+  // Outline -> right panel paragraph mode, as Fill
+  const fillSec = document.createElement('section');
+  fillSec.className = 'cell mwc-fill';
+  fillSec.innerHTML = '<div class="cell-h"><span>Fill</span><span class="r"></span></div>';
+  const outKids = [...outline.children].filter(k => !k.classList.contains('cell-h'));
+  const outLabel = $('label[for=outline]'), outLabelOrig = outLabel.textContent;
+  function decorate(c) {
+    const h = $('.cell-h', c); if (!h || h.dataset.mwc) return;
+    h.dataset.mwc = '1';
+    const t = h.firstElementChild, r = h.querySelector('.r');
+    const name = txt(t);
+    t.dataset.orig = name;
+    t.innerHTML = `<span class="mwc-orig">${name}</span><span class="mwc-only mwc-h"><button type="button" class="mwc-fold" aria-expanded="true"></button>${$(':scope > p.hint', c) ? '<button type="button" class="mwc-q" aria-label="About this group">?</button>' : ''}</span>`;
+    if (r) { r.dataset.orig = r.innerHTML; }
+  }
+  const css = document.createElement('style');
+  css.textContent = '.v32 .mwc-orig{display:none}';
+  document.head.appendChild(css);
+
+  function title(c) {
+    if (c === setting) return 'Type';
+    if (c === guides) return 'Guidelines';
+    return $('.cell-h > span', c).dataset.orig;
+  }
+
+  // --- summaries ---
+  function summary(c) {
+    if (c === pool) {
+      const fams = $$('#pool .fam').length, pc = txt($('#pool-count')).replace(/\s*in mix/i, '');
+      return `${fams} ${fams === 1 ? 'family' : 'families'} · ${pc.replace(/\s+/g, '').replace('styles', ' styles')} · base ${selTxt('#base')}`;
+    }
+    if (c === text) { const p = pressed('#case')[0] || ''; return p === 'Random' ? `Random · ${txt($('#case-amt-o'))} caps` : p; }
+    if (c === mix) return [txt($('#mix-o')), selTxt('#dist'), pressed('#gran')[0]].filter(Boolean).join(' · ');
+    if (c === align) return pressed('#valign')[0] || '';
+    if (c === setting) return [txt($('#size-o')), txt($('#leading-o')) + ' lead', txt($('#track-o')) + ' track', pressed('#align')[0]].join(' · ');
+    if (c === jitter) {
+      const v = ['#sizevar-o', '#basejit-o', '#trackjit-o'].map(s => txt($(s)));
+      return v.every(x => /^±?0(\s|%|$)/.test(x)) ? 'Off' : v.join(' · ');
+    }
+    if (c === outline || c === fillSec) { const o = txt($('#outline-o')); return /^0\s*%$/.test(o) ? 'Off' : `${o} · ${txt($('#strokew-o'))}`; }
+    if (c === guides) { const g = pressed('#guides'); const e = $('#exp-guides') && $('#exp-guides').checked; return (g.length ? g.join(' · ') : 'Off') + (g.length && e ? ' · in export' : ''); }
+    return '';
+  }
+  function paint() {
+    if (!root.classList.contains('v32')) return;
+    for (const c of all()) {
+      decorate(c);
+      const f = $('.mwc-fold', c); if (f) f.textContent = title(c);
+      const r = $('.cell-h .r', c); if (r) { r.textContent = summary(c); r.title = r.textContent; r.classList.add('mwc-r'); }
+    }
+    const fr = $('.cell-h .r', fillSec); if (fr) fr.textContent = summary(fillSec);
+    measure();
+  }
+
+  // --- before / after ---
+  function setMode(after) {
+    root.classList.toggle('v32', after);
+    $$('#mwc-card .seg button').forEach(b => b.setAttribute('aria-pressed', String((b.dataset.v === 'after') === after)));
+    if (after) {
+      setting.after(jitter);
+      jitterCtl.forEach(el => jpair.appendChild(el));
+      document.getElementById('track').closest('.ctl').after(gapsCtl);
+      if (inc) { guides.appendChild(inc); inc.lastChild.textContent = ' Include in export'; }
+      outKids.forEach(k => fillSec.appendChild(k));
+      outLabel.textContent = 'Random outline';
+      $('#hov').closest('section.cell').after(fillSec);
+      outline.dataset.mwcGone = '1';
+      baseRow.classList.add('mwc-base'); baseLabel.textContent = 'Base';
+      [pool, text, mix, setting, align, jitter, outline, guides, exp].forEach(c => c && rail.appendChild(c));
+    } else {
+      home.slice().reverse().forEach(({ el, parent, next }) => parent.insertBefore(el, next));
+      gapsHome.parent.insertBefore(gapsCtl, gapsHome.next);
+      jitter.remove();
+      if (inc) { incHome.parent.insertBefore(inc, incHome.next); inc.lastChild.textContent = incHome.html; }
+      outKids.forEach(k => outline.appendChild(k));
+      outLabel.textContent = outLabelOrig;
+      fillSec.remove();
+      delete outline.dataset.mwcGone;
+      baseRow.classList.remove('mwc-base'); baseLabel.textContent = baseLabelOrig;
+      origOrder.forEach(c => rail.appendChild(c));
+      for (const c of $$('.rail > section.cell')) { const r = $('.cell-h .r', c); if (r && r.dataset.orig !== undefined) r.innerHTML = r.dataset.orig; }
+    }
+    store.set('mwc-mode', after ? 'after' : 'before');
+    paint(); measure();
+  }
+
+  // --- folding ---
+  const foldKey = c => 'mwc-fold-' + ($('.cell-h > span', c).dataset.orig || 'jitter');
+  function fold(c, on, save = true) {
+    c.classList.toggle('mwc-c', on);
+    const f = $('.mwc-fold', c); if (f) f.setAttribute('aria-expanded', String(!on));
+    if (save) store.set(foldKey(c), on ? '1' : '0');
+    measure();
+  }
+  rail.addEventListener('click', e => {
+    if (!root.classList.contains('v32')) return;
+    const c = e.target.closest('section.cell'); if (!c) return;
+    if (e.target.closest('.mwc-q')) { c.classList.toggle('mwc-help'); if (c.classList.contains('mwc-c')) fold(c, false); measure(); return; }
+    if (e.target.closest('.mwc-fold')) fold(c, !c.classList.contains('mwc-c'));
+  });
+  $('#mwc-fold-all').onclick = () => { all().forEach(c => fold(c, true)); };
+  $('#mwc-para').onclick = () => { const h = $('#handle'); document.body.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true })); if (h) h.click(); };
+  $('#mwc-open-all').onclick = () => { all().forEach(c => fold(c, false)); };
+
+  // --- height meter ---
+  function measure() {
+    const h = rail.scrollHeight, win = rail.clientHeight;
+    const max = Math.max(2000, h);
+    $('#mwc-h').textContent = h.toLocaleString() + ' px';
+    $('#mwc-w').textContent = win.toLocaleString() + ' px';
+    $('#mwc-bar').style.width = Math.min(100, h / max * 100) + '%';
+    $('#mwc-win').style.left = Math.min(100, win / max * 100) + '%';
+  }
+  window.addEventListener('resize', measure);
+
+  $$('#mwc-card .seg button').forEach(b => b.onclick = () => setMode(b.dataset.v === 'after'));
+  $('#mwc-min').onclick = () => { const s = $('#mwc-card').classList.toggle('small'); $('#mwc-min').textContent = s ? 'Show' : 'Hide'; };
+
+  // keep summaries live
+  let q = 0; const later = () => { cancelAnimationFrame(q); q = requestAnimationFrame(() => setTimeout(paint, 0)); };
+  ['input', 'change', 'click', 'keyup'].forEach(t => document.addEventListener(t, later, true));
+  new MutationObserver(later).observe($('#pool'), { childList: true, subtree: true });
+
+  // --- right-click a style chip: set as base ---
+  let menu = null;
+  const closeMenu = () => { if (menu) { menu.remove(); menu = null; } };
+  document.addEventListener('contextmenu', e => {
+    if (!root.classList.contains('v32')) return;
+    const chip = e.target.closest('#pool .chip'); if (!chip) return;
+    e.preventDefault(); closeMenu();
+    const fam = txt($('.fam-h .nm', chip.closest('.fam')));
+    const style = chip.firstChild ? chip.firstChild.textContent.trim() : '';
+    const opt = $$('#base option').find(o => o.textContent.trim() === fam + ' ' + style);
+    const isBase = chip.classList.contains('is-base');
+    const on = chip.getAttribute('aria-pressed') === 'true';
+    menu = document.createElement('div');
+    menu.className = 'mwc-menu'; menu.setAttribute('role', 'menu');
+    menu.innerHTML = `<div class="t">${fam} ${style}</div><button type="button" role="menuitem">${isBase ? 'Already the base' : on ? 'Set as base style' : 'Add to mix + set as base'}</button>`;
+    const btn = $('button', menu); btn.disabled = isBase || !opt;
+    btn.onclick = () => {
+      if (!on) chip.click();
+      requestAnimationFrame(() => {
+        const o = $$('#base option').find(o => o.textContent.trim() === fam + ' ' + style);
+        if (o) { const sel = $('#base'); sel.value = o.value; sel.dispatchEvent(new Event('change', { bubbles: true })); }
+        closeMenu();
+      });
+    };
+    document.body.appendChild(menu);
+    const w = menu.offsetWidth, h = menu.offsetHeight;
+    menu.style.left = Math.min(e.clientX, innerWidth - w - 8) + 'px';
+    menu.style.top = Math.min(e.clientY, innerHeight - h - 8) + 'px';
+    btn.focus();
+  });
+  document.addEventListener('pointerdown', e => { if (menu && !menu.contains(e.target)) closeMenu(); }, true);
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeMenu(); });
+  rail.addEventListener('scroll', closeMenu);
+
+  function boot() {
+    setMode(store.get('mwc-mode') !== 'before');
+    for (const c of all()) { decorate(c); if (store.get(foldKey(c)) === '1') fold(c, true, false); }
+    paint();
+  }
+  if (document.readyState === 'complete') setTimeout(boot, 300); else window.addEventListener('load', () => setTimeout(boot, 300));
+})();
+</script>
