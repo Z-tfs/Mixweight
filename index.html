@@ -398,11 +398,9 @@ body.resizing, body.resizing * { cursor: col-resize !important; user-select: non
 
     <section class="cell">
       <div class="cell-h"><span>Jitter</span></div>
-      <div class="pair">
-        <div class="ctl"><label for="sizevar">Size range</label><output id="sizevar-o"></output><input type="range" id="sizevar" min="0" max="80" step="1"></div>
-        <div class="ctl"><label for="basejit">Base jitter</label><output id="basejit-o"></output><input type="range" id="basejit" min="0" max="30" step="0.5"></div>
-        <div class="ctl"><label for="trackjit">Track jitter</label><output id="trackjit-o"></output><input type="range" id="trackjit" min="0" max="200" step="5"></div>
-      </div>
+      <div class="ctl"><label for="sizevar">Size range</label><output id="sizevar-o"></output><input type="range" id="sizevar" min="0" max="80" step="1"></div>
+      <div class="ctl"><label for="basejit">Base jitter</label><output id="basejit-o"></output><input type="range" id="basejit" min="0" max="30" step="0.5"></div>
+      <div class="ctl"><label for="trackjit">Track jitter</label><output id="trackjit-o"></output><input type="range" id="trackjit" min="0" max="200" step="5"></div>
       <p class="hint">Size range, base jitter and track jitter add a random amount to each letter, picked from the seed. Baseline jitter only moves letters set on the baseline.</p>
     </section>
 
