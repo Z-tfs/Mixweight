@@ -192,8 +192,12 @@ textarea:focus { background: var(--g2); outline: none; }
 .numin input { width: 6ch; border: 0; border-bottom: var(--rule); background: transparent; text-align: right; font-variant-numeric: tabular-nums; padding: 0 1px 0 2px; border-radius: 0; -moz-appearance: textfield; }
 .numin input::-webkit-inner-spin-button { -webkit-appearance: none; }
 .numin input:focus { outline: 0; background: var(--g1); }
-.corner-row { display: grid; grid-template-columns: 2.4em 1fr; gap: 4px 8px; align-items: center; }
-.corner-row .lab { font-size: var(--s-xs); }
+/* Corners: one grid per row: label | shape | radius (right, like every slider value); the slider under it, full width. */
+#bx-corners { display: grid; gap: 10px; }
+.corner-row { display: grid; grid-template-columns: 2.6em minmax(0, 1fr) auto; gap: 3px 8px; align-items: baseline; }
+.corner-row .opts { gap: 4px 12px; }
+.corner-row output { color: var(--g4); font-variant-numeric: tabular-nums; text-align: right; }
+.corner-row input[type=range] { grid-column: 1 / -1; }
 .btn.sm { padding: 3px 7px; }
 .btn:disabled { color: var(--g3); border-color: var(--g3); background: var(--paper); cursor: default; }
 .chk { display: inline-flex; align-items: center; gap: 7px; text-transform: uppercase; cursor: pointer; }
@@ -541,13 +545,17 @@ body.resizing, body.resizing * { cursor: col-resize !important; user-select: non
         <div class="ctl"><label for="bx-sw">Stroke</label><output id="bx-sw-o"></output><input type="range" id="bx-sw" min="0" max="8" step="0.25"></div>
       </div>
       <div class="ctl"><label for="bx-pad">Expand</label><output id="bx-pad-o"></output><input type="range" id="bx-pad" min="-10" max="40" step="0.5"></div>
-      <div class="row"><span class="lab">Corners</span><button type="button" class="chk" id="bx-lock" aria-pressed="true"><span id="bx-lock-t">Locked: all four</span></button></div>
+      <div class="ctl"><label>Corners</label><output></output></div>
+      <div class="opts" id="bx-lock" role="group" aria-label="Corners">
+        <button type="button" data-v="all">Same for all corners</button>
+        <button type="button" data-v="each">Each corner</button>
+      </div>
       <div id="bx-corners">
-        <div class="corner-row" data-c="all"><span class="lab">All</span><span class="opts"><button type="button" data-v="round">Round</button><button type="button" data-v="bevel">Bevel</button><button type="button" data-v="inverse">Inverse</button></span><span></span><span class="ctl"><output></output><input type="range" min="0" max="60" step="0.5" aria-label="Radius, all corners"></span></div>
-        <div class="corner-row" data-c="0"><span class="lab">TL</span><span class="opts"><button type="button" data-v="round">Round</button><button type="button" data-v="bevel">Bevel</button><button type="button" data-v="inverse">Inverse</button></span><span></span><span class="ctl"><output></output><input type="range" min="0" max="60" step="0.5" aria-label="Radius, top left"></span></div>
-        <div class="corner-row" data-c="1"><span class="lab">TR</span><span class="opts"><button type="button" data-v="round">Round</button><button type="button" data-v="bevel">Bevel</button><button type="button" data-v="inverse">Inverse</button></span><span></span><span class="ctl"><output></output><input type="range" min="0" max="60" step="0.5" aria-label="Radius, top right"></span></div>
-        <div class="corner-row" data-c="2"><span class="lab">BR</span><span class="opts"><button type="button" data-v="round">Round</button><button type="button" data-v="bevel">Bevel</button><button type="button" data-v="inverse">Inverse</button></span><span></span><span class="ctl"><output></output><input type="range" min="0" max="60" step="0.5" aria-label="Radius, bottom right"></span></div>
-        <div class="corner-row" data-c="3"><span class="lab">BL</span><span class="opts"><button type="button" data-v="round">Round</button><button type="button" data-v="bevel">Bevel</button><button type="button" data-v="inverse">Inverse</button></span><span></span><span class="ctl"><output></output><input type="range" min="0" max="60" step="0.5" aria-label="Radius, bottom left"></span></div>
+        <div class="corner-row" data-c="all"><span class="lab">All</span><span class="opts"><button type="button" data-v="round">Round</button><button type="button" data-v="bevel">Bevel</button><button type="button" data-v="inverse">Inverse</button></span><output></output><input type="range" min="0" max="60" step="0.5" aria-label="Radius, all corners"></div>
+        <div class="corner-row" data-c="0"><span class="lab">TL</span><span class="opts"><button type="button" data-v="round">Round</button><button type="button" data-v="bevel">Bevel</button><button type="button" data-v="inverse">Inverse</button></span><output></output><input type="range" min="0" max="60" step="0.5" aria-label="Radius, top left"></div>
+        <div class="corner-row" data-c="1"><span class="lab">TR</span><span class="opts"><button type="button" data-v="round">Round</button><button type="button" data-v="bevel">Bevel</button><button type="button" data-v="inverse">Inverse</button></span><output></output><input type="range" min="0" max="60" step="0.5" aria-label="Radius, top right"></div>
+        <div class="corner-row" data-c="2"><span class="lab">BR</span><span class="opts"><button type="button" data-v="round">Round</button><button type="button" data-v="bevel">Bevel</button><button type="button" data-v="inverse">Inverse</button></span><output></output><input type="range" min="0" max="60" step="0.5" aria-label="Radius, bottom right"></div>
+        <div class="corner-row" data-c="3"><span class="lab">BL</span><span class="opts"><button type="button" data-v="round">Round</button><button type="button" data-v="bevel">Bevel</button><button type="button" data-v="inverse">Inverse</button></span><output></output><input type="range" min="0" max="60" step="0.5" aria-label="Radius, bottom left"></div>
       </div>
     </section>
   </aside>
@@ -2135,8 +2143,7 @@ function renderBoxEditor(gs) {
   setRange('bx-stroke', st.stroke, st.stroke + '%');
   setRange('bx-sw', st.sw, ptTxt(st.sw));
   setRange('bx-pad', st.pad, ptTxt(st.pad));
-  $('#bx-lock').setAttribute('aria-pressed', st.lock);
-  $('#bx-lock-t').textContent = st.lock ? 'Locked: all four' : 'Unlocked: each corner';
+  press('#bx-lock', st.lock ? 'all' : 'each');
   for (const row of $$('#bx-corners .corner-row')) {
     const all = row.dataset.c === 'all';
     row.hidden = all ? !st.lock : st.lock;
@@ -2891,10 +2898,11 @@ async function boot() {
   for (const [id, key] of [['bx-fill', 'fill'], ['bx-op', 'op'], ['bx-stroke', 'stroke'], ['bx-sw', 'sw'], ['bx-pad', 'pad']]) {
     $('#' + id).addEventListener('input', e => { const v = +e.target.value; editBox(key, st => { st[key] = v; }); });
   }
-  $('#bx-lock').onclick = () => {
-    const lock = !boxTargets(selectedGlyphs()).list[0].lock;
+  optClick('#bx-lock', v => {
+    const lock = v === 'all';
+    if (lock === boxTargets(selectedGlyphs()).list[0].lock) return;
     editBox('lock', st => { st.lock = lock; if (lock) st.c = st.c.map(() => Object.assign({}, st.c[0])); });
-  };
+  });
   for (const row of $$('#bx-corners .corner-row')) {
     const qs = row.dataset.c === 'all' ? [0, 1, 2, 3] : [+row.dataset.c];
     row.querySelector('.opts').addEventListener('click', e => {
