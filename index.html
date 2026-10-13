@@ -254,6 +254,10 @@ dialog::backdrop { background: rgba(255, 255, 255, .7); }
 #exp-ask { width: min(400px, calc(100% - 32px)); }
 .dlg.ask { grid-template-rows: auto auto; }
 .ask-b { padding: 14px; display: grid; gap: 14px; }
+.dlg header .hd-r { display: inline-flex; align-items: baseline; gap: 14px; }
+.dlg header .hd-r span { color: var(--g4); }
+.x-close { font-size: 18px; line-height: 1; padding: 0 2px; color: var(--ink); }
+.x-close:hover { color: var(--g4); }
 .ask-b .chk { font-size: var(--s-sm); color: var(--g4); text-transform: none; }
 .help { overflow: auto; }
 .help section { padding: 10px 14px 12px; border-bottom: var(--rule); display: grid; gap: 4px; }
@@ -627,10 +631,10 @@ body.resizing, body.resizing * { cursor: col-resize !important; user-select: non
 
 <dialog id="exp-ask">
   <form method="dialog" class="dlg ask">
-    <header><span>Want the how-to too?</span><span id="ask-app"></span></header>
+    <header><span>Want the how-to too?</span><span class="hd-r"><span id="ask-app"></span><button class="x-close" value="cancel" aria-label="Close without exporting" title="Close without exporting">×</button></span></header>
     <div class="ask-b">
       <div class="btns">
-        <button class="btn solid" value="howto">Script + how-to (.txt)</button>
+        <button class="btn solid" value="howto" autofocus>Script + how-to (.txt)</button>
         <button class="btn" value="script">Just the script</button>
       </div>
       <label class="chk"><input type="checkbox" id="ask-stop"> I know what a .jsx is. Stop asking.</label>
