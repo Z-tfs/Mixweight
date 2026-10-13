@@ -26,6 +26,7 @@ Mix the weights of your installed variable fonts letter by letter, then send the
 - Seed: every random choice comes from it. Reroll for a new one, or click the seed number to type one in and get an earlier result back.
 - Clear: the one above the left panel resets the left panel's look (case, mix, type, letter align, jitter, guidelines) to defaults; Clear edits in the right panel removes every right-panel edit (letter changes, boxes, bands, the paragraph band), sets Random outline and Stroke back to their defaults, and keeps the left-panel settings. Both undo.
 - Panel widths: drag the rule between a panel and the canvas to resize it (left 280–560 px, right 260–520 px, and the canvas keeps at least 360 px); double-click the rule for the default width. Widths are remembered. The text's layout doesn't change with the canvas: in Fit mode the zoom follows the canvas, otherwise the zoom stays put.
+- Folding groups: click a group title in the left panel to fold it to its title row (▸) and again to open it (▾). The summary stays visible while it is folded. All groups start open; each one's state is remembered, and folding isn't an undo step. Folding Font pool hides every family at once; a family's own name still folds just its styles.
 - Group titles: the right side of each title row sums up the group's current settings (for example `70% · Even · Letter` for Mix, `Off` for Jitter at zero) and updates as you change them. The grey note under a group is folded away; click the **?** next to the group title to show it, again to hide it.
 - ⌘Z / ⇧⌘Z undo and redo.
 
