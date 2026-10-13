@@ -141,6 +141,16 @@ textarea:focus { background: var(--g2); outline: none; }
 .chip[aria-pressed="true"]::before { content: ""; display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--ink); margin-right: 5px; vertical-align: .2em; }
 .chip.is-base { position: relative; background: var(--g2); color: var(--ink); padding: 7px 10px 3px 7px; margin-right: 16px; }
 .chip .badge { position: absolute; top: -9px; right: -18px; font: var(--s-xs)/1 var(--ui); font-variation-settings: normal; letter-spacing: .04em; text-transform: uppercase; background: var(--ink); color: var(--paper); padding: 3px 5px 2px; pointer-events: none; }
+.base-row { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 12px; }
+.base-row label { font: var(--s-xs)/1 var(--ui); letter-spacing: .04em; text-transform: uppercase; background: var(--ink); color: var(--paper); padding: 3px 5px 2px; }
+.base-row select { font-size: var(--s-md); }
+.base-hint { margin: -4px 0 0; color: var(--g4); font-size: var(--s-sm); line-height: 1.45; }
+/* Right-click menu on a style chip */
+.ctxmenu { position: fixed; z-index: 70; min-width: 170px; background: var(--paper); border: var(--rule); font-size: var(--s-sm); }
+.ctxmenu .t { padding: 6px 10px 5px; border-bottom: var(--rule); color: var(--g4); white-space: nowrap; }
+.ctxmenu button { display: block; width: 100%; text-align: left; padding: 6px 10px; text-transform: uppercase; }
+.ctxmenu button:hover, .ctxmenu button:focus-visible { background: var(--ink); color: var(--paper); outline: 0; }
+.ctxmenu button:disabled { color: var(--g3); background: none; cursor: default; }
 .chips:has(.is-base) { padding-top: 6px; row-gap: 12px; }
 .fam .ctl input:disabled { opacity: .35; cursor: default; }
 .pool .empty { padding: 14px; color: var(--g4); text-transform: uppercase; }
@@ -307,11 +317,9 @@ body.resizing, body.resizing * { cursor: col-resize !important; user-select: non
     <section class="cell cell-pool">
       <div class="cell-h"><span>Font pool</span><button class="tbtn r" type="button" id="fold-all" title="Fold or open every family's style list. Share of mix stays visible.">Collapse all</button></div>
       <div class="pool" id="pool"></div>
-      <div class="ctl">
-        <label for="base">Base style</label><output>Used at 0% mix</output>
-        <select id="base" style="grid-column:1/-1"></select>
-      </div>
-      <p class="hint">Click a style to mix it in; click a family's name to fold its styles away. Variable fonts are split into their named instances. Drop .ttf, .otf or .ttc files anywhere on the page to add them.</p>
+      <div class="base-row"><label for="base">Base</label><select id="base"></select></div>
+      <p class="base-hint">Right-click any style above to make it the base.</p>
+      <p class="hint">Click a style to mix it in; click a family's name to fold its styles away. The base style is the one letters keep at 0% mix. Variable fonts are split into their named instances. Drop .ttf, .otf or .ttc files anywhere on the page to add them.</p>
     </section>
 
     <section class="cell">
@@ -562,6 +570,7 @@ body.resizing, body.resizing * { cursor: col-resize !important; user-select: non
 </div>
 <div class="tag" id="hovtag" hidden></div>
 
+<div class="ctxmenu" id="ctxmenu" role="menu" hidden></div>
 <div class="drop" id="drop" hidden>Drop to add fonts</div>
 <div class="toast" id="toast" role="status" hidden></div>
 
@@ -581,7 +590,7 @@ body.resizing, body.resizing * { cursor: col-resize !important; user-select: non
       <section><h4>Illustrator</h4><p><b>File › Scripts › Other Script…</b> and pick the file. With a document open, the text lands in the middle of the active artboard; otherwise a new document is made.</p></section>
       <section><h4>InDesign</h4><p><b>Window › Utilities › Scripts</b>. Right-click the User folder › Reveal in Finder, drop the .jsx in, then double-click it in the panel. The frame auto-sizes to the text and the whole thing is one undo.</p></section>
       <section><h4>Photoshop</h4><p><b>File › Scripts › Browse…</b>. A new 72 ppi document opens with one editable type layer you can drag into your comp.</p></section>
-      <section><h4>Base style</h4><p>The base style is the one letters keep at 0% mix. It must be switched on in the pool: styles that are off are greyed out in the list, and switching off the base moves it to the nearest weight that is on.</p></section>
+      <section><h4>Base style</h4><p>The base style is the one letters keep at 0% mix. Pick it from the Base menu, or right-click any style in the pool: Set as base style, or Add to mix + set as base for a style that is off. It must be switched on in the pool: styles that are off are greyed out in the list, and switching off the base moves it to the nearest weight that is on.</p></section>
       <section><h4>Seed</h4><p>Every random choice comes from the seed, so the same seed and settings always give the same result. Click Seed in the toolbar to type one, Enter to apply, Esc to cancel. Note a seed to get a layout back later.</p></section>
       <section><h4>Fonts</h4><p>Fonts are matched by family and style name, then by PostScript name. Variable fonts use their named instances (Light, Bold…), so the app shows what the preview shows. Fonts the app can't find are listed and swapped for its default; the text stays editable.</p></section>
       <section><h4>Family share</h4><p>Share of mix is each family's part of the letters that leave the base style. At first it follows the number of styles switched on. Drag one family and the others make room, keeping their proportions, so the total stays 100%. Styles keep their place in the light → heavy range.</p></section>
@@ -2261,6 +2270,7 @@ function renderPool() {
       const b = document.createElement('button');
       b.type = 'button';
       b.className = 'chip' + (id === S.baseId ? ' is-base' : '');
+      b.dataset.id = id;
       b.textContent = s.style;
       if (id === S.baseId) { const t = document.createElement('span'); t.className = 'badge'; t.textContent = 'Base'; b.appendChild(t); }
       b.style.fontFamily = `"${s.css}", sans-serif`;
@@ -2884,6 +2894,40 @@ async function boot() {
     S.text = text.value; S.sel.clear(); if (!side.pinned) side.open = false; render(); save();
   });
   $('#base').onchange = e => { record(); S.baseId = e.target.value; renderPool(); render(); save(); };
+
+  // Right-click a style chip: make it the base, adding it to the mix first if it is off. One undo step either way.
+  const menu = $('#ctxmenu');
+  const closeMenu = () => { if (menu.hidden) return; menu.hidden = true; menu.innerHTML = ''; };
+  $('#pool').addEventListener('contextmenu', e => {
+    const chip = e.target.closest('.chip'); if (!chip) return;
+    e.preventDefault();
+    const id = chip.dataset.id, st = S.styles.get(id), fam = S.families.find(f => f.ids.includes(id));
+    if (!st || !fam) return;
+    const on = fam.on.has(id), isBase = id === S.baseId;
+    menu.innerHTML = '<div class="t"></div><button type="button" role="menuitem"></button>';
+    menu.querySelector('.t').textContent = st.family + ' ' + st.style;
+    const b = menu.querySelector('button');
+    b.textContent = isBase ? 'Already the base' : on ? 'Set as base style' : 'Add to mix + set as base';
+    b.disabled = isBase;
+    b.onclick = () => {
+      closeMenu();
+      record();
+      fam.on.add(id); S.baseId = id;
+      renderPool(); render(); save();
+    };
+    menu.hidden = false;
+    // At the pointer, or under the chip when opened from the keyboard; kept inside the window.
+    const r = chip.getBoundingClientRect();
+    const x = e.clientX || r.left, y = e.clientY || r.bottom;
+    menu.style.left = Math.max(4, Math.min(x, innerWidth - menu.offsetWidth - 4)) + 'px';
+    menu.style.top = Math.max(4, Math.min(y, innerHeight - menu.offsetHeight - 4)) + 'px';
+    (b.disabled ? menu : b).focus?.();
+  });
+  document.addEventListener('pointerdown', e => { if (!menu.contains(e.target)) closeMenu(); }, true);
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && !menu.hidden) { e.preventDefault(); e.stopImmediatePropagation(); closeMenu(); } }, true);
+  document.addEventListener('scroll', closeMenu, true);
+  window.addEventListener('resize', closeMenu);
+  window.addEventListener('blur', closeMenu);
 
   $('#btn-system').onclick = openPicker;
   $('#btn-files').onclick = () => $('#file-in').click();
