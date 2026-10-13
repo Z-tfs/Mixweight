@@ -17,14 +17,14 @@ Mix the weights of your installed variable fonts letter by letter, then send the
 - Match size: scale each font so its x-height or cap height matches the base style, so mixed families look the same size. Exported as per-letter point size.
 - Letter align: baseline, or geometric top / middle / bottom measured from each glyph's actual outline.
 - Click or drag across letters to change their font, weight or alignment by hand.
-- Right panel: select letters and it opens with their font, size, shift and tracking at the top (the same look as the hover tag), then weight, align, rotation, fill and boxes. Deselect and it folds away; the small handle on the canvas edge opens it for the whole paragraph.
+- Right panel: select letters and it opens with their font, size, shift and tracking at the top (the same look as the hover tag), then weight, align, rotation, fill and boxes. Deselect and it folds away; the small handle on the canvas edge opens it for the whole paragraph: hover info, fill, the paragraph band and random letter boxes.
 - Hover info: point at a letter to see its family, style, size, shift and tracking. On by default; switch it off in the right panel. Canvas only.
 - Boxes: grey boxes per letter (following its ink, size and shift, and its rotation), a straight band under a selection (as tall as the tallest letter, or stepping with each letter; adjustable height), or a band under every line. Fill and stroke grey, stroke weight, opacity, expand, and round / bevel / inverse corners, all four together or each on its own. Random letter boxes by ratio + reroll.
-- Outline: a ratio + reroll sets a share of letters to outline only; selected letters can be set solid or outline, with their own stroke weight.
+- Fill: in the right panel. With nothing selected, Random outline + Reroll outlines sets a share of letters to outline only, with a Stroke weight; selected letters can be set solid or outline, with their own stroke weight.
 - Rotation: angle (slider or number) and random jitter + reroll for the selected letters, each turning on its own centre.
 - Guidelines: baseline, x-height, cap height and ascender of the base style, each on its own switch. Tick **Include in export** in the same group to export them.
 - Seed: every random choice comes from it. Reroll for a new one, or click the seed number to type one in and get an earlier result back.
-- Clear: the one above the left panel resets the left panel's look (case, mix, align, setting, outline, guidelines) to defaults; Clear edits in the right panel removes every right-panel edit (letter changes, boxes, bands, the paragraph band) and keeps the left-panel settings. Both undo.
+- Clear: the one above the left panel resets the left panel's look (case, mix, align, setting, guidelines) to defaults; Clear edits in the right panel removes every right-panel edit (letter changes, boxes, bands, the paragraph band), sets Random outline and Stroke back to their defaults, and keeps the left-panel settings. Both undo.
 - Panel widths: drag the rule between a panel and the canvas to resize it (left 280–560 px, right 260–520 px, and the canvas keeps at least 360 px); double-click the rule for the default width. Widths are remembered. The text's layout doesn't change with the canvas: in Fit mode the zoom follows the canvas, otherwise the zoom stays put.
 - ⌘Z / ⇧⌘Z undo and redo.
 
