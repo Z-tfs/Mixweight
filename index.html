@@ -14,8 +14,8 @@
   --ink: #000000;
   --g1: #f3f3f3;   /* hover / field */
   --g2: #e2e2e2;   /* selected letters, pressed */
-  --g3: #a6a6a6;   /* inactive option */
-  --g4: #6e6e6e;   /* secondary text */
+  --g3: #a6a6a6;   /* unavailable: disabled buttons and options, no hover */
+  --g4: #6e6e6e;   /* secondary text; an option you can pick but haven't (5.1:1 on white) */
   --rule: 1px solid var(--ink);
   --ui: "Helvetica Neue", Helvetica, Arial, "PingFang SC", sans-serif;
   --s-xs: 10px; --s-sm: 11px; --s-md: 13px; --s-lg: 15px;
@@ -76,9 +76,11 @@ button { background: none; border: 0; padding: 0; cursor: pointer; }
 .hint { color: var(--g4); font-size: var(--s-sm); margin: 0; line-height: 1.45; }
 
 .opts { display: flex; flex-wrap: wrap; gap: 4px 14px; text-transform: uppercase; }
-.opts button { color: var(--g3); display: inline-flex; align-items: center; gap: 5px; padding: 2px 0; }
+.opts button { color: var(--g4); display: inline-flex; align-items: center; gap: 5px; padding: 2px 0; }
+/* Three states everywhere: picked = ink with a dot, can pick = --g4 (ink on hover), unavailable = --g3, no hover. */
 .opts button:hover { color: var(--ink); }
 .opts button[aria-pressed="true"] { color: var(--ink); }
+.opts button:disabled { color: var(--g3); cursor: default; }
 .opts button[aria-pressed="true"]::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--ink); }
 
 .ctl { display: grid; grid-template-columns: 1fr auto; gap: 3px 8px; align-items: baseline; }
@@ -129,9 +131,11 @@ textarea:focus { background: var(--g2); outline: none; }
 .cell-pool .cell-h .tbtn { color: var(--g4); }
 .cell-pool .cell-h .tbtn:hover { color: var(--ink); }
 .chips { display: flex; flex-wrap: wrap; align-items: baseline; gap: 3px 12px; }
-.chip { font-size: var(--s-lg); color: var(--g3); padding: 1px 0; line-height: 1.2; }
+.chip { font-size: var(--s-lg); color: var(--g4); padding: 1px 0; line-height: 1.2; }
+.chip:hover { color: var(--ink); }
+/* In the mix: ink with the same dot as a picked option. */
 .chip[aria-pressed="true"] { color: var(--ink); }
-.chip:hover { color: var(--g4); }
+.chip[aria-pressed="true"]::before { content: ""; display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--ink); margin-right: 5px; vertical-align: .2em; }
 .chip.is-base { position: relative; background: var(--g2); color: var(--ink); padding: 7px 10px 3px 7px; margin-right: 16px; }
 .chip .badge { position: absolute; top: -9px; right: -18px; font: var(--s-xs)/1 var(--ui); font-variation-settings: normal; letter-spacing: .04em; text-transform: uppercase; background: var(--ink); color: var(--paper); padding: 3px 5px 2px; pointer-events: none; }
 .chips:has(.is-base) { padding-top: 6px; row-gap: 12px; }
