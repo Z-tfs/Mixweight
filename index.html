@@ -50,6 +50,9 @@ button { background: none; border: 0; padding: 0; cursor: pointer; }
 .nav .exp span { color: var(--g4); font-size: var(--s-sm); }
 .q { width: 15px; height: 15px; border: 1px solid var(--g4); border-radius: 50%; padding: 0; font-size: 10px; line-height: 13px; justify-content: center; color: var(--g4); flex: none; }
 .nav .q { color: var(--g4); align-self: center; margin-left: -8px; }
+.cell-h .q { display: inline-block; margin-left: 7px; vertical-align: 1px; text-align: center; font-weight: 400; letter-spacing: 0; }
+.cell > p.hint { display: none; }
+.cell.hint-open > p.hint { display: block; }
 .q:hover, .q[aria-expanded="true"], .nav .q:hover { background: var(--ink); border-color: var(--ink); color: var(--paper); }
 .dot::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--ink); display: inline-block; }
 
@@ -598,6 +601,7 @@ body.resizing, body.resizing * { cursor: col-resize !important; user-select: non
       <section><h4>Even gaps</h4><p>Where neighbouring letters come from different fonts, their sidebearings differ and the gaps look uneven. Even gaps adjusts the left letter's tracking so the gap moves halfway between the spacing of the two fonts it joins, instead of jumping from one to the other. It exports as tracking.</p></section>
       <section><h4>Match size</h4><p>Different families at the same point size look different sizes. x-height or Cap height scales each letter's font so its lowercase x or capital H is as tall as in the base style (limited to 60–160%). It is written as the letter's point size, so it stays editable; leading follows the nominal size.</p></section>
       <section><h4>Letter align</h4><p>Top, middle and bottom alignment are written as baseline shift values. If you change a letter or its font afterwards, export again to re-align.</p></section>
+      <section><h4>Group notes</h4><p>Groups with a short note have a <b>?</b> next to their title. Click it to show the note, again to hide it.</p></section>
       <section><h4>Right panel</h4><p>Selecting letters opens it with their font, size, shift and tracking at the top, then weight, align, <b>rotation</b>, <b>fill</b> and <b>boxes</b>. With nothing selected, the handle on the right edge opens the paragraph settings: hover info, <b>fill</b> (random outline, stroke), the paragraph band, random letter boxes. Clear edits there also sets Random outline and Stroke back to their defaults.</p></section>
       <section><h4>Boxes</h4><p>Letter boxes follow each letter's ink, size and shift, and turn with it. A band runs under the selection, as tall as its tallest letter or stepping with each one; the paragraph band does the same for every line. Greys only. They export under the text as vector shapes: InDesign rectangles keep live corner options, Illustrator and Photoshop get the exact path.</p></section>
       <section><h4>Outline and rotation</h4><p>Outline letters export as live text with no fill and a black stroke; rotation as character rotation, about the centre of the em box. Photoshop can do neither per letter inside one type layer, so those letters become their own type layers (outline as a layer-style stroke) and the main layer keeps a space of the same width.</p></section>
@@ -2842,6 +2846,27 @@ async function loadDemo() {
   await addFontBuffers(bufs, 'demo');
 }
 
+// Each group's grey note is folded away behind a ? next to its title. Open or closed is only the view: not an undo
+// step and not saved.
+function setupHints() {
+  $$('.rail > .cell, .side .cell').forEach((cell, n) => {
+    const hint = cell.querySelector(':scope > p.hint'), title = cell.querySelector(':scope > .cell-h > :first-child');
+    if (!hint || !title) return;
+    hint.id = hint.id || 'hint-' + n;
+    const q = document.createElement('button');
+    q.type = 'button'; q.className = 'q'; q.textContent = '?';
+    q.setAttribute('aria-label', 'About ' + title.textContent);
+    q.setAttribute('aria-controls', hint.id);
+    q.setAttribute('aria-expanded', 'false');
+    q.onclick = e => {
+      e.stopPropagation();
+      const open = cell.classList.toggle('hint-open');
+      q.setAttribute('aria-expanded', open);
+    };
+    title.appendChild(q);
+  });
+}
+
 async function boot() {
   const saved = loadSaved();
   if (saved) {
@@ -2864,6 +2889,7 @@ async function boot() {
   }
   fixDeco();
 
+  setupHints();
   bindRange('case-amt', 'caseAmt', v => v + '%');
   bindRange('mix', 'mix', v => v + '%');
   bindRange('size', 'size', ptTxt);
