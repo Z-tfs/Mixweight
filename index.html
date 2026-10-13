@@ -48,6 +48,9 @@ button { background: none; border: 0; padding: 0; cursor: pointer; }
 .nav button:hover { color: var(--g4); }
 .nav .exp { display: inline-flex; gap: 14px; align-items: baseline; }
 .nav .exp span { color: var(--g4); font-size: var(--s-sm); }
+.q { width: 15px; height: 15px; border: 1px solid var(--g4); border-radius: 50%; padding: 0; font-size: 10px; line-height: 13px; justify-content: center; color: var(--g4); flex: none; }
+.nav .q { color: var(--g4); align-self: center; margin-left: -8px; }
+.q:hover, .q[aria-expanded="true"], .nav .q:hover { background: var(--ink); border-color: var(--ink); color: var(--paper); }
 .dot::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--ink); display: inline-block; }
 
 /* sub-bar */
@@ -227,6 +230,10 @@ dialog::backdrop { background: rgba(255, 255, 255, .7); }
 .dlg li button[data-state="added"] .ct { color: var(--ink); }
 .dlg footer { padding: 9px 14px; border-top: var(--rule); display: flex; justify-content: space-between; align-items: center; gap: 12px; }
 .dlg.two { grid-template-rows: auto minmax(0, 1fr) auto; }
+#exp-ask { width: min(400px, calc(100% - 32px)); }
+.dlg.ask { grid-template-rows: auto auto; }
+.ask-b { padding: 14px; display: grid; gap: 14px; }
+.ask-b .chk { font-size: var(--s-sm); color: var(--g4); text-transform: none; }
 .help { overflow: auto; }
 .help section { padding: 10px 14px 12px; border-bottom: var(--rule); display: grid; gap: 4px; }
 .help section:last-child { border-bottom: 0; }
@@ -268,7 +275,7 @@ body.resizing, body.resizing * { cursor: col-resize !important; user-select: non
       <button type="button" id="btn-files">Font files</button>
       <input type="file" id="file-in" accept=".ttf,.otf,.ttc,.otc" multiple hidden>
       <button type="button" id="btn-help">Help</button>
-      <span class="exp"><span>Export</span>
+      <span class="exp"><span>Export</span><button type="button" class="q" id="exp-q" aria-label="About exporting" aria-haspopup="dialog">?</button>
         <button type="button" data-exp="ai">AI</button>
         <button type="button" data-exp="id">ID</button>
         <button type="button" data-exp="ps">PS</button>
@@ -277,7 +284,7 @@ body.resizing, body.resizing * { cursor: col-resize !important; user-select: non
   </header>
 
   <div class="sub">
-    <div><span>Controls</span><span class="grp"><span class="muted" id="pool-count"></span><button class="tbtn" type="button" id="clear-left" title="Reset the left panel's settings (case, mix, align, setting, outline, guides) to their defaults. Text, fonts and edits in the right panel stay. ⌘Z brings them back.">Clear</button></span></div>
+    <div><span>Controls</span><span class="grp"><span class="muted" id="pool-count"></span><button class="tbtn" type="button" id="clear-left" title="Reset the left panel's settings (case, mix, align, setting, outline, guidelines) to their defaults. Text, fonts and edits in the right panel stay. ⌘Z brings them back.">Clear</button></span></div>
     <div>
       <span class="grp">
         <button class="tbtn" type="button" id="undo" title="⌘Z" disabled>Undo</button>
@@ -403,24 +410,14 @@ body.resizing, body.resizing * { cursor: col-resize !important; user-select: non
     </section>
 
     <section class="cell">
-      <div class="cell-h"><span>Guides</span><span class="r">Base style metrics</span></div>
-      <div class="opts" id="guides" role="group" aria-label="Guides">
+      <div class="cell-h"><span>Guidelines</span><span class="r">Base style metrics</span></div>
+      <div class="opts" id="guides" role="group" aria-label="Guidelines">
         <button type="button" data-v="base">Baseline</button>
         <button type="button" data-v="x">x-height</button>
         <button type="button" data-v="cap">Cap height</button>
         <button type="button" data-v="asc">Ascender</button>
       </div>
-    </section>
-
-    <section class="cell">
-      <div class="cell-h"><span>Export</span><span class="r">Live, editable text</span></div>
-      <div class="btns">
-        <button class="btn" type="button" data-exp="ai">Illustrator .jsx</button>
-        <button class="btn" type="button" data-exp="id">InDesign .jsx</button>
-        <button class="btn" type="button" data-exp="ps">Photoshop .jsx</button>
-      </div>
-      <label class="chk"><input type="checkbox" id="exp-guides"> Include guides</label>
-      <p class="hint" id="exp-note">Each script rebuilds the text inside the app with every letter's font, style, size, baseline shift and tracking set. Boxes come along as editable shapes under the text; guides only when Include guides is ticked.</p>
+      <label class="chk"><input type="checkbox" id="exp-guides"> Include in export</label>
     </section>
   </aside>
 
@@ -592,9 +589,36 @@ body.resizing, body.resizing * { cursor: col-resize !important; user-select: non
       <section><h4>Right panel</h4><p>Selecting letters opens it with their font, size, shift and tracking at the top, then weight, align, <b>rotation</b>, <b>fill</b> and <b>boxes</b>. With nothing selected, the handle on the right edge opens the paragraph settings: hover info, the paragraph band, random letter boxes.</p></section>
       <section><h4>Boxes</h4><p>Letter boxes follow each letter's ink, size and shift, and turn with it. A band runs under the selection, as tall as its tallest letter or stepping with each one; the paragraph band does the same for every line. Greys only. They export under the text as vector shapes: InDesign rectangles keep live corner options, Illustrator and Photoshop get the exact path.</p></section>
       <section><h4>Outline and rotation</h4><p>Outline letters export as live text with no fill and a black stroke; rotation as character rotation, about the centre of the em box. Photoshop can do neither per letter inside one type layer, so those letters become their own type layers (outline as a layer-style stroke) and the main layer keeps a space of the same width.</p></section>
-      <section><h4>Guides</h4><p>Baseline, x-height, cap height and ascender of the base style at the set size. Tick Include guides to export them as plain lines on their own layer or group.</p></section>
+      <section><h4>Guidelines</h4><p>Baseline, x-height, cap height and ascender of the base style at the set size. Tick Include in export under Guidelines to export them as plain lines on their own layer or group, named Mixweight guidelines.</p></section>
     </div>
     <footer><span></span><button class="btn solid" value="close">Close</button></footer>
+  </form>
+</dialog>
+
+<dialog id="exp-ask">
+  <form method="dialog" class="dlg ask">
+    <header><span>Want the how-to too?</span><span id="ask-app"></span></header>
+    <div class="ask-b">
+      <div class="btns">
+        <button class="btn solid" value="howto">Script + how-to (.txt)</button>
+        <button class="btn" value="script">Just the script</button>
+      </div>
+      <label class="chk"><input type="checkbox" id="ask-stop"> I know what a .jsx is. Stop asking.</label>
+    </div>
+  </form>
+</dialog>
+
+<dialog id="exp-help">
+  <form method="dialog" class="dlg two">
+    <header><span>Export</span><span>.jsx · live, editable text</span></header>
+    <div class="help">
+      <section><p>Each script rebuilds the text inside the app with every letter's font, style, size, baseline shift and tracking set. Boxes come along as editable shapes under the text; guidelines only when Include in export is ticked under Guidelines.</p></section>
+      <section><h4>Illustrator</h4><p><b>File › Scripts › Other Script…</b> and pick the file. With a document open, the text lands in the middle of the active artboard; otherwise a new document is made.</p></section>
+      <section><h4>InDesign</h4><p><b>Window › Utilities › Scripts</b>. Right-click the User folder › Reveal in Finder, drop the .jsx in, then double-click it in the panel. The frame auto-sizes to the text and the whole thing is one undo.</p></section>
+      <section><h4>Photoshop</h4><p><b>File › Scripts › Browse…</b>. A new 72 ppi document opens with one editable type layer you can drag into your comp.</p></section>
+      <section><h4>How-to file</h4><p id="ask-state"></p></section>
+    </div>
+    <footer><button class="btn" type="button" id="ask-again">Ask me again</button><button class="btn solid" value="close">Close</button></footer>
   </form>
 </dialog>
 
@@ -702,7 +726,7 @@ body.resizing, body.resizing * { cursor: col-resize !important; user-select: non
   }
   if (D.guides.length) {
     var gl = doc.layers.add();
-    gl.name = 'Mixweight guides';
+    gl.name = 'Mixweight guidelines';
     for (var u = 0; u < D.guides.length; u++) {
       var G = D.guides[u], li = gl.pathItems.add();
       li.setEntirePath([pt(G.x0, G.y, G.k), pt(G.x1, G.y, G.k)]);
@@ -864,8 +888,13 @@ body.resizing, body.resizing * { cursor: col-resize !important; user-select: non
       try { bg.sendToBack(tf); } catch (e) { try { bg.sendToBack(); } catch (e2) {} }
     }
     if (D.guides.length) {
-      var gl = doc.layers.itemByName('Mixweight guides');
-      if (!gl.isValid) gl = doc.layers.add({ name: 'Mixweight guides' });
+      // Reuse the layer from an earlier export; one made before V3.2 is still called Mixweight guides.
+      var gl = doc.layers.itemByName('Mixweight guidelines');
+      if (!gl.isValid) {
+        gl = doc.layers.itemByName('Mixweight guides');
+        if (gl.isValid) gl.name = 'Mixweight guidelines';
+        else gl = doc.layers.add({ name: 'Mixweight guidelines' });
+      }
       var gls = [];
       for (var u = 0; u < D.guides.length; u++) {
         var G = D.guides[u], go = at(G), ln = page.graphicLines.add({ itemLayer: gl });
@@ -874,7 +903,7 @@ body.resizing, body.resizing * { cursor: col-resize !important; user-select: non
         ln.name = G.n;
         gls.push(ln);
       }
-      if (gls.length > 1) page.groups.add(gls, gl).name = 'Mixweight guides';
+      if (gls.length > 1) page.groups.add(gls, gl).name = 'Mixweight guidelines';
     }
     try { tf.select(); } catch (e) {}
     if (missing.length) alert(MSG.missing + '\n\n' + missing.join('\n'));
@@ -1121,7 +1150,7 @@ body.resizing, body.resizing * { cursor: col-resize !important; user-select: non
       }
       doc.activeLayer = main;
       var gSet = doc.layerSets.add();
-      gSet.name = 'Mixweight guides';
+      gSet.name = 'Mixweight guidelines';
       for (var o = 0; o < order.length; o++) {
         doc.activeLayer = main;
         var GL = shape(kinds[order[o]], 45, order[o]);
@@ -1169,6 +1198,7 @@ const DEFAULTS = {
   outlineAmt: 0, outlineSeed: 7, strokeW: 1,
   guides: { base: false, x: false, cap: false, asc: false },
   hoverInfo: true,
+  expAsk: '', // export: '' asks each time; 'howto' or 'script' once Stop asking is ticked
   panelW: { l: 320, r: 300 }, // panel widths in px; view state, not in undo
   collapsed: new Set(), // family names whose style list is folded; view state, not in undo
   boxAmt: 30, boxSeed: 11,
@@ -2549,21 +2579,81 @@ function buildScript(app) {
   return esc(head + '\n' + body);
 }
 
-function exportFor(app) {
-  if (!S.styles.size || !S.lines.some(l => l.length)) { toast('Add fonts and some text first.'); return; }
-  const src = buildScript(app);
-  const name = `mixweight-${TARGET[app]}.jsx`;
+// The how-to that can ride along with a script: the README's steps for that app plus its After running notes.
+const HOWTO_STEPS = {
+  ai: [
+    'Open the document you want the text in. If none is open, the script makes a new one.',
+    'File > Scripts > Other Script... (Cmd+F12).',
+    'Pick mixweight-illustrator.jsx. The text lands in the middle of the active artboard, selected.',
+  ],
+  id: [
+    'Window > Utilities > Scripts.',
+    'Right-click the User folder > Reveal in Finder.',
+    'Drop mixweight-indesign.jsx into that folder.',
+    'Double-click it in the Scripts panel. The text goes on the current page in a frame that sizes itself to the text; one Cmd+Z undoes the whole thing.',
+  ],
+  ps: [
+    'File > Scripts > Browse...',
+    'Pick mixweight-photoshop.jsx. A new 72 ppi document opens with one editable type layer you can drag into your comp.',
+  ],
+};
+const HOWTO_AFTER = [
+  'The type is fully editable. Change words or fonts as usual.',
+  'If the app says some fonts weren\'t found, they aren\'t installed on that computer; those letters fall back to the app\'s default font. Install the font, select those letters and reapply it. The sample fonts (Inter, Lora) only match if they are installed.',
+  'Fonts are matched by family and style name, then PostScript name. Variable fonts use their named instances (Light, Bold...), so the app shows what the preview shows.',
+  'Outline letters are live text with no fill and a black stroke. Rotated letters use character rotation, which Illustrator and InDesign apply about the centre of the letter\'s em box; Mixweight rotates about the same point, so boxes stay with their letters.',
+  'Photoshop has no per-letter rotation or outline inside one type layer, so those letters become their own type layers (outline as a layer-style stroke, fill at 0%), and the main layer keeps a space tracked to the same width. Everything is still live type.',
+  'Top / middle / bottom letter alignment is written as baseline shift values worked out for those exact glyphs. If you change a letter or its font in the app, export again from Mixweight to re-align.',
+];
+function howto(app) {
+  const t = `Mixweight -> ${APP_NAME[app]}: running mixweight-${TARGET[app]}.jsx`;
+  return [
+    t, '='.repeat(t.length), '',
+    'The .jsx is a script. Run it inside ' + APP_NAME[app] + ' and it rebuilds the text there as live type, with every letter\'s font, style, size, baseline shift, tracking, rotation and outline already set. Nothing is outlined.',
+    '',
+    ...(app === 'id' ? ['InDesign only runs scripts from its Scripts panel, so there is one extra step the first time.', ''] : []),
+    ...HOWTO_STEPS[app].map((l, i) => `${i + 1}. ${l}`),
+    ...(app === 'id' ? ['', 'Later exports have the same file name: replace the file in that folder and double-click again.'] : []),
+    '', 'After running', '-------------', '',
+    ...HOWTO_AFTER.map(l => '- ' + l),
+    '',
+  ].join('\r\n');
+}
+
+function download(name, src) {
   const url = URL.createObjectURL(new Blob([src], { type: 'text/plain' }));
   const a = document.createElement('a');
   a.href = url; a.download = name;
   document.body.appendChild(a); a.click(); a.remove();
   setTimeout(() => URL.revokeObjectURL(url), 4000);
-  $('#exp-note').textContent = `Saved ${name}. ${RUN_HINT[app]}`;
+}
+
+// AI / ID / PS: ask whether the how-to should come too, unless Stop asking settled it.
+function exportFor(app) {
+  if (!S.styles.size || !S.lines.some(l => l.length)) { toast('Add fonts and some text first.'); return; }
+  if (S.expAsk) { exportFiles(app, S.expAsk === 'howto'); return; }
+  const dlg = $('#exp-ask');
+  $('#ask-app').textContent = APP_NAME[app];
+  $('#ask-stop').checked = false;
+  dlg.returnValue = '';
+  dlg.onclose = () => {
+    const v = dlg.returnValue;
+    if (v !== 'howto' && v !== 'script') return; // Esc: nothing saved
+    if ($('#ask-stop').checked) { S.expAsk = v; save(); }
+    exportFiles(app, v === 'howto');
+  };
+  dlg.showModal();
+}
+
+function exportFiles(app, withHowto) {
+  const name = `mixweight-${TARGET[app]}.jsx`;
+  download(name, buildScript(app));
+  if (withHowto) download(`mixweight-${TARGET[app]}-howto.txt`, howto(app));
   const used = new Set(S.lines.flat().map(g => g.st.family));
   const demo = S.families.some(f => f.source === 'demo' && used.has(f.name));
   const noGuides = $('#exp-guides').checked && !Object.values(S.guides).some(Boolean);
-  toast(`Saved ${name}` + (demo ? '. Sample fonts (Inter, Lora) only match if they are installed.' : '') +
-    (noGuides ? '. Include guides is on, but no guides are switched on under Guides.' : ''));
+  toast(`Saved ${name}` + (withHowto ? ' and its how-to' : ` · ${RUN_HINT[app]}`) + (demo ? '. Sample fonts (Inter, Lora) only match if they are installed.' : '') +
+    (noGuides ? '. Include in export is on, but no guidelines are switched on.' : ''));
 }
 
 /* ---------------- persistence ---------------- */
@@ -2597,6 +2687,7 @@ function save() {
     o.shares = Object.fromEntries(S.families.filter(f => f.share !== 100).map(f => [f.name, f.share]));
     o.overrides = [...S.overrides.entries()];
     o.hoverInfo = S.hoverInfo;
+    o.expAsk = S.expAsk;
     o.panelW = S.panelW;
     o.collapsed = [...S.collapsed]; // all of it: installed families may not be loaded back yet when this runs
     localStorage.setItem('mixweight', JSON.stringify(o));
@@ -2744,6 +2835,7 @@ async function boot() {
     if (saved.shares && typeof saved.shares === 'object') S.restoredShares = saved.shares;
     if (Array.isArray(saved.overrides)) S.overrides = new Map(saved.overrides.filter(e => e && e[1] && typeof e[1] === 'object'));
     if (typeof saved.hoverInfo === 'boolean') S.hoverInfo = saved.hoverInfo;
+    if (saved.expAsk === 'howto' || saved.expAsk === 'script') S.expAsk = saved.expAsk;
     if (saved.panelW) for (const k of ['l', 'r']) if (Number.isFinite(saved.panelW[k])) S.panelW[k] = saved.panelW[k];
     if (Array.isArray(saved.collapsed)) S.collapsed = new Set(saved.collapsed.filter(n => typeof n === 'string'));
   }
@@ -2793,6 +2885,14 @@ async function boot() {
   $('#file-in').onchange = e => { addFiles(e.target.files); e.target.value = ''; };
   $('#btn-help').onclick = () => $('#help').showModal();
   $$('[data-exp]').forEach(b => { b.onclick = () => exportFor(b.dataset.exp); });
+  const syncAsk = () => {
+    $('#ask-state').textContent = S.expAsk
+      ? `You asked not to be asked: every export gives ${S.expAsk === 'howto' ? 'the script and a how-to .txt' : 'just the script'}. Ask me again brings the question back.`
+      : 'Each export asks whether to save a how-to .txt with the script.';
+    $('#ask-again').disabled = !S.expAsk;
+  };
+  $('#exp-q').onclick = () => { syncAsk(); $('#exp-help').showModal(); };
+  $('#ask-again').onclick = () => { S.expAsk = ''; save(); syncAsk(); toast('The next export asks again.'); };
 
   const reroll = () => { record(); S.seed = Math.floor(Math.random() * 99999); render(); save(); };
   $('#reroll').onclick = reroll;

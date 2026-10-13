@@ -22,9 +22,9 @@ Mix the weights of your installed variable fonts letter by letter, then send the
 - Boxes: grey boxes per letter (following its ink, size and shift, and its rotation), a straight band under a selection (as tall as the tallest letter, or stepping with each letter; adjustable height), or a band under every line. Fill and stroke grey, stroke weight, opacity, expand, and round / bevel / inverse corners, all four together or each on its own. Random letter boxes by ratio + reroll.
 - Outline: a ratio + reroll sets a share of letters to outline only; selected letters can be set solid or outline, with their own stroke weight.
 - Rotation: angle (slider or number) and random jitter + reroll for the selected letters, each turning on its own centre.
-- Guides: baseline, x-height, cap height and ascender of the base style, each on its own switch.
+- Guidelines: baseline, x-height, cap height and ascender of the base style, each on its own switch. Tick **Include in export** in the same group to export them.
 - Seed: every random choice comes from it. Reroll for a new one, or click the seed number to type one in and get an earlier result back.
-- Clear: the one above the left panel resets the left panel's look (case, mix, align, setting, outline, guides) to defaults; Clear edits in the right panel removes every right-panel edit (letter changes, boxes, bands, the paragraph band) and keeps the left-panel settings. Both undo.
+- Clear: the one above the left panel resets the left panel's look (case, mix, align, setting, outline, guidelines) to defaults; Clear edits in the right panel removes every right-panel edit (letter changes, boxes, bands, the paragraph band) and keeps the left-panel settings. Both undo.
 - Panel widths: drag the rule between a panel and the canvas to resize it (left 280–560 px, right 260–520 px, and the canvas keeps at least 360 px); double-click the rule for the default width. Widths are remembered. The text's layout doesn't change with the canvas: in Fit mode the zoom follows the canvas, otherwise the zoom stays put.
 - ⌘Z / ⇧⌘Z undo and redo.
 
@@ -32,7 +32,9 @@ Mix the weights of your installed variable fonts letter by letter, then send the
 
 Each export is a `.jsx` script. Run it inside the app and it rebuilds the text there as live type, with every letter's font, style, size, baseline shift, tracking, rotation and outline already set. Nothing is outlined.
 
-Boxes come along as editable vector shapes in a group under the text: InDesign rectangles keep live corner options (rounded, bevel, inverse rounded); Illustrator and Photoshop get the exact path. Tick **Include guides** under Export to add the guides as plain lines on their own layer (Illustrator, InDesign) or group (Photoshop).
+Boxes come along as editable vector shapes in a group under the text: InDesign rectangles keep live corner options (rounded, bevel, inverse rounded); Illustrator and Photoshop get the exact path. Tick **Include in export** under Guidelines to add the guidelines as plain lines on their own layer (Illustrator, InDesign) or group (Photoshop), named `Mixweight guidelines`. InDesign reuses that layer on later exports, and renames a `Mixweight guides` layer left by an older export instead of adding a second one.
+
+Export from **AI**, **ID** or **PS** in the top bar. The first time, Mixweight asks whether you want the how-to too: **Script + how-to (.txt)** also saves `mixweight-illustrator-howto.txt` (or `-indesign-`, `-photoshop-`) with the steps below for that app and the After running notes; **Just the script** saves the `.jsx` alone. Tick **I know what a .jsx is. Stop asking.** and that choice is used from then on. The **?** next to Export has these steps and an **Ask me again** button. Chrome may ask once whether the page can download multiple files; allow it to get both.
 
 ### Illustrator
 
