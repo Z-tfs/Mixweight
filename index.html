@@ -176,7 +176,8 @@ textarea:focus { background: var(--g2); outline: none; }
 
 /* Hover info tag: one grey block per line, hugging the text. Same look in the right panel's selection info. */
 .tag { display: grid; justify-items: start; gap: 1px; font: 11px/15px var(--ui); text-transform: uppercase; color: var(--ink); }
-.tag span { background: var(--tag); padding: 0 3px 0 2px; text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 1.5px; white-space: nowrap; }
+.u { text-transform: none; } /* units stay lowercase (pt, em) inside the all-caps panels */
+.tag > span { background: var(--tag); padding: 0 3px 0 2px; text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 1.5px; white-space: nowrap; }
 #hovtag { position: fixed; z-index: 70; pointer-events: none; }
 
 /* Right panel: selection or paragraph. Collapsed to a small handle on the canvas edge. */
@@ -1909,7 +1910,7 @@ function corners() {
     }
   }
   $('#c-tl').textContent = S.families.map(f => f.name).join(' + ') || 'No fonts';
-  $('#c-tr').textContent = `${S.size} / ${r1(S.size * S.leading / 100)} pt · ${S.valign}`;
+  unitText($('#c-tr'), `${S.size} / ${r1(S.size * S.leading / 100)} pt · ${S.valign}`);
   let edits = 0;
   for (const v of S.overrides.values()) if (!ovEmpty(v)) edits++;
   $('#c-bl').textContent = `${glyphs} glyphs · ${used.size}/${pool.length} styles used · ${runs} runs` + (edits ? ` · ${edits} edited` : '');
@@ -1974,6 +1975,10 @@ function renderInspector() {
 const num = (v, d) => { const t = d ? v.toFixed(d) : String(v); return /^-0(\.0+)?$/.test(t) ? t.slice(1) : t.replace('-', '\u2212'); };
 const sgn = (v, d) => (v > 0 && num(v, d) !== num(0, d) ? '+' : '') + num(v, d);
 const TRACK_UNIT = ' /1000 em';
+// Write a value with its units wrapped in .u, so pt and em stay lowercase where the panel sets capitals.
+function unitText(el, t) {
+  el.replaceChildren(...String(t).split(/(\bpt\b|\/1000 em)/).map((x, i) => i % 2 ? Object.assign(document.createElement('span'), { className: 'u', textContent: x }) : x));
+}
 const TRACK_UNIT_SHORT = ' ‰'; // the two tracking sliders: '/1000 em' doesn't fit their half-width cells
 function tagRows(gs) {
   const one = (f, fmt) => {
@@ -1990,7 +1995,7 @@ function tagRows(gs) {
   ];
 }
 function fillTag(el, rows) {
-  el.replaceChildren(...rows.map(t => { const s = document.createElement('span'); s.textContent = t; return s; }));
+  el.replaceChildren(...rows.map(t => { const s = document.createElement('span'); unitText(s, t); return s; }));
 }
 const hovtag = $('#hovtag');
 let hovI = null, hovPt = null;
@@ -2036,7 +2041,7 @@ const ovOf = g => S.overrides.get(g.i) || {};
 const selIdx = () => [...S.sel];
 const touchesSel = b => selIdx().some(i => i >= b.a && i <= b.b);
 const selBands = () => S.bands.filter(touchesSel);
-const setRange = (id, v, txt) => { const el = $('#' + id); if (document.activeElement !== el || el.type === 'range') el.value = v; const o = $('#' + id + '-o'); if (o && txt != null) o.textContent = txt; };
+const setRange = (id, v, txt) => { const el = $('#' + id); if (document.activeElement !== el || el.type === 'range') el.value = v; const o = $('#' + id + '-o'); if (o && txt != null) unitText(o, txt); };
 const ptTxt = v => num(v) + ' pt';
 const dhTxt = v => sgn(v) + ' pt';
 let jitAmt = 6;
@@ -2138,7 +2143,7 @@ function renderBoxEditor(gs) {
     const c = st.c[all ? 0 : +row.dataset.c];
     row.querySelectorAll('.opts button').forEach(b => b.setAttribute('aria-pressed', b.dataset.v === c.s));
     row.querySelector('input').value = c.r;
-    row.querySelector('output').textContent = ptTxt(c.r);
+    unitText(row.querySelector('output'), ptTxt(c.r));
   }
 }
 function editBox(key, fn) {
@@ -2305,7 +2310,7 @@ function syncShares() {
 
 function bindRange(id, key, fmt) {
   const el = $('#' + id), o = $('#' + id + '-o');
-  const show = () => { el.value = S[key]; if (o) o.textContent = fmt(S[key]); };
+  const show = () => { el.value = S[key]; if (o) unitText(o, fmt(S[key])); };
   show();
   syncers.push(show);
   el.addEventListener('input', () => { record('range:' + id); S[key] = +el.value; show(); render(); save(); });
