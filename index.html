@@ -14,11 +14,15 @@
   --ink: #000000;
   --g1: #f3f3f3;   /* hover / field */
   --g2: #e2e2e2;   /* selected letters, pressed */
-  --g3: #a6a6a6;   /* inactive option */
-  --g4: #6e6e6e;   /* secondary text */
+  --g3: #a6a6a6;   /* unavailable: disabled buttons and options, no hover */
+  --g4: #6e6e6e;   /* secondary text; an option you can pick but haven't (5.1:1 on white) */
   --rule: 1px solid var(--ink);
   --ui: "Helvetica Neue", Helvetica, Arial, "PingFang SC", sans-serif;
   --s-xs: 10px; --s-sm: 11px; --s-md: 13px; --s-lg: 15px;
+  --h-size: var(--s-md); --h-weight: 700; /* group titles (left and right panels): 2pt over the options */
+  --h-space: 14px; /* room above a group title, more than the 10px between the options under it */
+  --lw: 320px;    /* left panel width: rail, and the first column of the header and sub-bar */
+  --rw: 300px;    /* right panel width */
   --bar: 38px;     /* selection bar = Font pool header row, so their rules line up */
   --hov: #eeeeee;  /* hover: behind the letter */
   --tag: #dddddd;  /* hover info tag blocks */
@@ -34,10 +38,10 @@ button { background: none; border: 0; padding: 0; cursor: pointer; }
 :focus-visible { outline: 1px dashed var(--ink); outline-offset: 2px; }
 .up { text-transform: uppercase; letter-spacing: .02em; }
 
-.app { display: grid; grid-template-columns: 320px minmax(0, 1fr) auto; grid-template-rows: auto auto minmax(0, 1fr); height: 100%; }
+.app { display: grid; grid-template-columns: var(--lw) minmax(0, 1fr) auto; grid-template-rows: auto auto minmax(0, 1fr); height: 100%; }
 
 /* header */
-.top { grid-column: 1 / -1; display: grid; grid-template-columns: 320px minmax(0, 1fr); border-bottom: var(--rule); }
+.top { grid-column: 1 / -1; display: grid; grid-template-columns: var(--lw) minmax(0, 1fr); border-bottom: var(--rule); }
 .brand { padding: 12px 14px; font-size: var(--s-lg); letter-spacing: .04em; display: flex; align-items: center; gap: 12px; }
 .nav { display: flex; align-items: center; justify-content: flex-end; flex-wrap: wrap; gap: 6px 28px; padding: 10px 14px; font-size: var(--s-lg); text-transform: uppercase; }
 .nav button { color: var(--ink); text-transform: uppercase; display: inline-flex; align-items: center; gap: 6px; }
@@ -47,7 +51,7 @@ button { background: none; border: 0; padding: 0; cursor: pointer; }
 .dot::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--ink); display: inline-block; }
 
 /* sub-bar */
-.sub { grid-column: 1 / -1; display: grid; grid-template-columns: 320px minmax(0, 1fr); border-bottom: var(--rule); font-size: var(--s-sm); text-transform: uppercase; }
+.sub { grid-column: 1 / -1; display: grid; grid-template-columns: var(--lw) minmax(0, 1fr); border-bottom: var(--rule); font-size: var(--s-sm); text-transform: uppercase; }
 .sub > div { padding: 5px 14px; display: flex; align-items: center; justify-content: space-between; gap: 16px; min-width: 0; flex-wrap: wrap; }
 .sub > div:first-child { border-right: var(--rule); } /* same x as the rail's border */
 .sub .grp { display: flex; align-items: center; gap: 14px; }
@@ -62,18 +66,21 @@ button { background: none; border: 0; padding: 0; cursor: pointer; }
 
 /* rail */
 .rail { border-right: var(--rule); overflow-y: auto; min-width: 0; min-height: 0; }
-.cell { border-bottom: var(--rule); padding: 9px 14px 14px; display: grid; gap: 10px; }
+.cell { border-bottom: var(--rule); padding: var(--h-space) 14px 14px; display: grid; gap: 10px; }
 .cell-h { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; text-transform: uppercase; font-size: var(--s-sm); }
-.cell-h .r { color: var(--g4); text-align: right; }
+.cell-h > :first-child { font-size: var(--h-size); font-weight: var(--h-weight); letter-spacing: .03em; }
+.cell-h .r { color: var(--g4); text-align: right; font-weight: 400; }
 /* First cell: header text centred on the selection bar's text, pool rule on the bar's bottom rule. */
 .cell-pool { padding-top: 10px; }
 .cell-pool > .cell-h { height: calc(var(--bar) - 21px); align-items: center; }
 .hint { color: var(--g4); font-size: var(--s-sm); margin: 0; line-height: 1.45; }
 
 .opts { display: flex; flex-wrap: wrap; gap: 4px 14px; text-transform: uppercase; }
-.opts button { color: var(--g3); display: inline-flex; align-items: center; gap: 5px; padding: 2px 0; }
+.opts button { color: var(--g4); display: inline-flex; align-items: center; gap: 5px; padding: 2px 0; }
+/* Three states everywhere: picked = ink with a dot, can pick = --g4 (ink on hover), unavailable = --g3, no hover. */
 .opts button:hover { color: var(--ink); }
 .opts button[aria-pressed="true"] { color: var(--ink); }
+.opts button:disabled { color: var(--g3); cursor: default; }
 .opts button[aria-pressed="true"]::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--ink); }
 
 .ctl { display: grid; grid-template-columns: 1fr auto; gap: 3px 8px; align-items: baseline; }
@@ -112,10 +119,23 @@ textarea:focus { background: var(--g2); outline: none; }
 .fam-h .r { display: flex; gap: 10px; color: var(--g4); white-space: nowrap; }
 .fam-h .x { color: var(--g4); text-transform: uppercase; }
 .fam-h .x:hover { color: var(--ink); }
+/* Collapsible family: the header row opens and closes the style list. Share of mix stays out either way. */
+.fam-h { cursor: pointer; }
+.fam-h .tg { display: flex; align-items: baseline; gap: 6px; min-width: 0; text-transform: uppercase; text-align: left; }
+.fam-h .tg::before { content: "▾"; width: 9px; flex: none; color: var(--g4); }
+.fam.closed .fam-h .tg::before { content: "▸"; }
+.fam-h:hover .tg::before { color: var(--ink); }
+.fam-h .bm { color: var(--ink); overflow: hidden; text-overflow: ellipsis; max-width: 11em; }
+.fam:not(.closed) .fam-h .bm { display: none; }
+.fam.closed .chips { display: none; }
+.cell-pool .cell-h .tbtn { color: var(--g4); }
+.cell-pool .cell-h .tbtn:hover { color: var(--ink); }
 .chips { display: flex; flex-wrap: wrap; align-items: baseline; gap: 3px 12px; }
-.chip { font-size: var(--s-lg); color: var(--g3); padding: 1px 0; line-height: 1.2; }
+.chip { font-size: var(--s-lg); color: var(--g4); padding: 1px 0; line-height: 1.2; }
+.chip:hover { color: var(--ink); }
+/* In the mix: ink with the same dot as a picked option. */
 .chip[aria-pressed="true"] { color: var(--ink); }
-.chip:hover { color: var(--g4); }
+.chip[aria-pressed="true"]::before { content: ""; display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--ink); margin-right: 5px; vertical-align: .2em; }
 .chip.is-base { position: relative; background: var(--g2); color: var(--ink); padding: 7px 10px 3px 7px; margin-right: 16px; }
 .chip .badge { position: absolute; top: -9px; right: -18px; font: var(--s-xs)/1 var(--ui); font-variation-settings: normal; letter-spacing: .04em; text-transform: uppercase; background: var(--ink); color: var(--paper); padding: 3px 5px 2px; pointer-events: none; }
 .chips:has(.is-base) { padding-top: 6px; row-gap: 12px; }
@@ -123,7 +143,7 @@ textarea:focus { background: var(--g2); outline: none; }
 .pool .empty { padding: 14px; color: var(--g4); text-transform: uppercase; }
 
 /* right side */
-.main { display: grid; grid-template-rows: auto minmax(0, 1fr); min-width: 0; min-height: 0; }
+.main { position: relative; display: grid; grid-template-rows: auto minmax(0, 1fr); min-width: 0; min-height: 0; }
 .insp { border-bottom: var(--rule); padding: 7px 14px; display: flex; flex-wrap: wrap; align-items: center; gap: 6px 22px; min-height: var(--bar); text-transform: uppercase; }
 .insp .count { min-width: 9em; }
 .insp .lab { color: var(--g4); }
@@ -156,25 +176,28 @@ textarea:focus { background: var(--g2); outline: none; }
 
 /* Hover info tag: one grey block per line, hugging the text. Same look in the right panel's selection info. */
 .tag { display: grid; justify-items: start; gap: 1px; font: 11px/15px var(--ui); text-transform: uppercase; color: var(--ink); }
-.tag span { background: var(--tag); padding: 0 3px 0 2px; text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 1.5px; white-space: nowrap; }
+.u { text-transform: none; } /* units stay lowercase (pt, em) inside the all-caps panels */
+.tag > span { background: var(--tag); padding: 0 3px 0 2px; text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 1.5px; white-space: nowrap; }
 #hovtag { position: fixed; z-index: 70; pointer-events: none; }
 
 /* Right panel: selection or paragraph. Collapsed to a small handle on the canvas edge. */
-.side { border-left: var(--rule); overflow-y: auto; min-width: 0; min-height: 0; width: 300px; }
+.side { border-left: var(--rule); overflow-y: auto; min-width: 0; min-height: 0; width: var(--rw); }
 .side-h { display: flex; justify-content: space-between; align-items: center; gap: 10px; min-height: var(--bar); padding: 7px 14px; border-bottom: var(--rule); text-transform: uppercase; }
-.side .acts { display: flex; gap: 14px; text-transform: uppercase; }
 .side-h .grp { display: flex; align-items: center; gap: 18px; }
-.side .acts button:hover { text-decoration: underline; }
 .side #sel-styles button { text-transform: none; font-size: var(--s-md); }
 .side .row { display: grid; grid-template-columns: 1fr auto; gap: 6px 10px; align-items: baseline; }
 .side .lab { color: var(--g4); text-transform: uppercase; }
 .side .sub-h { text-transform: uppercase; color: var(--g4); }
-.numin { display: inline-flex; align-items: baseline; gap: 2px; color: var(--g4); }
-.numin input { width: 6ch; border: 0; border-bottom: var(--rule); background: transparent; text-align: right; font-variant-numeric: tabular-nums; padding: 0 2px; border-radius: 0; -moz-appearance: textfield; }
+.numin { display: inline-flex; align-items: baseline; gap: 0; color: var(--g4); }
+.numin input { width: 6ch; border: 0; border-bottom: var(--rule); background: transparent; text-align: right; font-variant-numeric: tabular-nums; padding: 0 1px 0 2px; border-radius: 0; -moz-appearance: textfield; }
 .numin input::-webkit-inner-spin-button { -webkit-appearance: none; }
 .numin input:focus { outline: 0; background: var(--g1); }
-.corner-row { display: grid; grid-template-columns: 2.4em 1fr; gap: 4px 8px; align-items: center; }
-.corner-row .lab { font-size: var(--s-xs); }
+/* Corners: one grid per row: label | shape | radius (right, like every slider value); the slider under it, full width. */
+#bx-corners { display: grid; gap: 10px; }
+.corner-row { display: grid; grid-template-columns: 2.6em minmax(0, 1fr) auto; gap: 3px 8px; align-items: baseline; }
+.corner-row .opts { gap: 4px 12px; }
+.corner-row output { color: var(--g4); font-variant-numeric: tabular-nums; text-align: right; }
+.corner-row input[type=range] { grid-column: 1 / -1; }
 .btn.sm { padding: 3px 7px; }
 .btn:disabled { color: var(--g3); border-color: var(--g3); background: var(--paper); cursor: default; }
 .chk { display: inline-flex; align-items: center; gap: 7px; text-transform: uppercase; cursor: pointer; }
@@ -211,7 +234,19 @@ dialog::backdrop { background: rgba(255, 255, 255, .7); }
 .help p { margin: 0; color: var(--g4); font-size: var(--s-md); line-height: 1.45; }
 .help p b { color: var(--ink); font-weight: 400; }
 
+/* Panel splitters: sit on the rules either side of the canvas. Drag to resize, double-click for the default width. */
+.split { position: absolute; top: 0; bottom: 0; width: 7px; z-index: 6; cursor: col-resize; touch-action: none; }
+.split.l { left: -4px; }
+.split.r { right: -3px; }
+.split::after { content: ""; position: absolute; top: 0; bottom: 0; left: 3px; width: 1px; background: var(--ink); opacity: 0; }
+.split.l::after { left: 2px; width: 2px; }
+.split.r::after { left: 3px; width: 2px; }
+.split:hover::after, .split.on::after { opacity: 1; }
+body.resizing, body.resizing * { cursor: col-resize !important; user-select: none !important; -webkit-user-select: none !important; }
+.tbtn[aria-pressed="true"] { text-decoration: underline; text-underline-offset: 3px; }
+
 @media (max-width: 900px) {
+  .split { display: none; }
   .app { grid-template-columns: 1fr; grid-template-rows: auto; height: auto; }
   .top, .sub { grid-template-columns: 1fr; }
   .sub > div + div { border-left: 0; border-top: var(--rule); }
@@ -256,20 +291,20 @@ dialog::backdrop { background: rgba(255, 255, 255, .7); }
         <button class="tbtn" type="button" id="zoom-out" aria-label="Zoom out">−</button>
         <span class="num" id="zoom-v">100%</span>
         <button class="tbtn" type="button" id="zoom-in" aria-label="Zoom in">+</button>
-        <button class="tbtn" type="button" id="zoom-fit">Fit</button>
+        <button class="tbtn" type="button" id="zoom-fit" aria-pressed="false" title="Fit the text to the canvas. Stays fitted while panels are resized, until you zoom by hand.">Fit</button>
       </span>
     </div>
   </div>
 
   <aside class="rail" aria-label="Controls">
     <section class="cell cell-pool">
-      <div class="cell-h"><span>Font pool</span><span class="r">Click a style to mix it in</span></div>
+      <div class="cell-h"><span>Font pool</span><button class="tbtn r" type="button" id="fold-all" title="Fold or open every family's style list. Share of mix stays visible.">Collapse all</button></div>
       <div class="pool" id="pool"></div>
       <div class="ctl">
         <label for="base">Base style</label><output>Used at 0% mix</output>
         <select id="base" style="grid-column:1/-1"></select>
       </div>
-      <p class="hint">Variable fonts are split into their named instances. Drop .ttf, .otf or .ttc files anywhere on the page to add them.</p>
+      <p class="hint">Click a style to mix it in; click a family's name to fold its styles away. Variable fonts are split into their named instances. Drop .ttf, .otf or .ttc files anywhere on the page to add them.</p>
     </section>
 
     <section class="cell">
@@ -332,7 +367,7 @@ dialog::backdrop { background: rgba(255, 255, 255, .7); }
     </section>
 
     <section class="cell">
-      <div class="cell-h"><span>Setting</span><span class="r">pt</span></div>
+      <div class="cell-h"><span>Setting</span></div>
       <div class="pair">
         <div class="ctl"><label for="size">Size</label><output id="size-o"></output><input type="range" id="size" min="8" max="200" step="1"></div>
         <div class="ctl"><label for="leading">Leading</label><output id="leading-o"></output><input type="range" id="leading" min="60" max="200" step="1"></div>
@@ -354,7 +389,7 @@ dialog::backdrop { background: rgba(255, 255, 255, .7); }
         <button type="button" data-v="center">Center</button>
         <button type="button" data-v="right">Right</button>
       </div>
-      <p class="hint">Match size scales each font so its x-height or cap height meets the base style's; it exports as per-letter size. Baseline jitter only moves letters set on the baseline.</p>
+      <p class="hint">Tracking is in ‰: thousandths of an em, as in Adobe apps. Match size scales each font so its x-height or cap height meets the base style's; it exports as per-letter size. Baseline jitter only moves letters set on the baseline.</p>
     </section>
 
     <section class="cell">
@@ -390,6 +425,8 @@ dialog::backdrop { background: rgba(255, 255, 255, .7); }
   </aside>
 
   <main class="main">
+    <div class="split l" id="split-l" role="separator" aria-orientation="vertical" aria-label="Resize the left panel" title="Drag to resize · double-click for the default width"></div>
+    <div class="split r" id="split-r" role="separator" aria-orientation="vertical" aria-label="Resize the right panel" title="Drag to resize · double-click for the default width"></div>
     <div class="insp" id="insp">
       <span class="count" id="sel-count">No selection</span>
       <span class="lab" id="sel-hint">Click a letter, or drag across letters, to edit them. Shift extends, ⌘ adds.</span>
@@ -412,10 +449,10 @@ dialog::backdrop { background: rgba(255, 255, 255, .7); }
     <div id="side-sel">
       <section class="cell">
         <div class="tag" id="sel-info"></div>
-        <div class="acts">
-          <button type="button" id="sel-reroll">Reroll</button>
-          <button type="button" id="sel-reset" title="Remove every edit on the selected letters, and bands under them. ⌘Z brings them back.">Reset</button>
-          <button type="button" id="sel-none">Deselect</button>
+        <div class="btns">
+          <button class="btn sm" type="button" id="sel-reroll">Reroll</button>
+          <button class="btn sm" type="button" id="sel-reset" title="Remove every edit on the selected letters, and bands under them. ⌘Z brings them back.">Reset</button>
+          <button class="btn sm" type="button" id="sel-none">Deselect</button>
         </div>
       </section>
 
@@ -508,13 +545,17 @@ dialog::backdrop { background: rgba(255, 255, 255, .7); }
         <div class="ctl"><label for="bx-sw">Stroke</label><output id="bx-sw-o"></output><input type="range" id="bx-sw" min="0" max="8" step="0.25"></div>
       </div>
       <div class="ctl"><label for="bx-pad">Expand</label><output id="bx-pad-o"></output><input type="range" id="bx-pad" min="-10" max="40" step="0.5"></div>
-      <div class="row"><span class="lab">Corners</span><button type="button" class="chk" id="bx-lock" aria-pressed="true"><span id="bx-lock-t">Locked: all four</span></button></div>
+      <div class="ctl"><label>Corners</label><output></output></div>
+      <div class="opts" id="bx-lock" role="group" aria-label="Corners">
+        <button type="button" data-v="all">Same for all corners</button>
+        <button type="button" data-v="each">Each corner</button>
+      </div>
       <div id="bx-corners">
-        <div class="corner-row" data-c="all"><span class="lab">All</span><span class="opts"><button type="button" data-v="round">Round</button><button type="button" data-v="bevel">Bevel</button><button type="button" data-v="inverse">Inverse</button></span><span></span><span class="ctl"><output></output><input type="range" min="0" max="60" step="0.5" aria-label="Radius, all corners"></span></div>
-        <div class="corner-row" data-c="0"><span class="lab">TL</span><span class="opts"><button type="button" data-v="round">Round</button><button type="button" data-v="bevel">Bevel</button><button type="button" data-v="inverse">Inverse</button></span><span></span><span class="ctl"><output></output><input type="range" min="0" max="60" step="0.5" aria-label="Radius, top left"></span></div>
-        <div class="corner-row" data-c="1"><span class="lab">TR</span><span class="opts"><button type="button" data-v="round">Round</button><button type="button" data-v="bevel">Bevel</button><button type="button" data-v="inverse">Inverse</button></span><span></span><span class="ctl"><output></output><input type="range" min="0" max="60" step="0.5" aria-label="Radius, top right"></span></div>
-        <div class="corner-row" data-c="2"><span class="lab">BR</span><span class="opts"><button type="button" data-v="round">Round</button><button type="button" data-v="bevel">Bevel</button><button type="button" data-v="inverse">Inverse</button></span><span></span><span class="ctl"><output></output><input type="range" min="0" max="60" step="0.5" aria-label="Radius, bottom right"></span></div>
-        <div class="corner-row" data-c="3"><span class="lab">BL</span><span class="opts"><button type="button" data-v="round">Round</button><button type="button" data-v="bevel">Bevel</button><button type="button" data-v="inverse">Inverse</button></span><span></span><span class="ctl"><output></output><input type="range" min="0" max="60" step="0.5" aria-label="Radius, bottom left"></span></div>
+        <div class="corner-row" data-c="all"><span class="lab">All</span><span class="opts"><button type="button" data-v="round">Round</button><button type="button" data-v="bevel">Bevel</button><button type="button" data-v="inverse">Inverse</button></span><output></output><input type="range" min="0" max="60" step="0.5" aria-label="Radius, all corners"></div>
+        <div class="corner-row" data-c="0"><span class="lab">TL</span><span class="opts"><button type="button" data-v="round">Round</button><button type="button" data-v="bevel">Bevel</button><button type="button" data-v="inverse">Inverse</button></span><output></output><input type="range" min="0" max="60" step="0.5" aria-label="Radius, top left"></div>
+        <div class="corner-row" data-c="1"><span class="lab">TR</span><span class="opts"><button type="button" data-v="round">Round</button><button type="button" data-v="bevel">Bevel</button><button type="button" data-v="inverse">Inverse</button></span><output></output><input type="range" min="0" max="60" step="0.5" aria-label="Radius, top right"></div>
+        <div class="corner-row" data-c="2"><span class="lab">BR</span><span class="opts"><button type="button" data-v="round">Round</button><button type="button" data-v="bevel">Bevel</button><button type="button" data-v="inverse">Inverse</button></span><output></output><input type="range" min="0" max="60" step="0.5" aria-label="Radius, bottom right"></div>
+        <div class="corner-row" data-c="3"><span class="lab">BL</span><span class="opts"><button type="button" data-v="round">Round</button><button type="button" data-v="bevel">Bevel</button><button type="button" data-v="inverse">Inverse</button></span><output></output><input type="range" min="0" max="60" step="0.5" aria-label="Radius, bottom left"></div>
       </div>
     </section>
   </aside>
@@ -1128,6 +1169,8 @@ const DEFAULTS = {
   outlineAmt: 0, outlineSeed: 7, strokeW: 1,
   guides: { base: false, x: false, cap: false, asc: false },
   hoverInfo: true,
+  panelW: { l: 320, r: 300 }, // panel widths in px; view state, not in undo
+  collapsed: new Set(), // family names whose style list is folded; view state, not in undo
   boxAmt: 30, boxSeed: 11,
   boxStyle: defaultBoxStyle(),            // style for new boxes; follows the last box style edit
   bandFit: 'max',                         // height for new bands: 'max' (tallest letter) or 'each'
@@ -1403,6 +1446,7 @@ function removeFamily(name) {
   record();
   for (const id of fam.ids) S.styles.delete(id);
   S.families = S.families.filter(f => f !== fam);
+  S.collapsed.delete(name); // added again later, it comes back open
   for (const [k, v0] of [...S.overrides]) if (v0.style && !S.styles.has(v0.style)) { const v = Object.assign({}, v0); delete v.style; if (!ovEmpty(v)) S.overrides.set(k, v); else S.overrides.delete(k); }
   if (!S.styles.has(S.baseId)) S.baseId = pickDefaultBase();
   refreshAll();
@@ -1874,7 +1918,7 @@ function corners() {
     }
   }
   $('#c-tl').textContent = S.families.map(f => f.name).join(' + ') || 'No fonts';
-  $('#c-tr').textContent = `${S.size} / ${r1(S.size * S.leading / 100)} pt · ${S.valign}`;
+  unitText($('#c-tr'), `${S.size} / ${r1(S.size * S.leading / 100)} pt · ${S.valign}`);
   let edits = 0;
   for (const v of S.overrides.values()) if (!ovEmpty(v)) edits++;
   $('#c-bl').textContent = `${glyphs} glyphs · ${used.size}/${pool.length} styles used · ${runs} runs` + (edits ? ` · ${edits} edited` : '');
@@ -1917,6 +1961,8 @@ function syncSide() {
   const sel = S.sel.size > 0;
   $('#side').hidden = !side.open;
   $('#handle').hidden = side.open;
+  $('#split-r').hidden = !side.open;
+  applyPanelWidths(); // reopens at the width it was dragged to; the left panel gives way if the window is narrow
   $('#side-sel').hidden = !sel;
   $('#side-para').hidden = sel;
   $('#side-title').textContent = sel ? 'Selection' : 'Paragraph';
@@ -1933,7 +1979,15 @@ function renderInspector() {
 }
 
 /* ---------------- hover info / selection info ---------------- */
-const sgn = (v, d) => (v > 0 ? '+' : '') + (d ? v.toFixed(d) : String(v));
+// Display only: true minus sign (U+2212), no "−0", and every value with its unit. Tracking is in 1/1000 em, as in Adobe apps.
+const num = (v, d) => { const t = d ? v.toFixed(d) : String(v); return /^-0(\.0+)?$/.test(t) ? t.slice(1) : t.replace('-', '\u2212'); };
+const sgn = (v, d) => (v > 0 && num(v, d) !== num(0, d) ? '+' : '') + num(v, d);
+const TRACK_UNIT = ' /1000 em';
+// Write a value with its units wrapped in .u, so pt and em stay lowercase where the panel sets capitals.
+function unitText(el, t) {
+  el.replaceChildren(...String(t).split(/(\bpt\b|\/1000 em)/).map((x, i) => i % 2 ? Object.assign(document.createElement('span'), { className: 'u', textContent: x }) : x));
+}
+const TRACK_UNIT_SHORT = ' ‰'; // the two tracking sliders: '/1000 em' doesn't fit their half-width cells
 function tagRows(gs) {
   const one = (f, fmt) => {
     const vs = gs.map(f), lo = Math.min(...vs), hi = Math.max(...vs);
@@ -1944,12 +1998,12 @@ function tagRows(gs) {
     same(g => g.st.family),
     same(g => g.st.style),
     one(g => g.size, v => v.toFixed(1)) + ' pt',
-    'Shift ' + one(g => g.bs, v => sgn(v, 1)),
-    'Track ' + one(g => g.tr, v => sgn(v)),
+    'Shift ' + one(g => g.bs, v => sgn(v, 1)) + ' pt',
+    'Track ' + one(g => g.tr, v => sgn(v)) + TRACK_UNIT,
   ];
 }
 function fillTag(el, rows) {
-  el.replaceChildren(...rows.map(t => { const s = document.createElement('span'); s.textContent = t; return s; }));
+  el.replaceChildren(...rows.map(t => { const s = document.createElement('span'); unitText(s, t); return s; }));
 }
 const hovtag = $('#hovtag');
 let hovI = null, hovPt = null;
@@ -1995,9 +2049,9 @@ const ovOf = g => S.overrides.get(g.i) || {};
 const selIdx = () => [...S.sel];
 const touchesSel = b => selIdx().some(i => i >= b.a && i <= b.b);
 const selBands = () => S.bands.filter(touchesSel);
-const setRange = (id, v, txt) => { const el = $('#' + id); if (document.activeElement !== el || el.type === 'range') el.value = v; const o = $('#' + id + '-o'); if (o && txt != null) o.textContent = txt; };
-const ptTxt = v => (v === 0 ? '0' : v) + ' pt';
-const dhTxt = v => (v > 0 ? '+' : '') + v + ' pt';
+const setRange = (id, v, txt) => { const el = $('#' + id); if (document.activeElement !== el || el.type === 'range') el.value = v; const o = $('#' + id + '-o'); if (o && txt != null) unitText(o, txt); };
+const ptTxt = v => num(v) + ' pt';
+const dhTxt = v => sgn(v) + ' pt';
 let jitAmt = 6;
 
 function renderSelPanel(gs) {
@@ -2087,17 +2141,16 @@ function renderBoxEditor(gs) {
   setRange('bx-fill', st.fill, st.fill + '%');
   setRange('bx-op', st.op, st.op + '%');
   setRange('bx-stroke', st.stroke, st.stroke + '%');
-  setRange('bx-sw', st.sw, st.sw > 0 ? st.sw + ' pt' : 'None');
+  setRange('bx-sw', st.sw, ptTxt(st.sw));
   setRange('bx-pad', st.pad, ptTxt(st.pad));
-  $('#bx-lock').setAttribute('aria-pressed', st.lock);
-  $('#bx-lock-t').textContent = st.lock ? 'Locked: all four' : 'Unlocked: each corner';
+  press('#bx-lock', st.lock ? 'all' : 'each');
   for (const row of $$('#bx-corners .corner-row')) {
     const all = row.dataset.c === 'all';
     row.hidden = all ? !st.lock : st.lock;
     const c = st.c[all ? 0 : +row.dataset.c];
     row.querySelectorAll('.opts button').forEach(b => b.setAttribute('aria-pressed', b.dataset.v === c.s));
     row.querySelector('input').value = c.r;
-    row.querySelector('output').textContent = c.r ? c.r + ' pt' : 'Square';
+    unitText(row.querySelector('output'), ptTxt(c.r));
   }
 }
 function editBox(key, fn) {
@@ -2154,10 +2207,15 @@ function renderPool() {
   if (!S.families.length) host.innerHTML = '<div class="empty">The pool is empty</div>';
   for (const fam of S.families) {
     const box = document.createElement('div');
-    box.className = 'fam';
+    box.className = 'fam' + (S.collapsed.has(fam.name) ? ' closed' : '');
     const src = fam.source === 'demo' ? 'Sample' : fam.source === 'system' ? 'Installed' : 'File';
-    box.innerHTML = `<div class="fam-h"><span class="nm"></span><span class="r"><span>${fam.variable ? 'Var · ' : ''}${src} · ${fam.on.size}/${fam.ids.length}</span><button class="x" type="button">Remove</button></span></div><div class="chips"></div><div class="ctl"><label>Share of mix</label><output class="share-o"></output><input type="range" min="0" max="100" step="1"></div>`;
+    box.innerHTML = `<div class="fam-h"><button class="tg" type="button"><span class="nm"></span></button><span class="r"><span class="bm"></span><span>${fam.variable ? 'Var · ' : ''}${src} · ${fam.on.size}/${fam.ids.length}</span><button class="tbtn x" type="button">Remove</button></span></div><div class="chips"></div><div class="ctl"><label>Share of mix</label><output class="share-o"></output><input type="range" min="0" max="100" step="1"></div>`;
     box.querySelector('.nm').textContent = fam.name;
+    const tg = box.querySelector('.tg');
+    tg.setAttribute('aria-expanded', !S.collapsed.has(fam.name));
+    tg.setAttribute('aria-label', fam.name + ' styles');
+    box.querySelector('.fam-h').onclick = e => { if (!e.target.closest('.x')) foldFamily(fam.name, !S.collapsed.has(fam.name)); };
+    if (fam.ids.includes(S.baseId)) box.querySelector('.bm').textContent = 'Base · ' + S.styles.get(S.baseId).style;
     box.querySelector('.x').onclick = () => removeFamily(fam.name);
     box.querySelector('.x').setAttribute('aria-label', 'Remove ' + fam.name);
     const range = box.querySelector('input');
@@ -2204,6 +2262,19 @@ function renderPool() {
   if (S.baseId) sel.value = S.baseId;
   sel.disabled = !S.styles.size;
   syncShares();
+  syncFoldAll();
+}
+// Folding is view state only: saved with the page, never an undo step.
+function foldFamily(name, closed) {
+  closed ? S.collapsed.add(name) : S.collapsed.delete(name);
+  const k = S.families.findIndex(f => f.name === name), box = $$('#pool .fam')[k];
+  if (box) { box.classList.toggle('closed', closed); box.querySelector('.tg').setAttribute('aria-expanded', !closed); }
+  syncFoldAll(); save();
+}
+function syncFoldAll() {
+  const b = $('#fold-all'), open = S.families.some(f => !S.collapsed.has(f.name));
+  b.textContent = open ? 'Collapse all' : 'Expand all';
+  b.disabled = !S.families.length;
 }
 
 // Each family's part of the mixed letters in %, from its share (a weight per style) and its styles that are on.
@@ -2246,7 +2317,7 @@ function syncShares() {
 
 function bindRange(id, key, fmt) {
   const el = $('#' + id), o = $('#' + id + '-o');
-  const show = () => { el.value = S[key]; if (o) o.textContent = fmt(S[key]); };
+  const show = () => { el.value = S[key]; if (o) unitText(o, fmt(S[key])); };
   show();
   syncers.push(show);
   el.addEventListener('input', () => { record('range:' + id); S[key] = +el.value; show(); render(); save(); });
@@ -2526,6 +2597,8 @@ function save() {
     o.shares = Object.fromEntries(S.families.filter(f => f.share !== 100).map(f => [f.name, f.share]));
     o.overrides = [...S.overrides.entries()];
     o.hoverInfo = S.hoverInfo;
+    o.panelW = S.panelW;
+    o.collapsed = [...S.collapsed]; // all of it: installed families may not be loaded back yet when this runs
     localStorage.setItem('mixweight', JSON.stringify(o));
   } catch (e) { /* storage unavailable */ }
 }
@@ -2607,7 +2680,12 @@ const syncers = [];
 function syncControls() { for (const f of syncers) f(); }
 
 /* ---------------- zoom ---------------- */
-function setZoom(z) {
+// Fit is a mode: while it is on, the zoom follows the canvas size (panel resizes, the right panel opening).
+// Zooming by hand turns it off and keeps that zoom as the canvas changes size.
+let zoomFit = false;
+function setZoom(z, fit = false) {
+  zoomFit = fit;
+  $('#zoom-fit').setAttribute('aria-pressed', fit);
   S.zoom = clamp(Math.round(z * 100) / 100, 0.25, 4);
   $('#sheet').style.zoom = S.zoom;
   $('#zoom-v').textContent = Math.round(S.zoom * 100) + '%';
@@ -2616,7 +2694,39 @@ function setZoom(z) {
 function fitZoom() {
   const stage = $('#stage'), sheet = $('#sheet');
   const w = sheet.getBoundingClientRect().width / (S.zoom || 1);
-  setZoom(clamp((stage.clientWidth - 96) / w, 0.25, 2));
+  setZoom(clamp((stage.clientWidth - 96) / w, 0.25, 2), true);
+}
+
+/* ---------------- panel widths ---------------- */
+// Drag the rules either side of the canvas. Widths are kept with the page; they are not undo steps.
+const PANEL = { l: { def: 320, min: 280, max: 560 }, r: { def: 300, min: 260, max: 520 } };
+const MIN_CANVAS = 360;
+function panelWidth(k, w) {
+  const other = k === 'l' ? S.panelW.r : S.panelW.l;
+  const room = window.innerWidth - MIN_CANVAS - (k === 'l' ? (side.open ? other : 0) : other);
+  return Math.round(clamp(w, PANEL[k].min, Math.max(PANEL[k].min, Math.min(PANEL[k].max, room))));
+}
+function applyPanelWidths() {
+  const root = document.documentElement.style;
+  root.setProperty('--lw', panelWidth('l', S.panelW.l) + 'px');
+  root.setProperty('--rw', panelWidth('r', S.panelW.r) + 'px');
+}
+function bindSplit(k) {
+  const el = $('#split-' + k);
+  el.addEventListener('pointerdown', e => {
+    if (e.button !== 0) return;
+    e.preventDefault();
+    el.setPointerCapture(e.pointerId);
+    el.classList.add('on'); document.body.classList.add('resizing'); hideTag();
+    const move = ev => { S.panelW[k] = panelWidth(k, k === 'l' ? ev.clientX : window.innerWidth - ev.clientX); applyPanelWidths(); };
+    const up = () => {
+      el.classList.remove('on'); document.body.classList.remove('resizing');
+      el.removeEventListener('pointermove', move); el.removeEventListener('pointerup', up); el.removeEventListener('pointercancel', up);
+      save();
+    };
+    el.addEventListener('pointermove', move); el.addEventListener('pointerup', up); el.addEventListener('pointercancel', up);
+  });
+  el.addEventListener('dblclick', () => { S.panelW[k] = PANEL[k].def; applyPanelWidths(); save(); });
 }
 
 /* ---------------- boot ---------------- */
@@ -2634,6 +2744,8 @@ async function boot() {
     if (saved.shares && typeof saved.shares === 'object') S.restoredShares = saved.shares;
     if (Array.isArray(saved.overrides)) S.overrides = new Map(saved.overrides.filter(e => e && e[1] && typeof e[1] === 'object'));
     if (typeof saved.hoverInfo === 'boolean') S.hoverInfo = saved.hoverInfo;
+    if (saved.panelW) for (const k of ['l', 'r']) if (Number.isFinite(saved.panelW[k])) S.panelW[k] = saved.panelW[k];
+    if (Array.isArray(saved.collapsed)) S.collapsed = new Set(saved.collapsed.filter(n => typeof n === 'string'));
   }
   // Your own text stays; a built-in sample is swapped for a different one on each open.
   if (!saved || !S.text || SAMPLE_TEXTS.includes(S.text) || OLD_SAMPLES.includes(S.text)) {
@@ -2647,12 +2759,12 @@ async function boot() {
 
   bindRange('case-amt', 'caseAmt', v => v + '%');
   bindRange('mix', 'mix', v => v + '%');
-  bindRange('size', 'size', v => v + ' pt');
+  bindRange('size', 'size', ptTxt);
   bindRange('leading', 'leading', v => v + '%');
   bindRange('sizevar', 'sizeVar', v => '±' + v + '%');
   bindRange('basejit', 'baseJit', v => '±' + v + ' pt');
-  bindRange('trackjit', 'trackJit', v => '±' + v);
-  bindRange('track', 'track', v => (v > 0 ? '+' : '') + v);
+  bindRange('trackjit', 'trackJit', v => '±' + v + TRACK_UNIT_SHORT);
+  bindRange('track', 'track', v => sgn(v) + TRACK_UNIT_SHORT);
   const syncCaseAmt = () => { $('#case-amt-wrap').hidden = S.caseMode !== 'random'; };
   bindOpts('case', 'caseMode', syncCaseAmt); syncCaseAmt();
   bindOpts('gran', 'gran');
@@ -2661,7 +2773,7 @@ async function boot() {
   bindOpts('match', 'match');
   bindRange('gaps', 'gaps', v => v + '%');
   bindRange('outline', 'outlineAmt', v => v + '%');
-  bindRange('strokew', 'strokeW', v => v + ' pt');
+  bindRange('strokew', 'strokeW', ptTxt);
   const dist = $('#dist'); dist.value = S.dist;
   const syncPeriod = () => { $('#wave-period-wrap').hidden = S.dist !== 'wave'; };
   syncers.push(() => { dist.value = S.dist; syncPeriod(); });
@@ -2776,6 +2888,7 @@ async function boot() {
   $('#pscat-re').onclick = () => rescatter(true);
   $('#lb-rm-all').onclick = () => { record(); for (const g of glyphList()) if (g.box) { delete ovFor(g.i).box; cleanOv(g.i); } render(); save(); };
   // paragraph
+  $('#fold-all').onclick = () => { const close = S.families.some(f => !S.collapsed.has(f.name)); for (const f of S.families) foldFamily(f.name, close); };
   optClick('#hov', v => { S.hoverInfo = v === 'on'; if (!S.hoverInfo) hideTag(); renderInspector(); save(); });
   optClick('#para-on', v => { record(); S.para.on = v === 'on'; render(); save(); });
   optClick('#para-fit', v => { record(); S.para.fit = v; render(); save(); });
@@ -2785,10 +2898,11 @@ async function boot() {
   for (const [id, key] of [['bx-fill', 'fill'], ['bx-op', 'op'], ['bx-stroke', 'stroke'], ['bx-sw', 'sw'], ['bx-pad', 'pad']]) {
     $('#' + id).addEventListener('input', e => { const v = +e.target.value; editBox(key, st => { st[key] = v; }); });
   }
-  $('#bx-lock').onclick = () => {
-    const lock = !boxTargets(selectedGlyphs()).list[0].lock;
+  optClick('#bx-lock', v => {
+    const lock = v === 'all';
+    if (lock === boxTargets(selectedGlyphs()).list[0].lock) return;
     editBox('lock', st => { st.lock = lock; if (lock) st.c = st.c.map(() => Object.assign({}, st.c[0])); });
-  };
+  });
   for (const row of $$('#bx-corners .corner-row')) {
     const qs = row.dataset.c === 'all' ? [0, 1, 2, 3] : [+row.dataset.c];
     row.querySelector('.opts').addEventListener('click', e => {
@@ -2864,6 +2978,11 @@ async function boot() {
   $('#zoom-in').onclick = () => setZoom(S.zoom * 1.25);
   $('#zoom-out').onclick = () => setZoom(S.zoom / 1.25);
   $('#zoom-fit').onclick = fitZoom;
+  bindSplit('l'); bindSplit('r');
+  window.addEventListener('resize', applyPanelWidths);
+  // The text's layout never depends on the canvas size (lines break only where the text does), so a resize
+  // only changes what is visible; in Fit mode the zoom follows.
+  new ResizeObserver(() => { if (zoomFit) fitZoom(); }).observe($('#stage'));
 
   // drag & drop font files
   let depth = 0;
@@ -2889,6 +3008,7 @@ async function boot() {
   ensureBaseOn();
   S.restoredOff = null;
   S.restoredShares = null;
+  applyPanelWidths();
   setZoom(1);
   renderPool();
   render();
