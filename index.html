@@ -616,7 +616,7 @@ body.resizing, body.resizing * { cursor: col-resize !important; user-select: non
       <section><h4>Match size</h4><p>Different families at the same point size look different sizes. x-height or Cap height scales each letter's font so its lowercase x or capital H is as tall as in the base style (limited to 60–160%). It is written as the letter's point size, so it stays editable; leading follows the nominal size.</p></section>
       <section><h4>Letter align</h4><p>Top, middle and bottom alignment are written as baseline shift values. If you change a letter or its font afterwards, export again to re-align.</p></section>
       <section><h4>Group titles</h4><p>Click a group title in the left panel to fold the group to its title row (▸) or open it again (▾); each group remembers its own state. Folding Font pool hides every family; the family names fold just their own styles. The right side of each title row sums up what the group is set to, and follows every change; hover it for the full text if it is cut short. Groups with a short note have a <b>?</b> next to their title: click it to show the note, again to hide it.</p></section>
-      <section><h4>Right panel</h4><p>Selecting letters opens it with their font, size, shift and tracking at the top, then weight, align, <b>rotation</b>, <b>fill</b> and <b>boxes</b>. With nothing selected, the handle on the right edge opens the paragraph settings: hover info, <b>fill</b> (random outline, stroke), the paragraph band, random letter boxes. Clear edits there also sets Random outline and Stroke back to their defaults.</p></section>
+      <section><h4>Right panel</h4><p>Selecting letters opens it with their font, size, shift and tracking at the top, then weight, align, <b>rotation</b>, <b>fill</b> and <b>boxes</b>. With nothing selected, the handle on the right edge opens the paragraph settings: hover info, <b>fill</b> (random outline, stroke), the paragraph band, random letter boxes. Clear edits there also sets Random outline and Stroke back to their defaults. A drag that starts on empty canvas selects the letters it sweeps over. The panel keeps its place: selecting other letters, deselecting and reselecting, or switching between selection and paragraph brings back the group you were using.</p></section>
       <section><h4>Boxes</h4><p>Letter boxes follow each letter's ink, size and shift, and turn with it. A band runs under the selection, as tall as its tallest letter or stepping with each one; the paragraph band does the same for every line. Greys only. They export under the text as vector shapes: InDesign rectangles keep live corner options, Illustrator and Photoshop get the exact path.</p></section>
       <section><h4>Outline and rotation</h4><p>Outline letters export as live text with no fill and a black stroke; rotation as character rotation, about the centre of the em box. Photoshop can do neither per letter inside one type layer, so those letters become their own type layers (outline as a layer-style stroke) and the main layer keeps a space of the same width.</p></section>
       <section><h4>Guidelines</h4><p>Baseline, x-height, cap height and ascender of the base style at the set size. Tick Include in export under Guidelines to export them as plain lines on their own layer or group, named Mixweight guidelines.</p></section>
@@ -2018,7 +2018,9 @@ function paintSelection() {
   for (const sp of out.querySelectorAll('.g')) sp.classList.toggle('sel', S.sel.has(+sp.dataset.i));
   drawSelMarks();
   // Selecting opens the right panel; deselecting closes it again unless it was opened with the handle.
-  // Not mid-drag: opening narrows the canvas and the letters would move under the pointer.
+  // Not mid-drag: opening narrows the canvas and the letters would move under the pointer. A drag that starts on
+  // empty canvas clears the old selection first; the panel stays as it is until the drag ends.
+  if (dragging && !S.sel.size && side.open) return;
   if (S.sel.size) { if (!dragging) side.open = true; }
   else if (!side.pinned) side.open = false;
   renderInspector();
@@ -2060,6 +2062,32 @@ function renderInspector() {
   if (!side.open) return;
   if (on) renderSelPanel(gs); else renderParaPanel();
   renderBoxEditor(gs);
+  restoreSideScroll();
+}
+
+// The right panel keeps where it was scrolled, per mode (selection / paragraph): it remembers the first group in
+// view (the one last used, or the first title showing) and how far down the panel it sat, and puts that group back there after every redraw, on reopening and
+// on switching modes, so groups that appear or grow above it (Adjust height) don't push it away.
+const sideScroll = { sel: null, para: null };
+let sideUsed = null; // the right-panel group last clicked or focused
+const sideMode = () => (S.sel.size ? 'sel' : 'para');
+function sideCells() { return $$('#side .cell').filter(c => c.offsetParent); }
+function rememberSideScroll() {
+  const el = $('#side'); if (el.hidden) return;
+  const top = el.getBoundingClientRect().top;
+  if (el.scrollTop <= 0) { sideScroll[sideMode()] = null; return; }
+  // The group being looked at: the one last used, if it is still in view, else the first whose title shows.
+  const cells = sideCells(), bottom = el.getBoundingClientRect().bottom;
+  const inView = c => c.getBoundingClientRect().bottom > top + 1 && c.getBoundingClientRect().top < bottom - 1;
+  const c = (sideUsed && cells.includes(sideUsed) && inView(sideUsed) && sideUsed)
+    || cells.find(c => c.getBoundingClientRect().top >= top - 1) || cells.find(inView);
+  if (c) sideScroll[sideMode()] = { cell: c, off: c.getBoundingClientRect().top - top };
+}
+function restoreSideScroll() {
+  const el = $('#side'), mem = sideScroll[sideMode()];
+  if (el.hidden) return;
+  if (!mem || !mem.cell.offsetParent) { el.scrollTop = 0; return; }
+  el.scrollTop += mem.cell.getBoundingClientRect().top - el.getBoundingClientRect().top - mem.off;
 }
 
 /* ---------------- hover info / selection info ---------------- */
@@ -3216,14 +3244,22 @@ async function boot() {
   out.addEventListener('pointerover', e => {
     if (!dragging) return;
     const sp = e.target.closest('.g'); if (!sp) return;
+    if (S.anchor == null) S.anchor = +sp.dataset.i; // a drag from empty canvas starts at the first letter it reaches
     selectRange(S.anchor, +sp.dataset.i);
     paintSelection();
   });
   window.addEventListener('pointerup', () => { if (dragging) { dragging = false; paintSelection(); } });
+  // Empty canvas: a click deselects; a drag selects the letters it sweeps over.
   $('#stage').addEventListener('pointerdown', e => {
     if (e.target.closest('.g') || e.button !== 0) return;
+    if (e.target.closest('.stage') && e.offsetX > e.target.clientWidth) return; // the canvas scrollbar
+    dragging = true; S.anchor = null;
     if (S.sel.size) { S.sel.clear(); paintSelection(); }
   });
+  $('#side').addEventListener('scroll', rememberSideScroll, { passive: true });
+  const useCell = e => { const c = e.target.closest('#side .cell'); if (c) { sideUsed = c; rememberSideScroll(); } };
+  $('#side').addEventListener('pointerdown', useCell);
+  $('#side').addEventListener('focusin', useCell);
 
   $('#zoom-in').onclick = () => setZoom(S.zoom * 1.25);
   $('#zoom-out').onclick = () => setZoom(S.zoom / 1.25);
