@@ -284,7 +284,7 @@ body.resizing, body.resizing * { cursor: col-resize !important; user-select: non
   </header>
 
   <div class="sub">
-    <div><span>Controls</span><span class="grp"><span class="muted" id="pool-count"></span><button class="tbtn" type="button" id="clear-left" title="Reset the left panel's settings (case, mix, align, setting, guidelines) to their defaults. Text, fonts and edits in the right panel stay. ⌘Z brings them back.">Clear</button></span></div>
+    <div><span>Controls</span><span class="grp"><span class="muted" id="pool-count"></span><button class="tbtn" type="button" id="clear-left" title="Reset the left panel's settings (case, mix, type, letter align, jitter, guidelines) to their defaults. Text, fonts and edits in the right panel stay. ⌘Z brings them back.">Clear</button></span></div>
     <div>
       <span class="grp">
         <button class="tbtn" type="button" id="undo" title="⌘Z" disabled>Undo</button>
@@ -363,27 +363,13 @@ body.resizing, body.resizing * { cursor: col-resize !important; user-select: non
     </section>
 
     <section class="cell">
-      <div class="cell-h"><span>Letter align</span><span class="r">By glyph outline</span></div>
-      <div class="opts" id="valign" role="group" aria-label="Letter alignment">
-        <button type="button" data-v="baseline">Baseline</button>
-        <button type="button" data-v="top">Top</button>
-        <button type="button" data-v="middle">Middle</button>
-        <button type="button" data-v="bottom">Bottom</button>
-      </div>
-      <p class="hint">Top, middle and bottom line up the actual ink of each letter within its line. They export as baseline shift, so the text stays editable.</p>
-    </section>
-
-    <section class="cell">
-      <div class="cell-h"><span>Setting</span></div>
+      <div class="cell-h"><span>Type</span></div>
       <div class="pair">
         <div class="ctl"><label for="size">Size</label><output id="size-o"></output><input type="range" id="size" min="8" max="200" step="1"></div>
         <div class="ctl"><label for="leading">Leading</label><output id="leading-o"></output><input type="range" id="leading" min="60" max="200" step="1"></div>
-        <div class="ctl"><label for="sizevar">Size range</label><output id="sizevar-o"></output><input type="range" id="sizevar" min="0" max="80" step="1"></div>
-        <div class="ctl"><label for="basejit">Base jitter</label><output id="basejit-o"></output><input type="range" id="basejit" min="0" max="30" step="0.5"></div>
-        <div class="ctl"><label for="trackjit">Track jitter</label><output id="trackjit-o"></output><input type="range" id="trackjit" min="0" max="200" step="5"></div>
         <div class="ctl"><label for="track">Tracking</label><output id="track-o"></output><input type="range" id="track" min="-150" max="300" step="5"></div>
+        <div class="ctl"><label for="gaps">Even gaps</label><output id="gaps-o"></output><input type="range" id="gaps" min="0" max="100" step="5"></div>
       </div>
-      <div class="ctl"><label for="gaps">Even gaps</label><output id="gaps-o"></output><input type="range" id="gaps" min="0" max="100" step="5"></div>
       <div class="ctl"><label>Match size</label><output></output></div>
       <div class="opts" id="match" role="group" aria-label="Match size">
         <button type="button" data-v="off">Off</button>
@@ -396,7 +382,28 @@ body.resizing, body.resizing * { cursor: col-resize !important; user-select: non
         <button type="button" data-v="center">Center</button>
         <button type="button" data-v="right">Right</button>
       </div>
-      <p class="hint">Tracking is in ‰: thousandths of an em, as in Adobe apps. Match size scales each font so its x-height or cap height meets the base style's; it exports as per-letter size. Baseline jitter only moves letters set on the baseline.</p>
+      <p class="hint">Tracking is in ‰: thousandths of an em, as in Adobe apps. Match size scales each font so its x-height or cap height meets the base style's; it exports as per-letter size.</p>
+    </section>
+
+    <section class="cell">
+      <div class="cell-h"><span>Letter align</span><span class="r">By glyph outline</span></div>
+      <div class="opts" id="valign" role="group" aria-label="Letter alignment">
+        <button type="button" data-v="baseline">Baseline</button>
+        <button type="button" data-v="top">Top</button>
+        <button type="button" data-v="middle">Middle</button>
+        <button type="button" data-v="bottom">Bottom</button>
+      </div>
+      <p class="hint">Top, middle and bottom line up the actual ink of each letter within its line. They export as baseline shift, so the text stays editable.</p>
+    </section>
+
+    <section class="cell">
+      <div class="cell-h"><span>Jitter</span></div>
+      <div class="pair">
+        <div class="ctl"><label for="sizevar">Size range</label><output id="sizevar-o"></output><input type="range" id="sizevar" min="0" max="80" step="1"></div>
+        <div class="ctl"><label for="basejit">Base jitter</label><output id="basejit-o"></output><input type="range" id="basejit" min="0" max="30" step="0.5"></div>
+        <div class="ctl"><label for="trackjit">Track jitter</label><output id="trackjit-o"></output><input type="range" id="trackjit" min="0" max="200" step="5"></div>
+      </div>
+      <p class="hint">Baseline jitter only moves letters set on the baseline.</p>
     </section>
 
     <section class="cell">
