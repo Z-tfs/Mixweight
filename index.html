@@ -77,9 +77,7 @@ button { background: none; border: 0; padding: 0; cursor: pointer; }
 .cell-h > :first-child { font-size: var(--h-size); font-weight: var(--h-weight); letter-spacing: .03em; }
 .cell-h .r { color: var(--g4); text-align: right; font-weight: 400; min-width: 0; flex: 1 1 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .cell-h > :first-child { flex: none; }
-.pool-tools { display: flex; justify-content: flex-end; font-size: var(--s-sm); margin: -4px 0 -2px; }
-.pool-tools .tbtn { color: var(--g4); }
-.pool-tools .tbtn:hover { color: var(--ink); }
+.pool-tools { display: flex; justify-content: flex-start; margin-top: -2px; }
 /* First cell: header text centred on the selection bar's text, pool rule on the bar's bottom rule. */
 .cell-pool { padding-top: 10px; }
 .cell-pool > .cell-h { height: calc(var(--bar) - 21px); align-items: center; }
@@ -323,7 +321,7 @@ body.resizing, body.resizing * { cursor: col-resize !important; user-select: non
   <aside class="rail" aria-label="Controls">
     <section class="cell cell-pool">
       <div class="cell-h"><span>Font pool</span><span class="r" id="sum-pool"></span></div>
-      <div class="pool-tools"><button class="tbtn" type="button" id="fold-all" title="Fold or open every family's style list. Share of mix stays visible.">Collapse all</button></div>
+      <div class="pool-tools"><button class="btn sm" type="button" id="fold-all" title="Fold or open every family's style list. Share of mix stays visible.">Collapse all</button></div>
       <div class="pool" id="pool"></div>
       <div class="base-row"><label for="base">Base</label><select id="base"></select></div>
       <p class="base-hint">Right-click any style above to make it the base.</p>
