@@ -72,10 +72,14 @@ button { background: none; border: 0; padding: 0; cursor: pointer; }
 
 /* rail */
 .rail { border-right: var(--rule); overflow-y: auto; min-width: 0; min-height: 0; }
-.cell { border-bottom: var(--rule); padding: var(--h-space) 14px 14px; display: grid; gap: 10px; }
+.cell { border-bottom: var(--rule); padding: var(--h-space) 14px 14px; display: grid; grid-template-columns: minmax(0, 1fr); gap: 10px; }
 .cell-h { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; text-transform: uppercase; font-size: var(--s-sm); }
 .cell-h > :first-child { font-size: var(--h-size); font-weight: var(--h-weight); letter-spacing: .03em; }
-.cell-h .r { color: var(--g4); text-align: right; font-weight: 400; }
+.cell-h .r { color: var(--g4); text-align: right; font-weight: 400; min-width: 0; flex: 1 1 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cell-h > :first-child { flex: none; }
+.pool-tools { display: flex; justify-content: flex-end; font-size: var(--s-sm); margin: -4px 0 -2px; }
+.pool-tools .tbtn { color: var(--g4); }
+.pool-tools .tbtn:hover { color: var(--ink); }
 /* First cell: header text centred on the selection bar's text, pool rule on the bar's bottom rule. */
 .cell-pool { padding-top: 10px; }
 .cell-pool > .cell-h { height: calc(var(--bar) - 21px); align-items: center; }
@@ -318,7 +322,8 @@ body.resizing, body.resizing * { cursor: col-resize !important; user-select: non
 
   <aside class="rail" aria-label="Controls">
     <section class="cell cell-pool">
-      <div class="cell-h"><span>Font pool</span><button class="tbtn r" type="button" id="fold-all" title="Fold or open every family's style list. Share of mix stays visible.">Collapse all</button></div>
+      <div class="cell-h"><span>Font pool</span><span class="r" id="sum-pool"></span></div>
+      <div class="pool-tools"><button class="tbtn" type="button" id="fold-all" title="Fold or open every family's style list. Share of mix stays visible.">Collapse all</button></div>
       <div class="pool" id="pool"></div>
       <div class="base-row"><label for="base">Base</label><select id="base"></select></div>
       <p class="base-hint">Right-click any style above to make it the base.</p>
@@ -326,7 +331,7 @@ body.resizing, body.resizing * { cursor: col-resize !important; user-select: non
     </section>
 
     <section class="cell">
-      <div class="cell-h"><span>Text</span><span class="r" id="case-name"></span></div>
+      <div class="cell-h"><span>Text</span><span class="r" id="sum-text"></span></div>
       <textarea id="text" spellcheck="false" aria-label="Text to set"></textarea>
       <div class="opts" id="case" role="group" aria-label="Case">
         <button type="button" data-v="orig">Original</button>
@@ -343,7 +348,7 @@ body.resizing, body.resizing * { cursor: col-resize !important; user-select: non
     </section>
 
     <section class="cell">
-      <div class="cell-h"><span>Mix</span><span class="r" id="mix-name"></span></div>
+      <div class="cell-h"><span>Mix</span><span class="r" id="sum-mix"></span></div>
       <div class="ctl">
         <label for="mix">Weight mix</label><output id="mix-o"></output>
         <input type="range" id="mix" min="0" max="100" step="1">
@@ -374,7 +379,7 @@ body.resizing, body.resizing * { cursor: col-resize !important; user-select: non
     </section>
 
     <section class="cell">
-      <div class="cell-h"><span>Type</span></div>
+      <div class="cell-h"><span>Type</span><span class="r" id="sum-type"></span></div>
       <div class="pair">
         <div class="ctl"><label for="size">Size</label><output id="size-o"></output><input type="range" id="size" min="8" max="200" step="1"></div>
         <div class="ctl"><label for="leading">Leading</label><output id="leading-o"></output><input type="range" id="leading" min="60" max="200" step="1"></div>
@@ -397,18 +402,18 @@ body.resizing, body.resizing * { cursor: col-resize !important; user-select: non
     </section>
 
     <section class="cell">
-      <div class="cell-h"><span>Letter align</span><span class="r">By glyph outline</span></div>
+      <div class="cell-h"><span>Letter align</span><span class="r" id="sum-valign"></span></div>
       <div class="opts" id="valign" role="group" aria-label="Letter alignment">
         <button type="button" data-v="baseline">Baseline</button>
         <button type="button" data-v="top">Top</button>
         <button type="button" data-v="middle">Middle</button>
         <button type="button" data-v="bottom">Bottom</button>
       </div>
-      <p class="hint">Top, middle and bottom line up the actual ink of each letter within its line. They export as baseline shift, so the text stays editable.</p>
+      <p class="hint">Measured by each glyph's outline: top, middle and bottom line up the actual ink of each letter within its line. They export as baseline shift, so the text stays editable.</p>
     </section>
 
     <section class="cell">
-      <div class="cell-h"><span>Jitter</span></div>
+      <div class="cell-h"><span>Jitter</span><span class="r" id="sum-jitter"></span></div>
       <div class="ctl"><label for="sizevar">Size range</label><output id="sizevar-o"></output><input type="range" id="sizevar" min="0" max="80" step="1"></div>
       <div class="ctl"><label for="basejit">Base jitter</label><output id="basejit-o"></output><input type="range" id="basejit" min="0" max="30" step="0.5"></div>
       <div class="ctl"><label for="trackjit">Track jitter</label><output id="trackjit-o"></output><input type="range" id="trackjit" min="0" max="200" step="5"></div>
@@ -416,7 +421,7 @@ body.resizing, body.resizing * { cursor: col-resize !important; user-select: non
     </section>
 
     <section class="cell">
-      <div class="cell-h"><span>Guidelines</span><span class="r">Base style metrics</span></div>
+      <div class="cell-h"><span>Guidelines</span><span class="r" id="sum-guides"></span></div>
       <div class="opts" id="guides" role="group" aria-label="Guidelines">
         <button type="button" data-v="base">Baseline</button>
         <button type="button" data-v="x">x-height</button>
@@ -424,6 +429,7 @@ body.resizing, body.resizing * { cursor: col-resize !important; user-select: non
         <button type="button" data-v="asc">Ascender</button>
       </div>
       <label class="chk"><input type="checkbox" id="exp-guides"> Include in export</label>
+      <p class="hint">Lines at the base style's metrics: baseline, x-height, cap height and ascender, at the set size.</p>
     </section>
   </aside>
 
@@ -460,7 +466,7 @@ body.resizing, body.resizing * { cursor: col-resize !important; user-select: non
       </section>
 
       <section class="cell">
-        <div class="cell-h"><span>Letter</span><span class="r">Font, weight, align</span></div>
+        <div class="cell-h"><span>Letter</span><span class="r" id="sum-letter"></span></div>
         <div class="ctl"><label for="sel-fam">Font</label><output></output><select id="sel-fam" style="grid-column:1/-1"></select></div>
         <div class="ctl"><label>Weight</label><output></output></div>
         <div class="opts" id="sel-styles"></div>
@@ -472,13 +478,15 @@ body.resizing, body.resizing * { cursor: col-resize !important; user-select: non
           <button type="button" data-v="middle">Mid</button>
           <button type="button" data-v="bottom">Bottom</button>
         </div>
+        <p class="hint">Font, weight and alignment of the selected letters.</p>
       </section>
 
       <section class="cell">
-        <div class="cell-h"><span>Rotate</span><span class="r">Each letter on its centre</span></div>
+        <div class="cell-h"><span>Rotate</span><span class="r" id="sum-rot"></span></div>
         <div class="ctl"><label for="rot">Angle</label><span class="numin"><input type="number" id="rot-n" min="-180" max="180" step="1" aria-label="Angle in degrees">°</span><input type="range" id="rot" min="-180" max="180" step="1"></div>
         <div class="ctl"><label for="rjit">Random jitter</label><output id="rjit-o"></output><input type="range" id="rjit" min="0" max="45" step="1"></div>
         <div class="btns"><button class="btn sm" type="button" id="rjit-re">Reroll jitter</button><button class="btn sm" type="button" id="rot-reset">No rotation</button></div>
+        <p class="hint">Each letter turns on its own centre.</p>
       </section>
 
       <section class="cell">
@@ -508,23 +516,24 @@ body.resizing, body.resizing * { cursor: col-resize !important; user-select: non
 
     <div id="side-para">
       <section class="cell">
-        <div class="cell-h"><span>Hover info</span><span class="r">Canvas only, not exported</span></div>
+        <div class="cell-h"><span>Hover info</span><span class="r" id="sum-hov"></span></div>
         <div class="opts" id="hov" role="group" aria-label="Hover info">
           <button type="button" data-v="on">On</button>
           <button type="button" data-v="off">Off</button>
         </div>
+        <p class="hint">Point at a letter to see its family, style, size, shift and tracking. Canvas only, not exported.</p>
       </section>
 
       <section class="cell">
-        <div class="cell-h"><span>Fill</span><span class="r">Solid ↔ outline</span></div>
+        <div class="cell-h"><span>Fill</span><span class="r" id="sum-fill"></span></div>
         <div class="ctl"><label for="outline">Random outline</label><output id="outline-o"></output><input type="range" id="outline" min="0" max="100" step="1"></div>
         <div class="ctl"><label for="strokew">Stroke</label><output id="strokew-o"></output><input type="range" id="strokew" min="0.25" max="8" step="0.25"></div>
         <div class="btns"><button class="btn sm" type="button" id="outline-re">Reroll outlines</button></div>
-        <p class="hint">Picks a share of the letters to set as outline only: no fill, black stroke. It exports as live text with a stroke. Select letters to set them by hand.</p>
+        <p class="hint">Solid ↔ outline. Random outline picks a share of the letters to set as outline only: no fill, black stroke. It exports as live text with a stroke. Select letters to set them by hand.</p>
       </section>
 
       <section class="cell">
-        <div class="cell-h"><span>Paragraph band</span><span class="r">One band per line</span></div>
+        <div class="cell-h"><span>Paragraph band</span><span class="r" id="sum-para"></span></div>
         <div class="opts" id="para-on" role="group" aria-label="Paragraph band">
           <button type="button" data-v="off">Off</button>
           <button type="button" data-v="on">On</button>
@@ -534,6 +543,7 @@ body.resizing, body.resizing * { cursor: col-resize !important; user-select: non
           <button type="button" data-v="each">Each letter</button>
         </div>
         <div class="ctl"><label for="para-dh">Adjust height</label><output id="para-dh-o"></output><input type="range" id="para-dh" min="-40" max="120" step="1"></div>
+        <p class="hint">One band under each line of text, as tall as its tallest letter or stepping with each letter.</p>
       </section>
 
       <section class="cell">
@@ -601,7 +611,7 @@ body.resizing, body.resizing * { cursor: col-resize !important; user-select: non
       <section><h4>Even gaps</h4><p>Where neighbouring letters come from different fonts, their sidebearings differ and the gaps look uneven. Even gaps adjusts the left letter's tracking so the gap moves halfway between the spacing of the two fonts it joins, instead of jumping from one to the other. It exports as tracking.</p></section>
       <section><h4>Match size</h4><p>Different families at the same point size look different sizes. x-height or Cap height scales each letter's font so its lowercase x or capital H is as tall as in the base style (limited to 60–160%). It is written as the letter's point size, so it stays editable; leading follows the nominal size.</p></section>
       <section><h4>Letter align</h4><p>Top, middle and bottom alignment are written as baseline shift values. If you change a letter or its font afterwards, export again to re-align.</p></section>
-      <section><h4>Group notes</h4><p>Groups with a short note have a <b>?</b> next to their title. Click it to show the note, again to hide it.</p></section>
+      <section><h4>Group titles</h4><p>The right side of each title row sums up what the group is set to, and follows every change; hover it for the full text if it is cut short. Groups with a short note have a <b>?</b> next to their title: click it to show the note, again to hide it.</p></section>
       <section><h4>Right panel</h4><p>Selecting letters opens it with their font, size, shift and tracking at the top, then weight, align, <b>rotation</b>, <b>fill</b> and <b>boxes</b>. With nothing selected, the handle on the right edge opens the paragraph settings: hover info, <b>fill</b> (random outline, stroke), the paragraph band, random letter boxes. Clear edits there also sets Random outline and Stroke back to their defaults.</p></section>
       <section><h4>Boxes</h4><p>Letter boxes follow each letter's ink, size and shift, and turn with it. A band runs under the selection, as tall as its tallest letter or stepping with each one; the paragraph band does the same for every line. Greys only. They export under the text as vector shapes: InDesign rectangles keep live corner options, Illustrator and Photoshop get the exact path.</p></section>
       <section><h4>Outline and rotation</h4><p>Outline letters export as live text with no fill and a black stroke; rotation as character rotation, about the centre of the em box. Photoshop can do neither per letter inside one type layer, so those letters become their own type layers (outline as a layer-style stroke) and the main layer keeps a space of the same width.</p></section>
@@ -1970,8 +1980,31 @@ function corners() {
   $('#c-bl').textContent = `${glyphs} glyphs · ${used.size}/${pool.length} styles used · ${runs} runs` + (edits ? ` · ${edits} edited` : '');
   $('#seed-lbl').textContent = 'Seed ' + S.seed;
   $('#pool-count').textContent = S.styles.size ? `${pool.length} / ${S.styles.size} styles in mix` : '';
-  $('#mix-name').textContent = { uniform: 'Even', poles: 'Extremes', heavy: 'Lean heavy', light: 'Lean light', wave: 'Wave', ramp: 'Ramp', rampline: 'Ramp per line', alt: 'Alternate' }[S.dist];
-  $('#case-name').textContent = { orig: 'Original', upper: 'All caps', lower: 'All lower', title: 'Title case', sentence: 'Sentence', random: 'Random' }[S.caseMode];
+  leftSummaries();
+}
+
+// The right side of each group's title row: a short summary of what the group is set to.
+function summary(id, t) {
+  const el = $('#' + id);
+  unitText(el, t);
+  el.title = el.textContent;
+}
+function leftSummaries() {
+  const on = S.families.reduce((a, f) => a + f.on.size, 0), base = S.styles.get(S.baseId);
+  summary('sum-pool', S.families.length
+    ? `${S.families.length} ${S.families.length === 1 ? 'family' : 'families'} · ${on}/${S.styles.size} styles` + (base ? ` · base ${base.family} ${base.style}` : '')
+    : 'Empty');
+  const cs = { orig: 'Original', upper: 'All caps', lower: 'All lower', title: 'Title case', sentence: 'Sentence', random: 'Random' }[S.caseMode];
+  summary('sum-text', S.caseMode === 'random' ? `${cs} · ${S.caseAmt}% caps` : cs);
+  const dist = { uniform: 'Even', poles: 'Extremes', heavy: 'Lean heavy', light: 'Lean light', wave: 'Wave', ramp: 'Ramp', rampline: 'Ramp per line', alt: 'Alternate' }[S.dist];
+  const unit = { glyph: 'Letter', segment: 'Fragment', word: 'Word' }[S.gran];
+  summary('sum-mix', `${S.mix}% · ${dist} · ${unit}`);
+  const al = { left: 'Left', center: 'Center', right: 'Right' }[S.align];
+  summary('sum-type', `${S.size} pt · ${S.leading}% lead · ${num(S.track)} track · ${al}`);
+  summary('sum-valign', { baseline: 'Baseline', top: 'Top', middle: 'Middle', bottom: 'Bottom' }[S.valign]);
+  summary('sum-jitter', S.sizeVar || S.baseJit || S.trackJit ? `±${S.sizeVar}% · ±${num(S.baseJit)} pt · ±${S.trackJit}` : 'Off');
+  const gl = GUIDES.filter(G => S.guides[G.key]).map(G => G.name);
+  summary('sum-guides', gl.length ? gl.join(' · ') + ($('#exp-guides').checked ? ' · in export' : '') : 'Off');
 }
 
 /* ---------------- selection ---------------- */
@@ -2126,6 +2159,9 @@ function renderSelPanel(gs) {
   }
   const vas = new Set(gs.map(g => ovOf(g).va || ''));
   press('#sel-va', vas.size === 1 ? [...vas][0] : null);
+  const va = vas.size === 1 ? { '': 'Auto', baseline: 'Base', top: 'Top', middle: 'Mid', bottom: 'Bottom' }[[...vas][0]] : 'Mixed';
+  const stl = stys.size === 1 ? S.styles.get([...stys][0]).style : 'Mixed';
+  summary('sum-letter', `${fams.size === 1 ? [...fams][0] : 'Mixed'} · ${stl} · ${va}`);
 
   // rotate
   const rots = new Set(gs.map(g => ovOf(g).rot || 0)), rot0 = ovOf(gs[0]).rot || 0;
@@ -2134,6 +2170,7 @@ function renderSelPanel(gs) {
   if (document.activeElement !== rn) { rn.value = rots.size === 1 ? rot0 : ''; rn.placeholder = rots.size === 1 ? '' : 'Mixed'; }
   const ra = gs.map(g => ovOf(g).ra || 0).find(v => v) || 0;
   setRange('rjit', ra || jitAmt, '±' + (ra || 0) + '°');
+  summary('sum-rot', rots.size > 1 ? 'Mixed' + (ra ? ` · ±${ra}°` : '') : rot0 || ra ? `${num(rot0)}°` + (ra ? ` · ±${ra}°` : '') : 'None');
 
   // fill
   const fills = new Set(gs.map(g => ovOf(g).fill || ''));
@@ -2156,6 +2193,9 @@ function renderSelPanel(gs) {
 }
 
 function renderParaPanel() {
+  summary('sum-hov', S.hoverInfo ? 'On' : 'Off');
+  summary('sum-fill', S.outlineAmt ? `${S.outlineAmt}% · ${ptTxt(S.strokeW)}` : 'Off');
+  summary('sum-para', S.para.on ? `On · ${S.para.fit === 'each' ? 'Each letter' : 'Tallest letter'}` + (S.para.dh ? ` · ${dhTxt(S.para.dh)}` : '') : 'Off');
   press('#hov', S.hoverInfo ? 'on' : 'off');
   press('#para-on', S.para.on ? 'on' : 'off');
   press('#para-fit', S.para.fit);
@@ -2890,6 +2930,7 @@ async function boot() {
   fixDeco();
 
   setupHints();
+  $('#exp-guides').addEventListener('change', leftSummaries);
   bindRange('case-amt', 'caseAmt', v => v + '%');
   bindRange('mix', 'mix', v => v + '%');
   bindRange('size', 'size', ptTxt);

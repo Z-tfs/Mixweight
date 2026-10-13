@@ -10,7 +10,7 @@ Mix the weights of your installed variable fonts letter by letter, then send the
 - Mixes styles across one or more families: mix amount, distribution (even, extremes, lean heavy, lean light, wave with adjustable period, ramp light → heavy across the text or per line, alternate light / heavy), unit (letter, fragment, word).
 - Family share of mix: set each family's % of the mixed letters; the other families adjust so the total stays 100%. A family with nine styles no longer has to drown one with two.
 - The base style is marked in the pool and must be one of the styles switched on. Pick it from the Base menu, or right-click any style: Set as base style, or Add to mix + set as base for a style that is off. Either is one undo step.
-- Click a family's name in the pool to fold its style list away (Collapse all / Expand all for every family). Share of mix stays visible, and a folded family that holds the base style says so. Folding is remembered and isn't an undo step.
+- Click a family's name in the pool to fold its style list away (Collapse all / Expand all, at the top of the pool, for every family). Share of mix stays visible, and a folded family that holds the base style says so. Folding is remembered and isn't an undo step.
 - Case: original, all caps, all lower, title case, sentence, random.
 - Size range, baseline and tracking jitter, leading, line alignment.
 - Even gaps: where neighbouring letters come from different fonts, nudge the tracking so the gap sits halfway between the two fonts' own spacing. Exported as tracking.
@@ -26,7 +26,7 @@ Mix the weights of your installed variable fonts letter by letter, then send the
 - Seed: every random choice comes from it. Reroll for a new one, or click the seed number to type one in and get an earlier result back.
 - Clear: the one above the left panel resets the left panel's look (case, mix, type, letter align, jitter, guidelines) to defaults; Clear edits in the right panel removes every right-panel edit (letter changes, boxes, bands, the paragraph band), sets Random outline and Stroke back to their defaults, and keeps the left-panel settings. Both undo.
 - Panel widths: drag the rule between a panel and the canvas to resize it (left 280–560 px, right 260–520 px, and the canvas keeps at least 360 px); double-click the rule for the default width. Widths are remembered. The text's layout doesn't change with the canvas: in Fit mode the zoom follows the canvas, otherwise the zoom stays put.
-- Group notes: the grey note under a group is folded away; click the **?** next to the group title to show it, again to hide it.
+- Group titles: the right side of each title row sums up the group's current settings (for example `70% · Even · Letter` for Mix, `Off` for Jitter at zero) and updates as you change them. The grey note under a group is folded away; click the **?** next to the group title to show it, again to hide it.
 - ⌘Z / ⇧⌘Z undo and redo.
 
 ## Export
