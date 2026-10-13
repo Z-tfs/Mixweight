@@ -187,8 +187,8 @@ textarea:focus { background: var(--g2); outline: none; }
 .side .row { display: grid; grid-template-columns: 1fr auto; gap: 6px 10px; align-items: baseline; }
 .side .lab { color: var(--g4); text-transform: uppercase; }
 .side .sub-h { text-transform: uppercase; color: var(--g4); }
-.numin { display: inline-flex; align-items: baseline; gap: 2px; color: var(--g4); }
-.numin input { width: 6ch; border: 0; border-bottom: var(--rule); background: transparent; text-align: right; font-variant-numeric: tabular-nums; padding: 0 2px; border-radius: 0; -moz-appearance: textfield; }
+.numin { display: inline-flex; align-items: baseline; gap: 0; color: var(--g4); }
+.numin input { width: 6ch; border: 0; border-bottom: var(--rule); background: transparent; text-align: right; font-variant-numeric: tabular-nums; padding: 0 1px 0 2px; border-radius: 0; -moz-appearance: textfield; }
 .numin input::-webkit-inner-spin-button { -webkit-appearance: none; }
 .numin input:focus { outline: 0; background: var(--g1); }
 .corner-row { display: grid; grid-template-columns: 2.4em 1fr; gap: 4px 8px; align-items: center; }
@@ -362,7 +362,7 @@ body.resizing, body.resizing * { cursor: col-resize !important; user-select: non
     </section>
 
     <section class="cell">
-      <div class="cell-h"><span>Setting</span><span class="r">pt</span></div>
+      <div class="cell-h"><span>Setting</span></div>
       <div class="pair">
         <div class="ctl"><label for="size">Size</label><output id="size-o"></output><input type="range" id="size" min="8" max="200" step="1"></div>
         <div class="ctl"><label for="leading">Leading</label><output id="leading-o"></output><input type="range" id="leading" min="60" max="200" step="1"></div>
@@ -384,7 +384,7 @@ body.resizing, body.resizing * { cursor: col-resize !important; user-select: non
         <button type="button" data-v="center">Center</button>
         <button type="button" data-v="right">Right</button>
       </div>
-      <p class="hint">Match size scales each font so its x-height or cap height meets the base style's; it exports as per-letter size. Baseline jitter only moves letters set on the baseline.</p>
+      <p class="hint">Tracking is in ‰: thousandths of an em, as in Adobe apps. Match size scales each font so its x-height or cap height meets the base style's; it exports as per-letter size. Baseline jitter only moves letters set on the baseline.</p>
     </section>
 
     <section class="cell">
@@ -1970,7 +1970,11 @@ function renderInspector() {
 }
 
 /* ---------------- hover info / selection info ---------------- */
-const sgn = (v, d) => (v > 0 ? '+' : '') + (d ? v.toFixed(d) : String(v));
+// Display only: true minus sign (U+2212), no "−0", and every value with its unit. Tracking is in 1/1000 em, as in Adobe apps.
+const num = (v, d) => { const t = d ? v.toFixed(d) : String(v); return /^-0(\.0+)?$/.test(t) ? t.slice(1) : t.replace('-', '\u2212'); };
+const sgn = (v, d) => (v > 0 && num(v, d) !== num(0, d) ? '+' : '') + num(v, d);
+const TRACK_UNIT = ' /1000 em';
+const TRACK_UNIT_SHORT = ' ‰'; // the two tracking sliders: '/1000 em' doesn't fit their half-width cells
 function tagRows(gs) {
   const one = (f, fmt) => {
     const vs = gs.map(f), lo = Math.min(...vs), hi = Math.max(...vs);
@@ -1981,8 +1985,8 @@ function tagRows(gs) {
     same(g => g.st.family),
     same(g => g.st.style),
     one(g => g.size, v => v.toFixed(1)) + ' pt',
-    'Shift ' + one(g => g.bs, v => sgn(v, 1)),
-    'Track ' + one(g => g.tr, v => sgn(v)),
+    'Shift ' + one(g => g.bs, v => sgn(v, 1)) + ' pt',
+    'Track ' + one(g => g.tr, v => sgn(v)) + TRACK_UNIT,
   ];
 }
 function fillTag(el, rows) {
@@ -2033,8 +2037,8 @@ const selIdx = () => [...S.sel];
 const touchesSel = b => selIdx().some(i => i >= b.a && i <= b.b);
 const selBands = () => S.bands.filter(touchesSel);
 const setRange = (id, v, txt) => { const el = $('#' + id); if (document.activeElement !== el || el.type === 'range') el.value = v; const o = $('#' + id + '-o'); if (o && txt != null) o.textContent = txt; };
-const ptTxt = v => (v === 0 ? '0' : v) + ' pt';
-const dhTxt = v => (v > 0 ? '+' : '') + v + ' pt';
+const ptTxt = v => num(v) + ' pt';
+const dhTxt = v => sgn(v) + ' pt';
 let jitAmt = 6;
 
 function renderSelPanel(gs) {
@@ -2124,7 +2128,7 @@ function renderBoxEditor(gs) {
   setRange('bx-fill', st.fill, st.fill + '%');
   setRange('bx-op', st.op, st.op + '%');
   setRange('bx-stroke', st.stroke, st.stroke + '%');
-  setRange('bx-sw', st.sw, st.sw > 0 ? st.sw + ' pt' : 'None');
+  setRange('bx-sw', st.sw, ptTxt(st.sw));
   setRange('bx-pad', st.pad, ptTxt(st.pad));
   $('#bx-lock').setAttribute('aria-pressed', st.lock);
   $('#bx-lock-t').textContent = st.lock ? 'Locked: all four' : 'Unlocked: each corner';
@@ -2134,7 +2138,7 @@ function renderBoxEditor(gs) {
     const c = st.c[all ? 0 : +row.dataset.c];
     row.querySelectorAll('.opts button').forEach(b => b.setAttribute('aria-pressed', b.dataset.v === c.s));
     row.querySelector('input').value = c.r;
-    row.querySelector('output').textContent = c.r ? c.r + ' pt' : 'Square';
+    row.querySelector('output').textContent = ptTxt(c.r);
   }
 }
 function editBox(key, fn) {
@@ -2743,12 +2747,12 @@ async function boot() {
 
   bindRange('case-amt', 'caseAmt', v => v + '%');
   bindRange('mix', 'mix', v => v + '%');
-  bindRange('size', 'size', v => v + ' pt');
+  bindRange('size', 'size', ptTxt);
   bindRange('leading', 'leading', v => v + '%');
   bindRange('sizevar', 'sizeVar', v => '±' + v + '%');
   bindRange('basejit', 'baseJit', v => '±' + v + ' pt');
-  bindRange('trackjit', 'trackJit', v => '±' + v);
-  bindRange('track', 'track', v => (v > 0 ? '+' : '') + v);
+  bindRange('trackjit', 'trackJit', v => '±' + v + TRACK_UNIT_SHORT);
+  bindRange('track', 'track', v => sgn(v) + TRACK_UNIT_SHORT);
   const syncCaseAmt = () => { $('#case-amt-wrap').hidden = S.caseMode !== 'random'; };
   bindOpts('case', 'caseMode', syncCaseAmt); syncCaseAmt();
   bindOpts('gran', 'gran');
@@ -2757,7 +2761,7 @@ async function boot() {
   bindOpts('match', 'match');
   bindRange('gaps', 'gaps', v => v + '%');
   bindRange('outline', 'outlineAmt', v => v + '%');
-  bindRange('strokew', 'strokeW', v => v + ' pt');
+  bindRange('strokew', 'strokeW', ptTxt);
   const dist = $('#dist'); dist.value = S.dist;
   const syncPeriod = () => { $('#wave-period-wrap').hidden = S.dist !== 'wave'; };
   syncers.push(() => { dist.value = S.dist; syncPeriod(); });
