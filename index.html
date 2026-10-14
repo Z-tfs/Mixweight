@@ -48,6 +48,18 @@ button { background: none; border: 0; padding: 0; cursor: pointer; }
 .nav button:hover { color: var(--g4); }
 .nav .exp { display: inline-flex; gap: 14px; align-items: baseline; }
 .nav .exp span { color: var(--g4); font-size: var(--s-sm); }
+.q { width: 15px; height: 15px; border: 1px solid var(--g4); border-radius: 50%; padding: 0; font-size: 10px; line-height: 13px; justify-content: center; color: var(--g4); flex: none; }
+.nav .q { color: var(--g4); align-self: center; margin-left: -8px; }
+.cell-h .q { display: inline-block; margin-left: 7px; vertical-align: 1px; text-align: center; font-weight: 400; letter-spacing: 0; }
+.cell > p.hint { display: none; }
+.rail > .cell > .cell-h { cursor: pointer; }
+.gfold { font: inherit; letter-spacing: inherit; text-transform: inherit; padding: 0; display: inline-flex; align-items: center; gap: 7px; }
+.gfold::before { content: ""; width: 0; height: 0; border-left: 4px solid transparent; border-right: 4px solid transparent; border-top: 5px solid var(--ink); transition: transform .12s; }
+.g-closed .gfold::before { transform: rotate(-90deg); }
+.rail > .cell.g-closed > :not(.cell-h) { display: none !important; }
+.rail > .cell.g-closed { padding-bottom: calc(var(--h-space) - 4px); }
+.cell.hint-open > p.hint { display: block; }
+.q:hover, .q[aria-expanded="true"], .nav .q:hover { background: var(--ink); border-color: var(--ink); color: var(--paper); }
 .dot::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--ink); display: inline-block; }
 
 /* sub-bar */
@@ -66,10 +78,12 @@ button { background: none; border: 0; padding: 0; cursor: pointer; }
 
 /* rail */
 .rail { border-right: var(--rule); overflow-y: auto; min-width: 0; min-height: 0; }
-.cell { border-bottom: var(--rule); padding: var(--h-space) 14px 14px; display: grid; gap: 10px; }
+.cell { border-bottom: var(--rule); padding: var(--h-space) 14px 14px; display: grid; grid-template-columns: minmax(0, 1fr); gap: 10px; }
 .cell-h { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; text-transform: uppercase; font-size: var(--s-sm); }
 .cell-h > :first-child { font-size: var(--h-size); font-weight: var(--h-weight); letter-spacing: .03em; }
-.cell-h .r { color: var(--g4); text-align: right; font-weight: 400; }
+.cell-h .r { color: var(--g4); text-align: right; font-weight: 400; min-width: 0; flex: 1 1 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cell-h > :first-child { flex: none; }
+.pool-tools { display: flex; justify-content: flex-start; margin-top: -2px; }
 /* First cell: header text centred on the selection bar's text, pool rule on the bar's bottom rule. */
 .cell-pool { padding-top: 10px; }
 .cell-pool > .cell-h { height: calc(var(--bar) - 21px); align-items: center; }
@@ -138,6 +152,16 @@ textarea:focus { background: var(--g2); outline: none; }
 .chip[aria-pressed="true"]::before { content: ""; display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--ink); margin-right: 5px; vertical-align: .2em; }
 .chip.is-base { position: relative; background: var(--g2); color: var(--ink); padding: 7px 10px 3px 7px; margin-right: 16px; }
 .chip .badge { position: absolute; top: -9px; right: -18px; font: var(--s-xs)/1 var(--ui); font-variation-settings: normal; letter-spacing: .04em; text-transform: uppercase; background: var(--ink); color: var(--paper); padding: 3px 5px 2px; pointer-events: none; }
+.base-row { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 12px; }
+.base-row label { font: var(--s-xs)/1 var(--ui); letter-spacing: .04em; text-transform: uppercase; background: var(--ink); color: var(--paper); padding: 3px 5px 2px; }
+.base-row select { font-size: var(--s-md); }
+.base-hint { margin: -4px 0 0; color: var(--g4); font-size: var(--s-sm); line-height: 1.45; }
+/* Right-click menu on a style chip */
+.ctxmenu { position: fixed; z-index: 70; min-width: 170px; background: var(--paper); border: var(--rule); font-size: var(--s-sm); }
+.ctxmenu .t { padding: 6px 10px 5px; border-bottom: var(--rule); color: var(--g4); white-space: nowrap; }
+.ctxmenu button { display: block; width: 100%; text-align: left; padding: 6px 10px; text-transform: uppercase; }
+.ctxmenu button:hover, .ctxmenu button:focus-visible { background: var(--ink); color: var(--paper); outline: 0; }
+.ctxmenu button:disabled { color: var(--g3); background: none; cursor: default; }
 .chips:has(.is-base) { padding-top: 6px; row-gap: 12px; }
 .fam .ctl input:disabled { opacity: .35; cursor: default; }
 .pool .empty { padding: 14px; color: var(--g4); text-transform: uppercase; }
@@ -227,6 +251,14 @@ dialog::backdrop { background: rgba(255, 255, 255, .7); }
 .dlg li button[data-state="added"] .ct { color: var(--ink); }
 .dlg footer { padding: 9px 14px; border-top: var(--rule); display: flex; justify-content: space-between; align-items: center; gap: 12px; }
 .dlg.two { grid-template-rows: auto minmax(0, 1fr) auto; }
+#exp-ask { width: min(400px, calc(100% - 32px)); }
+.dlg.ask { grid-template-rows: auto auto; }
+.ask-b { padding: 14px; display: grid; gap: 14px; }
+.dlg header .hd-r { display: inline-flex; align-items: baseline; gap: 14px; }
+.dlg header .hd-r span { color: var(--g4); }
+.x-close { font-size: 18px; line-height: 1; padding: 0 2px; color: var(--ink); }
+.x-close:hover { color: var(--g4); }
+.ask-b .chk { font-size: var(--s-sm); color: var(--g4); text-transform: none; }
 .help { overflow: auto; }
 .help section { padding: 10px 14px 12px; border-bottom: var(--rule); display: grid; gap: 4px; }
 .help section:last-child { border-bottom: 0; }
@@ -268,7 +300,7 @@ body.resizing, body.resizing * { cursor: col-resize !important; user-select: non
       <button type="button" id="btn-files">Font files</button>
       <input type="file" id="file-in" accept=".ttf,.otf,.ttc,.otc" multiple hidden>
       <button type="button" id="btn-help">Help</button>
-      <span class="exp"><span>Export</span>
+      <span class="exp"><span>Export</span><button type="button" class="q" id="exp-q" aria-label="About exporting" aria-haspopup="dialog">?</button>
         <button type="button" data-exp="ai">AI</button>
         <button type="button" data-exp="id">ID</button>
         <button type="button" data-exp="ps">PS</button>
@@ -277,7 +309,7 @@ body.resizing, body.resizing * { cursor: col-resize !important; user-select: non
   </header>
 
   <div class="sub">
-    <div><span>Controls</span><span class="grp"><span class="muted" id="pool-count"></span><button class="tbtn" type="button" id="clear-left" title="Reset the left panel's settings (case, mix, align, setting, outline, guides) to their defaults. Text, fonts and edits in the right panel stay. ⌘Z brings them back.">Clear</button></span></div>
+    <div><span>Controls</span><span class="grp"><span class="muted" id="pool-count"></span><button class="tbtn" type="button" id="clear-left" title="Reset the left panel's settings (case, mix, type, letter align, jitter, guidelines) to their defaults. Text, fonts and edits in the right panel stay. ⌘Z brings them back.">Clear</button></span></div>
     <div>
       <span class="grp">
         <button class="tbtn" type="button" id="undo" title="⌘Z" disabled>Undo</button>
@@ -298,17 +330,16 @@ body.resizing, body.resizing * { cursor: col-resize !important; user-select: non
 
   <aside class="rail" aria-label="Controls">
     <section class="cell cell-pool">
-      <div class="cell-h"><span>Font pool</span><button class="tbtn r" type="button" id="fold-all" title="Fold or open every family's style list. Share of mix stays visible.">Collapse all</button></div>
+      <div class="cell-h"><span>Font pool</span><span class="r" id="sum-pool"></span></div>
+      <div class="pool-tools"><button class="btn sm" type="button" id="fold-all" title="Fold or open every family's style list. Share of mix stays visible.">Collapse all</button></div>
       <div class="pool" id="pool"></div>
-      <div class="ctl">
-        <label for="base">Base style</label><output>Used at 0% mix</output>
-        <select id="base" style="grid-column:1/-1"></select>
-      </div>
-      <p class="hint">Click a style to mix it in; click a family's name to fold its styles away. Variable fonts are split into their named instances. Drop .ttf, .otf or .ttc files anywhere on the page to add them.</p>
+      <div class="base-row"><label for="base">Base</label><select id="base"></select></div>
+      <p class="base-hint">Right-click any style above to make it the base.</p>
+      <p class="hint">Click a style to mix it in; click a family's name to fold its styles away. The base style is the one letters keep at 0% mix. Variable fonts are split into their named instances. Drop .ttf, .otf or .ttc files anywhere on the page to add them.</p>
     </section>
 
     <section class="cell">
-      <div class="cell-h"><span>Text</span><span class="r" id="case-name"></span></div>
+      <div class="cell-h"><span>Text</span><span class="r" id="sum-text"></span></div>
       <textarea id="text" spellcheck="false" aria-label="Text to set"></textarea>
       <div class="opts" id="case" role="group" aria-label="Case">
         <button type="button" data-v="orig">Original</button>
@@ -325,7 +356,7 @@ body.resizing, body.resizing * { cursor: col-resize !important; user-select: non
     </section>
 
     <section class="cell">
-      <div class="cell-h"><span>Mix</span><span class="r" id="mix-name"></span></div>
+      <div class="cell-h"><span>Mix</span><span class="r" id="sum-mix"></span></div>
       <div class="ctl">
         <label for="mix">Weight mix</label><output id="mix-o"></output>
         <input type="range" id="mix" min="0" max="100" step="1">
@@ -356,27 +387,13 @@ body.resizing, body.resizing * { cursor: col-resize !important; user-select: non
     </section>
 
     <section class="cell">
-      <div class="cell-h"><span>Letter align</span><span class="r">By glyph outline</span></div>
-      <div class="opts" id="valign" role="group" aria-label="Letter alignment">
-        <button type="button" data-v="baseline">Baseline</button>
-        <button type="button" data-v="top">Top</button>
-        <button type="button" data-v="middle">Middle</button>
-        <button type="button" data-v="bottom">Bottom</button>
-      </div>
-      <p class="hint">Top, middle and bottom line up the actual ink of each letter within its line. They export as baseline shift, so the text stays editable.</p>
-    </section>
-
-    <section class="cell">
-      <div class="cell-h"><span>Setting</span></div>
+      <div class="cell-h"><span>Type</span><span class="r" id="sum-type"></span></div>
       <div class="pair">
         <div class="ctl"><label for="size">Size</label><output id="size-o"></output><input type="range" id="size" min="8" max="200" step="1"></div>
         <div class="ctl"><label for="leading">Leading</label><output id="leading-o"></output><input type="range" id="leading" min="60" max="200" step="1"></div>
-        <div class="ctl"><label for="sizevar">Size range</label><output id="sizevar-o"></output><input type="range" id="sizevar" min="0" max="80" step="1"></div>
-        <div class="ctl"><label for="basejit">Base jitter</label><output id="basejit-o"></output><input type="range" id="basejit" min="0" max="30" step="0.5"></div>
-        <div class="ctl"><label for="trackjit">Track jitter</label><output id="trackjit-o"></output><input type="range" id="trackjit" min="0" max="200" step="5"></div>
         <div class="ctl"><label for="track">Tracking</label><output id="track-o"></output><input type="range" id="track" min="-150" max="300" step="5"></div>
+        <div class="ctl"><label for="gaps">Even gaps</label><output id="gaps-o"></output><input type="range" id="gaps" min="0" max="100" step="5"></div>
       </div>
-      <div class="ctl"><label for="gaps">Even gaps</label><output id="gaps-o"></output><input type="range" id="gaps" min="0" max="100" step="5"></div>
       <div class="ctl"><label>Match size</label><output></output></div>
       <div class="opts" id="match" role="group" aria-label="Match size">
         <button type="button" data-v="off">Off</button>
@@ -389,38 +406,38 @@ body.resizing, body.resizing * { cursor: col-resize !important; user-select: non
         <button type="button" data-v="center">Center</button>
         <button type="button" data-v="right">Right</button>
       </div>
-      <p class="hint">Tracking is in ‰: thousandths of an em, as in Adobe apps. Match size scales each font so its x-height or cap height meets the base style's; it exports as per-letter size. Baseline jitter only moves letters set on the baseline.</p>
+      <p class="hint">Tracking is in ‰: thousandths of an em, as in Adobe apps. Match size scales each font so its x-height or cap height meets the base style's; it exports as per-letter size.</p>
     </section>
 
     <section class="cell">
-      <div class="cell-h"><span>Outline</span><span class="r">Solid ↔ outline</span></div>
-      <div class="pair">
-        <div class="ctl"><label for="outline">Outline ratio</label><output id="outline-o"></output><input type="range" id="outline" min="0" max="100" step="1"></div>
-        <div class="ctl"><label for="strokew">Stroke</label><output id="strokew-o"></output><input type="range" id="strokew" min="0.25" max="8" step="0.25"></div>
+      <div class="cell-h"><span>Letter align</span><span class="r" id="sum-valign"></span></div>
+      <div class="opts" id="valign" role="group" aria-label="Letter alignment">
+        <button type="button" data-v="baseline">Baseline</button>
+        <button type="button" data-v="top">Top</button>
+        <button type="button" data-v="middle">Middle</button>
+        <button type="button" data-v="bottom">Bottom</button>
       </div>
-      <div class="btns"><button class="btn sm" type="button" id="outline-re">Reroll outlines</button></div>
-      <p class="hint">Picks a share of the letters to set as outline only: no fill, black stroke. It exports as live text with a stroke. Select letters to set them by hand.</p>
+      <p class="hint">Measured by each glyph's outline: top, middle and bottom line up the actual ink of each letter within its line. They export as baseline shift, so the text stays editable.</p>
     </section>
 
     <section class="cell">
-      <div class="cell-h"><span>Guides</span><span class="r">Base style metrics</span></div>
-      <div class="opts" id="guides" role="group" aria-label="Guides">
+      <div class="cell-h"><span>Jitter</span><span class="r" id="sum-jitter"></span></div>
+      <div class="ctl"><label for="sizevar">Size range</label><output id="sizevar-o"></output><input type="range" id="sizevar" min="0" max="80" step="1"></div>
+      <div class="ctl"><label for="basejit">Base jitter</label><output id="basejit-o"></output><input type="range" id="basejit" min="0" max="30" step="0.5"></div>
+      <div class="ctl"><label for="trackjit">Track jitter</label><output id="trackjit-o"></output><input type="range" id="trackjit" min="0" max="200" step="5"></div>
+      <p class="hint">Size range, base jitter and track jitter add a random amount to each letter, picked from the seed. Baseline jitter only moves letters set on the baseline.</p>
+    </section>
+
+    <section class="cell">
+      <div class="cell-h"><span>Guidelines</span><span class="r" id="sum-guides"></span></div>
+      <div class="opts" id="guides" role="group" aria-label="Guidelines">
         <button type="button" data-v="base">Baseline</button>
         <button type="button" data-v="x">x-height</button>
         <button type="button" data-v="cap">Cap height</button>
         <button type="button" data-v="asc">Ascender</button>
       </div>
-    </section>
-
-    <section class="cell">
-      <div class="cell-h"><span>Export</span><span class="r">Live, editable text</span></div>
-      <div class="btns">
-        <button class="btn" type="button" data-exp="ai">Illustrator .jsx</button>
-        <button class="btn" type="button" data-exp="id">InDesign .jsx</button>
-        <button class="btn" type="button" data-exp="ps">Photoshop .jsx</button>
-      </div>
-      <label class="chk"><input type="checkbox" id="exp-guides"> Include guides</label>
-      <p class="hint" id="exp-note">Each script rebuilds the text inside the app with every letter's font, style, size, baseline shift and tracking set. Boxes come along as editable shapes under the text; guides only when Include guides is ticked.</p>
+      <label class="chk"><input type="checkbox" id="exp-guides"> Include in export</label>
+      <p class="hint">Lines at the base style's metrics: baseline, x-height, cap height and ascender, at the set size.</p>
     </section>
   </aside>
 
@@ -444,7 +461,7 @@ body.resizing, body.resizing * { cursor: col-resize !important; user-select: non
   </main>
 
   <aside class="side" id="side" aria-label="Selection and paragraph" hidden>
-    <div class="side-h"><span id="side-title">Paragraph</span><span class="grp"><button class="tbtn" type="button" id="clear-ov" title="Remove every right-panel edit: letter font, weight, align, rotation, fill, letter boxes, bands and the paragraph band. Left-panel settings stay. ⌘Z brings them back.">Clear edits</button><button class="tbtn" type="button" id="side-close" aria-label="Close the right panel">Close ›</button></span></div>
+    <div class="side-h"><span id="side-title">Paragraph</span><span class="grp"><button class="tbtn" type="button" id="clear-ov" title="Remove every right-panel edit: letter font, weight, align, rotation, fill, letter boxes, bands and the paragraph band, and set Random outline and Stroke back to their defaults. Left-panel settings stay. ⌘Z brings them back.">Clear edits</button><button class="tbtn" type="button" id="side-close" aria-label="Close the right panel">Close ›</button></span></div>
 
     <div id="side-sel">
       <section class="cell">
@@ -457,7 +474,7 @@ body.resizing, body.resizing * { cursor: col-resize !important; user-select: non
       </section>
 
       <section class="cell">
-        <div class="cell-h"><span>Letter</span><span class="r">Font, weight, align</span></div>
+        <div class="cell-h"><span>Letter</span><span class="r" id="sum-letter"></span></div>
         <div class="ctl"><label for="sel-fam">Font</label><output></output><select id="sel-fam" style="grid-column:1/-1"></select></div>
         <div class="ctl"><label>Weight</label><output></output></div>
         <div class="opts" id="sel-styles"></div>
@@ -469,13 +486,15 @@ body.resizing, body.resizing * { cursor: col-resize !important; user-select: non
           <button type="button" data-v="middle">Mid</button>
           <button type="button" data-v="bottom">Bottom</button>
         </div>
+        <p class="hint">Font, weight and alignment of the selected letters.</p>
       </section>
 
       <section class="cell">
-        <div class="cell-h"><span>Rotate</span><span class="r">Each letter on its centre</span></div>
+        <div class="cell-h"><span>Rotate</span><span class="r" id="sum-rot"></span></div>
         <div class="ctl"><label for="rot">Angle</label><span class="numin"><input type="number" id="rot-n" min="-180" max="180" step="1" aria-label="Angle in degrees">°</span><input type="range" id="rot" min="-180" max="180" step="1"></div>
         <div class="ctl"><label for="rjit">Random jitter</label><output id="rjit-o"></output><input type="range" id="rjit" min="0" max="45" step="1"></div>
         <div class="btns"><button class="btn sm" type="button" id="rjit-re">Reroll jitter</button><button class="btn sm" type="button" id="rot-reset">No rotation</button></div>
+        <p class="hint">Each letter turns on its own centre.</p>
       </section>
 
       <section class="cell">
@@ -505,15 +524,24 @@ body.resizing, body.resizing * { cursor: col-resize !important; user-select: non
 
     <div id="side-para">
       <section class="cell">
-        <div class="cell-h"><span>Hover info</span><span class="r">Canvas only, not exported</span></div>
+        <div class="cell-h"><span>Hover info</span><span class="r" id="sum-hov"></span></div>
         <div class="opts" id="hov" role="group" aria-label="Hover info">
           <button type="button" data-v="on">On</button>
           <button type="button" data-v="off">Off</button>
         </div>
+        <p class="hint">Point at a letter to see its family, style, size, shift and tracking. Canvas only, not exported.</p>
       </section>
 
       <section class="cell">
-        <div class="cell-h"><span>Paragraph band</span><span class="r">One band per line</span></div>
+        <div class="cell-h"><span>Fill</span><span class="r" id="sum-fill"></span></div>
+        <div class="ctl"><label for="outline">Random outline</label><output id="outline-o"></output><input type="range" id="outline" min="0" max="100" step="1"></div>
+        <div class="ctl"><label for="strokew">Stroke</label><output id="strokew-o"></output><input type="range" id="strokew" min="0.25" max="8" step="0.25"></div>
+        <div class="btns"><button class="btn sm" type="button" id="outline-re">Reroll outlines</button></div>
+        <p class="hint">Solid ↔ outline. Random outline picks a share of the letters to set as outline only: no fill, black stroke. It exports as live text with a stroke. Select letters to set them by hand.</p>
+      </section>
+
+      <section class="cell">
+        <div class="cell-h"><span>Paragraph band</span><span class="r" id="sum-para"></span></div>
         <div class="opts" id="para-on" role="group" aria-label="Paragraph band">
           <button type="button" data-v="off">Off</button>
           <button type="button" data-v="on">On</button>
@@ -523,6 +551,7 @@ body.resizing, body.resizing * { cursor: col-resize !important; user-select: non
           <button type="button" data-v="each">Each letter</button>
         </div>
         <div class="ctl"><label for="para-dh">Adjust height</label><output id="para-dh-o"></output><input type="range" id="para-dh" min="-40" max="120" step="1"></div>
+        <p class="hint">One band under each line of text, as tall as its tallest letter or stepping with each letter.</p>
       </section>
 
       <section class="cell">
@@ -562,6 +591,7 @@ body.resizing, body.resizing * { cursor: col-resize !important; user-select: non
 </div>
 <div class="tag" id="hovtag" hidden></div>
 
+<div class="ctxmenu" id="ctxmenu" role="menu" hidden></div>
 <div class="drop" id="drop" hidden>Drop to add fonts</div>
 <div class="toast" id="toast" role="status" hidden></div>
 
@@ -581,7 +611,7 @@ body.resizing, body.resizing * { cursor: col-resize !important; user-select: non
       <section><h4>Illustrator</h4><p><b>File › Scripts › Other Script…</b> and pick the file. With a document open, the text lands in the middle of the active artboard; otherwise a new document is made.</p></section>
       <section><h4>InDesign</h4><p><b>Window › Utilities › Scripts</b>. Right-click the User folder › Reveal in Finder, drop the .jsx in, then double-click it in the panel. The frame auto-sizes to the text and the whole thing is one undo.</p></section>
       <section><h4>Photoshop</h4><p><b>File › Scripts › Browse…</b>. A new 72 ppi document opens with one editable type layer you can drag into your comp.</p></section>
-      <section><h4>Base style</h4><p>The base style is the one letters keep at 0% mix. It must be switched on in the pool: styles that are off are greyed out in the list, and switching off the base moves it to the nearest weight that is on.</p></section>
+      <section><h4>Base style</h4><p>The base style is the one letters keep at 0% mix. Pick it from the Base menu, or right-click any style in the pool: Set as base style, or Add to mix + set as base for a style that is off. It must be switched on in the pool: styles that are off are greyed out in the list, and switching off the base moves it to the nearest weight that is on.</p></section>
       <section><h4>Seed</h4><p>Every random choice comes from the seed, so the same seed and settings always give the same result. Click Seed in the toolbar to type one, Enter to apply, Esc to cancel. Note a seed to get a layout back later.</p></section>
       <section><h4>Fonts</h4><p>Fonts are matched by family and style name, then by PostScript name. Variable fonts use their named instances (Light, Bold…), so the app shows what the preview shows. Fonts the app can't find are listed and swapped for its default; the text stays editable.</p></section>
       <section><h4>Family share</h4><p>Share of mix is each family's part of the letters that leave the base style. At first it follows the number of styles switched on. Drag one family and the others make room, keeping their proportions, so the total stays 100%. Styles keep their place in the light → heavy range.</p></section>
@@ -589,12 +619,40 @@ body.resizing, body.resizing * { cursor: col-resize !important; user-select: non
       <section><h4>Even gaps</h4><p>Where neighbouring letters come from different fonts, their sidebearings differ and the gaps look uneven. Even gaps adjusts the left letter's tracking so the gap moves halfway between the spacing of the two fonts it joins, instead of jumping from one to the other. It exports as tracking.</p></section>
       <section><h4>Match size</h4><p>Different families at the same point size look different sizes. x-height or Cap height scales each letter's font so its lowercase x or capital H is as tall as in the base style (limited to 60–160%). It is written as the letter's point size, so it stays editable; leading follows the nominal size.</p></section>
       <section><h4>Letter align</h4><p>Top, middle and bottom alignment are written as baseline shift values. If you change a letter or its font afterwards, export again to re-align.</p></section>
-      <section><h4>Right panel</h4><p>Selecting letters opens it with their font, size, shift and tracking at the top, then weight, align, <b>rotation</b>, <b>fill</b> and <b>boxes</b>. With nothing selected, the handle on the right edge opens the paragraph settings: hover info, the paragraph band, random letter boxes.</p></section>
+      <section><h4>Group titles</h4><p>Click a group title in the left panel to fold the group to its title row (▸) or open it again (▾); each group remembers its own state. Folding Font pool hides every family; the family names fold just their own styles. The right side of each title row sums up what the group is set to, and follows every change; hover it for the full text if it is cut short. Groups with a short note have a <b>?</b> next to their title: click it to show the note, again to hide it.</p></section>
+      <section><h4>Right panel</h4><p>Selecting letters opens it with their font, size, shift and tracking at the top, then weight, align, <b>rotation</b>, <b>fill</b> and <b>boxes</b>. With nothing selected, the handle on the right edge opens the paragraph settings: hover info, <b>fill</b> (random outline, stroke), the paragraph band, random letter boxes. Clear edits there also sets Random outline and Stroke back to their defaults. A drag that starts on empty canvas selects the letters it sweeps over. The panel keeps its place: selecting other letters, deselecting and reselecting, or switching between selection and paragraph brings back the group you were using.</p></section>
       <section><h4>Boxes</h4><p>Letter boxes follow each letter's ink, size and shift, and turn with it. A band runs under the selection, as tall as its tallest letter or stepping with each one; the paragraph band does the same for every line. Greys only. They export under the text as vector shapes: InDesign rectangles keep live corner options, Illustrator and Photoshop get the exact path.</p></section>
       <section><h4>Outline and rotation</h4><p>Outline letters export as live text with no fill and a black stroke; rotation as character rotation, about the centre of the em box. Photoshop can do neither per letter inside one type layer, so those letters become their own type layers (outline as a layer-style stroke) and the main layer keeps a space of the same width.</p></section>
-      <section><h4>Guides</h4><p>Baseline, x-height, cap height and ascender of the base style at the set size. Tick Include guides to export them as plain lines on their own layer or group.</p></section>
+      <section><h4>Guidelines</h4><p>Baseline, x-height, cap height and ascender of the base style at the set size. Tick Include in export under Guidelines to export them as plain lines on their own layer or group, named Mixweight guidelines.</p></section>
     </div>
     <footer><span></span><button class="btn solid" value="close">Close</button></footer>
+  </form>
+</dialog>
+
+<dialog id="exp-ask">
+  <form method="dialog" class="dlg ask">
+    <header><span>Want the how-to too?</span><span class="hd-r"><span id="ask-app"></span><button class="x-close" value="cancel" aria-label="Close without exporting" title="Close without exporting">×</button></span></header>
+    <div class="ask-b">
+      <div class="btns">
+        <button class="btn solid" value="howto" autofocus>Script + how-to (.txt)</button>
+        <button class="btn" value="script">Just the script</button>
+      </div>
+      <label class="chk"><input type="checkbox" id="ask-stop"> I know what a .jsx is. Stop asking.</label>
+    </div>
+  </form>
+</dialog>
+
+<dialog id="exp-help">
+  <form method="dialog" class="dlg two">
+    <header><span>Export</span><span>.jsx · live, editable text</span></header>
+    <div class="help">
+      <section><p>Each script rebuilds the text inside the app with every letter's font, style, size, baseline shift and tracking set. Boxes come along as editable shapes under the text; guidelines only when Include in export is ticked under Guidelines.</p></section>
+      <section><h4>Illustrator</h4><p><b>File › Scripts › Other Script…</b> and pick the file. With a document open, the text lands in the middle of the active artboard; otherwise a new document is made.</p></section>
+      <section><h4>InDesign</h4><p><b>Window › Utilities › Scripts</b>. Right-click the User folder › Reveal in Finder, drop the .jsx in, then double-click it in the panel. The frame auto-sizes to the text and the whole thing is one undo.</p></section>
+      <section><h4>Photoshop</h4><p><b>File › Scripts › Browse…</b>. A new 72 ppi document opens with one editable type layer you can drag into your comp.</p></section>
+      <section><h4>How-to file</h4><p id="ask-state"></p></section>
+    </div>
+    <footer><button class="btn" type="button" id="ask-again">Ask me again</button><button class="btn solid" value="close">Close</button></footer>
   </form>
 </dialog>
 
@@ -702,7 +760,7 @@ body.resizing, body.resizing * { cursor: col-resize !important; user-select: non
   }
   if (D.guides.length) {
     var gl = doc.layers.add();
-    gl.name = 'Mixweight guides';
+    gl.name = 'Mixweight guidelines';
     for (var u = 0; u < D.guides.length; u++) {
       var G = D.guides[u], li = gl.pathItems.add();
       li.setEntirePath([pt(G.x0, G.y, G.k), pt(G.x1, G.y, G.k)]);
@@ -864,8 +922,13 @@ body.resizing, body.resizing * { cursor: col-resize !important; user-select: non
       try { bg.sendToBack(tf); } catch (e) { try { bg.sendToBack(); } catch (e2) {} }
     }
     if (D.guides.length) {
-      var gl = doc.layers.itemByName('Mixweight guides');
-      if (!gl.isValid) gl = doc.layers.add({ name: 'Mixweight guides' });
+      // Reuse the layer from an earlier export; one made before V3.2 is still called Mixweight guides.
+      var gl = doc.layers.itemByName('Mixweight guidelines');
+      if (!gl.isValid) {
+        gl = doc.layers.itemByName('Mixweight guides');
+        if (gl.isValid) gl.name = 'Mixweight guidelines';
+        else gl = doc.layers.add({ name: 'Mixweight guidelines' });
+      }
       var gls = [];
       for (var u = 0; u < D.guides.length; u++) {
         var G = D.guides[u], go = at(G), ln = page.graphicLines.add({ itemLayer: gl });
@@ -874,7 +937,7 @@ body.resizing, body.resizing * { cursor: col-resize !important; user-select: non
         ln.name = G.n;
         gls.push(ln);
       }
-      if (gls.length > 1) page.groups.add(gls, gl).name = 'Mixweight guides';
+      if (gls.length > 1) page.groups.add(gls, gl).name = 'Mixweight guidelines';
     }
     try { tf.select(); } catch (e) {}
     if (missing.length) alert(MSG.missing + '\n\n' + missing.join('\n'));
@@ -1121,7 +1184,7 @@ body.resizing, body.resizing * { cursor: col-resize !important; user-select: non
       }
       doc.activeLayer = main;
       var gSet = doc.layerSets.add();
-      gSet.name = 'Mixweight guides';
+      gSet.name = 'Mixweight guidelines';
       for (var o = 0; o < order.length; o++) {
         doc.activeLayer = main;
         var GL = shape(kinds[order[o]], 45, order[o]);
@@ -1169,8 +1232,10 @@ const DEFAULTS = {
   outlineAmt: 0, outlineSeed: 7, strokeW: 1,
   guides: { base: false, x: false, cap: false, asc: false },
   hoverInfo: true,
+  expAsk: '', // export: '' asks each time; 'howto' or 'script' once Stop asking is ticked
   panelW: { l: 320, r: 300 }, // panel widths in px; view state, not in undo
   collapsed: new Set(), // family names whose style list is folded; view state, not in undo
+  groupsClosed: new Set(), // left-panel groups folded to their title row, by title; view state, not in undo
   boxAmt: 30, boxSeed: 11,
   boxStyle: defaultBoxStyle(),            // style for new boxes; follows the last box style edit
   bandFit: 'max',                         // height for new bands: 'max' (tallest letter) or 'each'
@@ -1924,8 +1989,31 @@ function corners() {
   $('#c-bl').textContent = `${glyphs} glyphs · ${used.size}/${pool.length} styles used · ${runs} runs` + (edits ? ` · ${edits} edited` : '');
   $('#seed-lbl').textContent = 'Seed ' + S.seed;
   $('#pool-count').textContent = S.styles.size ? `${pool.length} / ${S.styles.size} styles in mix` : '';
-  $('#mix-name').textContent = { uniform: 'Even', poles: 'Extremes', heavy: 'Lean heavy', light: 'Lean light', wave: 'Wave', ramp: 'Ramp', rampline: 'Ramp per line', alt: 'Alternate' }[S.dist];
-  $('#case-name').textContent = { orig: 'Original', upper: 'All caps', lower: 'All lower', title: 'Title case', sentence: 'Sentence', random: 'Random' }[S.caseMode];
+  leftSummaries();
+}
+
+// The right side of each group's title row: a short summary of what the group is set to.
+function summary(id, t) {
+  const el = $('#' + id);
+  unitText(el, t);
+  el.title = el.textContent;
+}
+function leftSummaries() {
+  const on = S.families.reduce((a, f) => a + f.on.size, 0), base = S.styles.get(S.baseId);
+  summary('sum-pool', S.families.length
+    ? `${S.families.length} ${S.families.length === 1 ? 'family' : 'families'} · ${on}/${S.styles.size} styles` + (base ? ` · base ${base.family} ${base.style}` : '')
+    : 'Empty');
+  const cs = { orig: 'Original', upper: 'All caps', lower: 'All lower', title: 'Title case', sentence: 'Sentence', random: 'Random' }[S.caseMode];
+  summary('sum-text', S.caseMode === 'random' ? `${cs} · ${S.caseAmt}% caps` : cs);
+  const dist = { uniform: 'Even', poles: 'Extremes', heavy: 'Lean heavy', light: 'Lean light', wave: 'Wave', ramp: 'Ramp', rampline: 'Ramp per line', alt: 'Alternate' }[S.dist];
+  const unit = { glyph: 'Letter', segment: 'Fragment', word: 'Word' }[S.gran];
+  summary('sum-mix', `${S.mix}% · ${dist} · ${unit}`);
+  const al = { left: 'Left', center: 'Center', right: 'Right' }[S.align];
+  summary('sum-type', `${S.size} pt · ${S.leading}% lead · ${num(S.track)} track · ${al}`);
+  summary('sum-valign', { baseline: 'Baseline', top: 'Top', middle: 'Middle', bottom: 'Bottom' }[S.valign]);
+  summary('sum-jitter', S.sizeVar || S.baseJit || S.trackJit ? `±${S.sizeVar}% · ±${num(S.baseJit)} pt · ±${S.trackJit}` : 'Off');
+  const gl = GUIDES.filter(G => S.guides[G.key]).map(G => G.name);
+  summary('sum-guides', gl.length ? gl.join(' · ') + ($('#exp-guides').checked ? ' · in export' : '') : 'Off');
 }
 
 /* ---------------- selection ---------------- */
@@ -1934,7 +2022,9 @@ function paintSelection() {
   for (const sp of out.querySelectorAll('.g')) sp.classList.toggle('sel', S.sel.has(+sp.dataset.i));
   drawSelMarks();
   // Selecting opens the right panel; deselecting closes it again unless it was opened with the handle.
-  // Not mid-drag: opening narrows the canvas and the letters would move under the pointer.
+  // Not mid-drag: opening narrows the canvas and the letters would move under the pointer. A drag that starts on
+  // empty canvas clears the old selection first; the panel stays as it is until the drag ends.
+  if (dragging && !S.sel.size && side.open) return;
   if (S.sel.size) { if (!dragging) side.open = true; }
   else if (!side.pinned) side.open = false;
   renderInspector();
@@ -1976,6 +2066,32 @@ function renderInspector() {
   if (!side.open) return;
   if (on) renderSelPanel(gs); else renderParaPanel();
   renderBoxEditor(gs);
+  restoreSideScroll();
+}
+
+// The right panel keeps where it was scrolled, per mode (selection / paragraph): it remembers the first group in
+// view (the one last used, or the first title showing) and how far down the panel it sat, and puts that group back there after every redraw, on reopening and
+// on switching modes, so groups that appear or grow above it (Adjust height) don't push it away.
+const sideScroll = { sel: null, para: null };
+let sideUsed = null; // the right-panel group last clicked or focused
+const sideMode = () => (S.sel.size ? 'sel' : 'para');
+function sideCells() { return $$('#side .cell').filter(c => c.offsetParent); }
+function rememberSideScroll() {
+  const el = $('#side'); if (el.hidden) return;
+  const top = el.getBoundingClientRect().top;
+  if (el.scrollTop <= 0) { sideScroll[sideMode()] = null; return; }
+  // The group being looked at: the one last used, if it is still in view, else the first whose title shows.
+  const cells = sideCells(), bottom = el.getBoundingClientRect().bottom;
+  const inView = c => c.getBoundingClientRect().bottom > top + 1 && c.getBoundingClientRect().top < bottom - 1;
+  const c = (sideUsed && cells.includes(sideUsed) && inView(sideUsed) && sideUsed)
+    || cells.find(c => c.getBoundingClientRect().top >= top - 1) || cells.find(inView);
+  if (c) sideScroll[sideMode()] = { cell: c, off: c.getBoundingClientRect().top - top };
+}
+function restoreSideScroll() {
+  const el = $('#side'), mem = sideScroll[sideMode()];
+  if (el.hidden) return;
+  if (!mem || !mem.cell.offsetParent) { el.scrollTop = 0; return; }
+  el.scrollTop += mem.cell.getBoundingClientRect().top - el.getBoundingClientRect().top - mem.off;
 }
 
 /* ---------------- hover info / selection info ---------------- */
@@ -2080,6 +2196,9 @@ function renderSelPanel(gs) {
   }
   const vas = new Set(gs.map(g => ovOf(g).va || ''));
   press('#sel-va', vas.size === 1 ? [...vas][0] : null);
+  const va = vas.size === 1 ? { '': 'Auto', baseline: 'Base', top: 'Top', middle: 'Mid', bottom: 'Bottom' }[[...vas][0]] : 'Mixed';
+  const stl = stys.size === 1 ? S.styles.get([...stys][0]).style : 'Mixed';
+  summary('sum-letter', `${fams.size === 1 ? [...fams][0] : 'Mixed'} · ${stl} · ${va}`);
 
   // rotate
   const rots = new Set(gs.map(g => ovOf(g).rot || 0)), rot0 = ovOf(gs[0]).rot || 0;
@@ -2088,6 +2207,7 @@ function renderSelPanel(gs) {
   if (document.activeElement !== rn) { rn.value = rots.size === 1 ? rot0 : ''; rn.placeholder = rots.size === 1 ? '' : 'Mixed'; }
   const ra = gs.map(g => ovOf(g).ra || 0).find(v => v) || 0;
   setRange('rjit', ra || jitAmt, '±' + (ra || 0) + '°');
+  summary('sum-rot', rots.size > 1 ? 'Mixed' + (ra ? ` · ±${ra}°` : '') : rot0 || ra ? `${num(rot0)}°` + (ra ? ` · ±${ra}°` : '') : 'None');
 
   // fill
   const fills = new Set(gs.map(g => ovOf(g).fill || ''));
@@ -2110,6 +2230,9 @@ function renderSelPanel(gs) {
 }
 
 function renderParaPanel() {
+  summary('sum-hov', S.hoverInfo ? 'On' : 'Off');
+  summary('sum-fill', S.outlineAmt ? `${S.outlineAmt}% · ${ptTxt(S.strokeW)}` : 'Off');
+  summary('sum-para', S.para.on ? `On · ${S.para.fit === 'each' ? 'Each letter' : 'Tallest letter'}` + (S.para.dh ? ` · ${dhTxt(S.para.dh)}` : '') : 'Off');
   press('#hov', S.hoverInfo ? 'on' : 'off');
   press('#para-on', S.para.on ? 'on' : 'off');
   press('#para-fit', S.para.fit);
@@ -2228,6 +2351,7 @@ function renderPool() {
       const b = document.createElement('button');
       b.type = 'button';
       b.className = 'chip' + (id === S.baseId ? ' is-base' : '');
+      b.dataset.id = id;
       b.textContent = s.style;
       if (id === S.baseId) { const t = document.createElement('span'); t.className = 'badge'; t.textContent = 'Base'; b.appendChild(t); }
       b.style.fontFamily = `"${s.css}", sans-serif`;
@@ -2549,27 +2673,89 @@ function buildScript(app) {
   return esc(head + '\n' + body);
 }
 
-function exportFor(app) {
-  if (!S.styles.size || !S.lines.some(l => l.length)) { toast('Add fonts and some text first.'); return; }
-  const src = buildScript(app);
-  const name = `mixweight-${TARGET[app]}.jsx`;
+// The how-to that can ride along with a script: the README's steps for that app plus its After running notes.
+const HOWTO_STEPS = {
+  ai: [
+    'Open the document you want the text in. If none is open, the script makes a new one.',
+    'File > Scripts > Other Script... (Cmd+F12).',
+    'Pick mixweight-illustrator.jsx. The text lands in the middle of the active artboard, selected.',
+  ],
+  id: [
+    'Window > Utilities > Scripts.',
+    'Right-click the User folder > Reveal in Finder.',
+    'Drop mixweight-indesign.jsx into that folder.',
+    'Double-click it in the Scripts panel. The text goes on the current page in a frame that sizes itself to the text; one Cmd+Z undoes the whole thing.',
+  ],
+  ps: [
+    'File > Scripts > Browse...',
+    'Pick mixweight-photoshop.jsx. A new 72 ppi document opens with one editable type layer you can drag into your comp.',
+  ],
+};
+const HOWTO_AFTER = [
+  'The type is fully editable. Change words or fonts as usual.',
+  'If the app says some fonts weren\'t found, they aren\'t installed on that computer; those letters fall back to the app\'s default font. Install the font, select those letters and reapply it. The sample fonts (Inter, Lora) only match if they are installed.',
+  'Fonts are matched by family and style name, then PostScript name. Variable fonts use their named instances (Light, Bold...), so the app shows what the preview shows.',
+  'Outline letters are live text with no fill and a black stroke. Rotated letters use character rotation, which Illustrator and InDesign apply about the centre of the letter\'s em box; Mixweight rotates about the same point, so boxes stay with their letters.',
+  'Photoshop has no per-letter rotation or outline inside one type layer, so those letters become their own type layers (outline as a layer-style stroke, fill at 0%), and the main layer keeps a space tracked to the same width. Everything is still live type.',
+  'Top / middle / bottom letter alignment is written as baseline shift values worked out for those exact glyphs. If you change a letter or its font in the app, export again from Mixweight to re-align.',
+];
+function howto(app) {
+  const t = `Mixweight -> ${APP_NAME[app]}: running mixweight-${TARGET[app]}.jsx`;
+  return [
+    t, '='.repeat(t.length), '',
+    'The .jsx is a script. Run it inside ' + APP_NAME[app] + ' and it rebuilds the text there as live type, with every letter\'s font, style, size, baseline shift, tracking, rotation and outline already set. Nothing is outlined.',
+    '',
+    ...(app === 'id' ? ['InDesign only runs scripts from its Scripts panel, so there is one extra step the first time.', ''] : []),
+    ...HOWTO_STEPS[app].map((l, i) => `${i + 1}. ${l}`),
+    ...(app === 'id' ? ['', 'Later exports have the same file name: replace the file in that folder and double-click again.'] : []),
+    '', 'After running', '-------------', '',
+    ...HOWTO_AFTER.map(l => '- ' + l),
+    '',
+  ].join('\r\n');
+}
+
+function download(name, src) {
   const url = URL.createObjectURL(new Blob([src], { type: 'text/plain' }));
   const a = document.createElement('a');
   a.href = url; a.download = name;
   document.body.appendChild(a); a.click(); a.remove();
   setTimeout(() => URL.revokeObjectURL(url), 4000);
-  $('#exp-note').textContent = `Saved ${name}. ${RUN_HINT[app]}`;
+}
+
+// AI / ID / PS: ask whether the how-to should come too, unless Stop asking settled it.
+function exportFor(app) {
+  if (!S.styles.size || !S.lines.some(l => l.length)) { toast('Add fonts and some text first.'); return; }
+  if (S.expAsk) { exportFiles(app, S.expAsk === 'howto'); return; }
+  const dlg = $('#exp-ask');
+  $('#ask-app').textContent = APP_NAME[app];
+  $('#ask-stop').checked = false;
+  dlg.returnValue = '';
+  dlg.onclose = () => {
+    const v = dlg.returnValue;
+    if (v !== 'howto' && v !== 'script') return; // Esc: nothing saved
+    if ($('#ask-stop').checked) { S.expAsk = v; save(); }
+    exportFiles(app, v === 'howto');
+  };
+  dlg.showModal();
+}
+
+function exportFiles(app, withHowto) {
+  const name = `mixweight-${TARGET[app]}.jsx`;
+  download(name, buildScript(app));
+  if (withHowto) download(`mixweight-${TARGET[app]}-howto.txt`, howto(app));
   const used = new Set(S.lines.flat().map(g => g.st.family));
   const demo = S.families.some(f => f.source === 'demo' && used.has(f.name));
   const noGuides = $('#exp-guides').checked && !Object.values(S.guides).some(Boolean);
-  toast(`Saved ${name}` + (demo ? '. Sample fonts (Inter, Lora) only match if they are installed.' : '') +
-    (noGuides ? '. Include guides is on, but no guides are switched on under Guides.' : ''));
+  toast(`Saved ${name}` + (withHowto ? ' and its how-to' : ` · ${RUN_HINT[app]}`) + (demo ? '. Sample fonts (Inter, Lora) only match if they are installed.' : '') +
+    (noGuides ? '. Include in export is on, but no guidelines are switched on.' : ''));
 }
 
 /* ---------------- persistence ---------------- */
 // Settings that live in the left panel and change how the text looks (Clear there resets these).
 const LEFT_KEYS = ['caseMode', 'caseAmt', 'mix', 'dist', 'wavePeriod', 'gran', 'valign', 'size', 'leading', 'sizeVar', 'baseJit',
-  'trackJit', 'track', 'gaps', 'match', 'align', 'outlineAmt', 'outlineSeed', 'strokeW', 'guides'];
+  'trackJit', 'track', 'gaps', 'match', 'align', 'guides'];
+// Paragraph settings in the right panel that its Clear edits resets.
+const RIGHT_KEYS = ['outlineAmt', 'strokeW'];
 const SAVE_KEYS = ['text', 'caseMode', 'caseAmt', 'mix', 'dist', 'gran', 'valign', 'size', 'leading', 'sizeVar', 'baseJit', 'trackJit', 'track', 'align', 'seed', 'match', 'wavePeriod', 'gaps',
   'outlineAmt', 'outlineSeed', 'strokeW', 'guides', 'boxAmt', 'boxSeed', 'boxStyle', 'bandFit', 'bands', 'para'];
 // Saved state from older versions, or edited by hand: keep only well-formed decoration settings.
@@ -2597,7 +2783,9 @@ function save() {
     o.shares = Object.fromEntries(S.families.filter(f => f.share !== 100).map(f => [f.name, f.share]));
     o.overrides = [...S.overrides.entries()];
     o.hoverInfo = S.hoverInfo;
+    o.expAsk = S.expAsk;
     o.panelW = S.panelW;
+    o.groupsClosed = [...S.groupsClosed];
     o.collapsed = [...S.collapsed]; // all of it: installed families may not be loaded back yet when this runs
     localStorage.setItem('mixweight', JSON.stringify(o));
   } catch (e) { /* storage unavailable */ }
@@ -2736,6 +2924,50 @@ async function loadDemo() {
   await addFontBuffers(bufs, 'demo');
 }
 
+// Each group's grey note is folded away behind a ? next to its title. Open or closed is only the view: not an undo
+// step and not saved.
+function setupHints() {
+  $$('.rail > .cell, .side .cell').forEach((cell, n) => {
+    const hint = cell.querySelector(':scope > p.hint'), title = cell.querySelector(':scope > .cell-h > :first-child');
+    if (!hint || !title) return;
+    hint.id = hint.id || 'hint-' + n;
+    const q = document.createElement('button');
+    q.type = 'button'; q.className = 'q'; q.textContent = '?';
+    q.setAttribute('aria-label', 'About ' + title.textContent);
+    q.setAttribute('aria-controls', hint.id);
+    q.setAttribute('aria-expanded', 'false');
+    q.onclick = e => {
+      e.stopPropagation();
+      if (cell.classList.contains('g-closed')) foldGroup(cell, false); // a folded group opens to show its note
+      const open = cell.classList.toggle('hint-open');
+      q.setAttribute('aria-expanded', open);
+    };
+    title.appendChild(q);
+  });
+}
+
+// Left-panel groups fold to their title row (the summary stays). Click the title row; remembered per group by its
+// title, not an undo step. A layer above the families' own folding in Font pool.
+function foldGroup(cell, closed) {
+  cell.classList.toggle('g-closed', closed);
+  cell.querySelector('.gfold').setAttribute('aria-expanded', !closed);
+  closed ? S.groupsClosed.add(cell.dataset.group) : S.groupsClosed.delete(cell.dataset.group);
+  save();
+}
+function setupGroupFolds() {
+  $$('.rail > .cell').forEach(cell => {
+    const h = cell.querySelector(':scope > .cell-h'), title = h.firstElementChild, name = title.firstChild.textContent.trim();
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'gfold'; b.textContent = name;
+    title.firstChild.replaceWith(b);
+    cell.dataset.group = name;
+    const closed = S.groupsClosed.has(name);
+    cell.classList.toggle('g-closed', closed);
+    b.setAttribute('aria-expanded', !closed);
+    h.addEventListener('click', e => { if (!e.target.closest('.q')) foldGroup(cell, !cell.classList.contains('g-closed')); });
+  });
+}
+
 async function boot() {
   const saved = loadSaved();
   if (saved) {
@@ -2744,8 +2976,10 @@ async function boot() {
     if (saved.shares && typeof saved.shares === 'object') S.restoredShares = saved.shares;
     if (Array.isArray(saved.overrides)) S.overrides = new Map(saved.overrides.filter(e => e && e[1] && typeof e[1] === 'object'));
     if (typeof saved.hoverInfo === 'boolean') S.hoverInfo = saved.hoverInfo;
+    if (saved.expAsk === 'howto' || saved.expAsk === 'script') S.expAsk = saved.expAsk;
     if (saved.panelW) for (const k of ['l', 'r']) if (Number.isFinite(saved.panelW[k])) S.panelW[k] = saved.panelW[k];
     if (Array.isArray(saved.collapsed)) S.collapsed = new Set(saved.collapsed.filter(n => typeof n === 'string'));
+    if (Array.isArray(saved.groupsClosed)) S.groupsClosed = new Set(saved.groupsClosed.filter(n => typeof n === 'string'));
   }
   // Your own text stays; a built-in sample is swapped for a different one on each open.
   if (!saved || !S.text || SAMPLE_TEXTS.includes(S.text) || OLD_SAMPLES.includes(S.text)) {
@@ -2757,6 +2991,9 @@ async function boot() {
   }
   fixDeco();
 
+  setupHints();
+  setupGroupFolds();
+  $('#exp-guides').addEventListener('change', leftSummaries);
   bindRange('case-amt', 'caseAmt', v => v + '%');
   bindRange('mix', 'mix', v => v + '%');
   bindRange('size', 'size', ptTxt);
@@ -2788,11 +3025,53 @@ async function boot() {
   });
   $('#base').onchange = e => { record(); S.baseId = e.target.value; renderPool(); render(); save(); };
 
+  // Right-click a style chip: make it the base, adding it to the mix first if it is off. One undo step either way.
+  const menu = $('#ctxmenu');
+  const closeMenu = () => { if (menu.hidden) return; menu.hidden = true; menu.innerHTML = ''; };
+  $('#pool').addEventListener('contextmenu', e => {
+    const chip = e.target.closest('.chip'); if (!chip) return;
+    e.preventDefault();
+    const id = chip.dataset.id, st = S.styles.get(id), fam = S.families.find(f => f.ids.includes(id));
+    if (!st || !fam) return;
+    const on = fam.on.has(id), isBase = id === S.baseId;
+    menu.innerHTML = '<div class="t"></div><button type="button" role="menuitem"></button>';
+    menu.querySelector('.t').textContent = st.family + ' ' + st.style;
+    const b = menu.querySelector('button');
+    b.textContent = isBase ? 'Already the base' : on ? 'Set as base style' : 'Add to mix + set as base';
+    b.disabled = isBase;
+    b.onclick = () => {
+      closeMenu();
+      record();
+      fam.on.add(id); S.baseId = id;
+      renderPool(); render(); save();
+    };
+    menu.hidden = false;
+    // At the pointer, or under the chip when opened from the keyboard; kept inside the window.
+    const r = chip.getBoundingClientRect();
+    const x = e.clientX || r.left, y = e.clientY || r.bottom;
+    menu.style.left = Math.max(4, Math.min(x, innerWidth - menu.offsetWidth - 4)) + 'px';
+    menu.style.top = Math.max(4, Math.min(y, innerHeight - menu.offsetHeight - 4)) + 'px';
+    (b.disabled ? menu : b).focus?.();
+  });
+  document.addEventListener('pointerdown', e => { if (!menu.contains(e.target)) closeMenu(); }, true);
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && !menu.hidden) { e.preventDefault(); e.stopImmediatePropagation(); closeMenu(); } }, true);
+  document.addEventListener('scroll', closeMenu, true);
+  window.addEventListener('resize', closeMenu);
+  window.addEventListener('blur', closeMenu);
+
   $('#btn-system').onclick = openPicker;
   $('#btn-files').onclick = () => $('#file-in').click();
   $('#file-in').onchange = e => { addFiles(e.target.files); e.target.value = ''; };
   $('#btn-help').onclick = () => $('#help').showModal();
   $$('[data-exp]').forEach(b => { b.onclick = () => exportFor(b.dataset.exp); });
+  const syncAsk = () => {
+    $('#ask-state').textContent = S.expAsk
+      ? `You asked not to be asked: every export gives ${S.expAsk === 'howto' ? 'the script and a how-to .txt' : 'just the script'}. Ask me again brings the question back.`
+      : 'Each export asks whether to save a how-to .txt with the script.';
+    $('#ask-again').disabled = !S.expAsk;
+  };
+  $('#exp-q').onclick = () => { syncAsk(); $('#exp-help').showModal(); };
+  $('#ask-again').onclick = () => { S.expAsk = ''; save(); syncAsk(); toast('The next export asks again.'); };
 
   const reroll = () => { record(); S.seed = Math.floor(Math.random() * 99999); render(); save(); };
   $('#reroll').onclick = reroll;
@@ -2816,8 +3095,11 @@ async function boot() {
   // Clear edits (right panel): every per-letter adjustment (font, weight, align, rotation, fill, letter boxes),
   // every band and the paragraph band. Left-panel settings stay as they are.
   $('#clear-ov').onclick = () => {
-    if (!S.overrides.size && !S.bands.length && !S.para.on) return;
-    record(); S.overrides = new Map(); S.bands = []; S.para.on = false; render(); save();
+    const keys = RIGHT_KEYS.filter(k => S[k] !== DEFAULTS[k]);
+    if (!S.overrides.size && !S.bands.length && !S.para.on && !keys.length) return;
+    record(); S.overrides = new Map(); S.bands = []; S.para.on = false;
+    for (const k of keys) S[k] = DEFAULTS[k];
+    syncControls(); render(); save();
   };
   // Clear (left panel): its visual settings back to their defaults. Text, font pool, base style, seed and every
   // right-panel edit stay.
@@ -2933,7 +3215,7 @@ async function boot() {
   out.addEventListener('pointerleave', hideTag);
   $('#stage').addEventListener('scroll', hideTag, { passive: true });
 
-  // left: outline mix, guides
+  // right: outline mix. left: guidelines
   $('#outline-re').onclick = () => { record(); S.outlineSeed = Math.floor(Math.random() * 99999); render(); save(); };
   const syncGuides = () => $$('#guides button').forEach(b => b.setAttribute('aria-pressed', !!S.guides[b.dataset.v]));
   syncGuides(); syncers.push(syncGuides);
@@ -2966,14 +3248,22 @@ async function boot() {
   out.addEventListener('pointerover', e => {
     if (!dragging) return;
     const sp = e.target.closest('.g'); if (!sp) return;
+    if (S.anchor == null) S.anchor = +sp.dataset.i; // a drag from empty canvas starts at the first letter it reaches
     selectRange(S.anchor, +sp.dataset.i);
     paintSelection();
   });
   window.addEventListener('pointerup', () => { if (dragging) { dragging = false; paintSelection(); } });
+  // Empty canvas: a click deselects; a drag selects the letters it sweeps over.
   $('#stage').addEventListener('pointerdown', e => {
     if (e.target.closest('.g') || e.button !== 0) return;
+    if (e.target.closest('.stage') && e.offsetX > e.target.clientWidth) return; // the canvas scrollbar
+    dragging = true; S.anchor = null;
     if (S.sel.size) { S.sel.clear(); paintSelection(); }
   });
+  $('#side').addEventListener('scroll', rememberSideScroll, { passive: true });
+  const useCell = e => { const c = e.target.closest('#side .cell'); if (c) { sideUsed = c; rememberSideScroll(); } };
+  $('#side').addEventListener('pointerdown', useCell);
+  $('#side').addEventListener('focusin', useCell);
 
   $('#zoom-in').onclick = () => setZoom(S.zoom * 1.25);
   $('#zoom-out').onclick = () => setZoom(S.zoom / 1.25);
