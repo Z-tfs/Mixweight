@@ -76,18 +76,27 @@ A fixed version of the hover info tag.
 - In the PNG dialog, add **Include labels**. Labels are **not** exported to the `.jsx` in V4 (that would change the templates); say so in Help.
 - Check: attach labels to letters in two different fonts, drag them, change the seed (letters change, labels follow), turn lines off, export a PNG with and without labels, undo/redo.
 
-### 4. Recipe (seed archive)
-Save and share the whole look of a result as parameters only, with no font files.
-- Working name in code is `recipe`; "Seed" already means the random number in the UI, so **confirm the UI label with the owner before shipping**.
-- A recipe is a JSON object holding everything in `SAVE_KEYS` plus the manual per-letter overrides, the text, colours and labels, plus: a **recipe version** number (so old recipes keep loading in newer versions), the tool version, and the **names of the fonts it uses** (family and style names, plus PostScript names, as the `.jsx` export already matches them), not the font data. Optional metadata fields for later gallery use: `title`, `author`.
-- UI: **Copy recipe** (text to clipboard), **Download recipe** (`.json`), and **Load recipe** (paste or choose a file). Loading is one undo step.
-- Loading a recipe whose fonts the user doesn't have: list the missing fonts in a clear message, apply the recipe with the base style or default font standing in for them, and say that layout will differ because widths differ. A recipe made with the same fonts must reproduce the result exactly.
+### 4. Specimen (seed archive)
+Save and share the whole look of a result as parameters only, with no font files. The UI word is **Specimen** ("Seed" stays the random number).
+Do this in two parts, each its own commit; stop and report after part A.
+
+**A. Specimen file**
+- A specimen is a JSON object holding everything in `SAVE_KEYS` plus the manual per-letter overrides, the text, colours and labels, plus: a **specimen version** number (so old specimens keep loading in newer versions), the tool version, and the **names of the fonts it uses** (family and style names, plus PostScript names, as the `.jsx` export already matches them), not the font data. Optional metadata fields for later gallery use: `title`, `author`.
+- UI: **Copy specimen** (text to clipboard), **Download specimen** (`.json`), and **Load specimen** (paste or choose a file). Loading is one undo step.
+- Loading a specimen whose fonts the user doesn't have: list the missing fonts in a clear message, apply the specimen with the base style or default font standing in for them, and say that layout will differ because widths differ. A specimen made with the same fonts must reproduce the result exactly.
 - Everything works offline from `file://`; no server, no links.
-- Validate input defensively (a pasted recipe may be hand-edited or from a newer version): ignore unknown keys, normalise through the same path as saved sessions, never throw.
-- Check: save a recipe, change everything, load it back: identical result. Load it with a font removed from the pool: the message is right and nothing crashes. Load a recipe from the previous step's version.
+- Validate input defensively (a pasted specimen may be hand-edited or from a newer version): ignore unknown keys, normalise through the same path as saved sessions, never throw.
+- Check: save a specimen, change everything, load it back: identical result. Load it with a font removed from the pool: the message is right and nothing crashes. Load a specimen made by the previous step's version.
+
+**B. My specimens (personal gallery)**
+- A **My specimens** list inside the tool: **Save current** (asks for a name), and each entry shows its name, date and a small thumbnail made with the PNG export from step 1. Click to load (one undo step), rename, delete.
+- Storage is the browser's IndexedDB (localStorage is too small for thumbnails). It must degrade gracefully: if storage is unavailable or blocked, say so and keep everything else working.
+- Stored data lives per browser and per origin: the online version and a downloaded offline copy do not share it, and clearing site data erases it. So include **Export all** (one `.json` holding every specimen) and **Import** (merge, never overwrite silently; ask on a name clash). Say this in Help.
+- Entries use exactly the part A specimen format, so a file the user downloads can be imported and one in the list can be downloaded.
+- Check: save several, reload the page, they are still there; delete and rename; Export all, clear the list, Import: identical entries and thumbnails; open the page from `file://` and from localhost.
 
 ### Not in V4 (V4.x or later)
 - SVG export; CMYK; gradients; palette extraction from images; per-letter random colour assignment (reroll + ratio).
 - Static labels in the `.jsx` export.
 - Type animation templates (its own release); box/grid pattern behind the text (V4.x candidate).
-- A public gallery with user uploads (needs a backend; start with a hand-curated static gallery that opens recipes).
+- A public gallery with user uploads (needs a backend; start with a hand-curated static gallery that opens specimens).
