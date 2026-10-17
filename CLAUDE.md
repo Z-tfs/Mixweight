@@ -47,7 +47,7 @@ V4 is a major release, so it ships the **basic** version of each feature. Everyt
 
 ### 1. Export as an image (PNG)
 Mixweight has been built around editable export; the plain "give me a picture" case is missing.
-- A **PNG** button in the top bar next to AI / ID / PS, same button pattern. A small options dialog (reuse the `exp-ask` dialog style): scale **1× / 2× / 4×**, **Transparent background** (off by default → white), and **Copy to clipboard** as an alternative to download. Remember the last choices in localStorage.
+- A **PNG** button in the top bar next to AI / ID / PS, same button pattern. A small options dialog (reuse the `exp-ask` dialog style): scale **1× / 2× / 4×**, **Transparent background** (off by default → white), and **Copy to clipboard** as an alternative to download (PNG through the async Clipboard API; if the browser refuses, fall back to a download and say so). Remember the last choices in localStorage.
 - The image holds the text and the decoration (letter boxes, bands, paragraph band, outline letters, rotation), exactly as on the canvas. It never includes selection marks, the hover tag, zoom or other UI.
 - **Include guidelines** checkbox in the same dialog (independent of the `.jsx` export's own checkbox). Step 3 adds **Include labels** next to it.
 - Crop to the text block plus a margin (like the `.jsx` export's `m`), not to the screen.
@@ -57,14 +57,33 @@ Mixweight has been built around editable export; the plain "give me a picture" c
 
 ### 2. Colour system (basic)
 Today everything is black on white with grey-only decoration, and the selection style was chosen to leave room for colour.
-- Colours are **RGB hex**. No CMYK, no gradients, no per-letter random colour assignment in V4.
+- Colours are **RGB hex**. No CMYK, no gradients, no random text colour (random box colours are step 2b).
 - What gets a colour: global **text colour**, **background colour** (canvas sheet; the PNG uses it unless Transparent is on), **box / band / paragraph-band fill and stroke**, **guideline colour**, and **selected letters' text colour** (an override like the existing ones, in the right panel). Outline letters stroke in their text colour.
 - Greys keep working: boxes saved by v3.x hold numeric grey ink percentages (`fill`, `stroke`). Migrate them to the new representation in `normStyle()` / `fixDeco()` so old sessions look identical.
 - A colour control reuses the existing right-panel patterns; include a **recent colours** row (last ~8 used) and the preset palettes below.
-- **Preset palettes**: the owner supplies reference images in `reference/palettes/`. Derive a handful of presets from them and give each three roles (text, background, accent). Keep presets in one `PALETTES` constant. Do **not** invent palettes: if `reference/palettes/` is empty when you reach this step, build the mechanism with a single black-on-white preset and stop to ask.
+- **Preset palettes**: the owner supplies them as hex lists in `reference/palettes.md` (about eight, derived from her references; the reference images themselves are not kept in this public repo). Each preset has three roles, **text**, **background** and **block** (the colour for boxes and bands), plus a few extra colours that step 2b draws from. Keep presets in one `PALETTES` constant. Applying a preset sets text, background and block colours in one click (one undo step). Do **not** invent palettes: if `reference/palettes.md` is missing when you reach this step, build the mechanism with a single black-on-white preset and stop to ask.
 - Selection corner-ticks and the hover tag stay neutral.
 - Export impact (do as a **separate, final commit of this step, after confirming with the owner**): the `.jsx` templates currently carry no colour for text, and box fills/strokes are greys. Adding text colour per run and RGB for shapes and guidelines changes all three templates (Photoshop's separate letter layers included). Flag it first, make the canvas and PNG colour work complete before touching it, and then tell the owner exactly what to test in each Adobe app.
+- The same commit adds an opt-in **Include background** checkbox (same style as the guidelines' Include in export, off by default): a rectangle in the background colour, the size of the text block plus margin (`w` × `h`), sent to the back and named `Mixweight background` (its own layer in Illustrator and InDesign like the guidelines; in Photoshop the new document is filled with the colour). Illustrator and InDesign have no canvas colour, so this is a real object in the user's document, which is why it is opt-in.
 - Check: colour text, background, boxes and guidelines; undo/redo; reload; load a v3.2-era saved session; PNG export with and without Transparent.
+
+### 2b. Random box colours from the palette
+Reference: letter boxes in several colours under black text (the `POGO ALL NIGHT LONG` poster and the `Block Projects` strip in the owner's references).
+- Letter boxes only. Bands and the paragraph band keep one colour. Text colour is not randomised (V4.x).
+- In the Box group's random letter boxes (the existing ratio + Reroll), add **Box colour: Single / From palette**. Single is today's behaviour. From palette: each randomly placed box takes a colour from the active preset's colour list (block + extras), drawn with a new `rnd` channel (10) off `boxSeed`, so the same seed always gives the same colours. Reroll rerolls placement and colours together.
+- A box colour the user set by hand always wins over the random one, like every other override.
+- With no preset active, From palette is disabled with a short hint ("Pick a palette first"). Editing a palette is V4.x.
+- New keys go into `DEFAULTS`, `SAVE_KEYS` and `fixDeco()`; sessions saved before load as Single.
+- It exports as ordinary RGB box fills, covered by step 2's `.jsx` commit. If this step ships before that commit, say so in the PR.
+- Check: scatter boxes at about 50% with a palette, reroll, undo/redo, reload (same colours), set one box by hand then reroll (it stays).
+
+### 2c. Letter-box height: glyph or line
+Reference: `POGO ALL NIGHT LONG`, where every letter sits on a column as tall as its line and the columns touch.
+- New option in the Box group for letter boxes: **Height: Glyph / Line**. It is part of the box style, so it works per selection like the other box parameters.
+- **Glyph** is today's behaviour (the box follows the letter's own ink). **Line**: every box in a line is as tall as that line's tallest letter (the same rule as a band's "Tallest letter") and as wide as the letter's advance width rather than its ink, so neighbouring boxes touch. Expand, corners, fill and stroke still apply, and a rotated letter's box still turns with it.
+- Default Glyph; sessions saved before load as Glyph (handle it in `normStyle()`).
+- It exports as the same rectangles; InDesign keeps the live corner options. If the current box geometry makes Line awkward, stop and discuss before building.
+- Check: four lines in a heavy family, select all, add letter boxes with Line: a clean grid of columns; with Glyph, a session saved in v3.2 looks exactly as before.
 
 ### 3. Static labels
 A fixed version of the hover info tag.
@@ -96,7 +115,7 @@ Do this in two parts, each its own commit; stop and report after part A.
 - Check: save several, reload the page, they are still there; delete and rename; Export all, clear the list, Import: identical entries and thumbnails; open the page from `file://` and from localhost.
 
 ### Not in V4 (V4.x or later)
-- SVG export; CMYK; gradients; palette extraction from images; per-letter random colour assignment (reroll + ratio).
-- Static labels in the `.jsx` export.
-- Type animation templates (its own release); box/grid pattern behind the text (V4.x candidate).
+- SVG export; CMYK; gradients; palette extraction from images; random text colour from the palette (random box colours are step 2b); palette editing.
+- Static labels in the `.jsx` export (first as plain text lines without the grey highlight boxes, whose widths would not match in the Adobe apps).
+- Type animation templates (its own release); box/grid pattern behind the text (V4.x candidate); a crop-mark (registration cross) decoration; a floating panel, only if the Color group outgrows the sidebars.
 - A public gallery with user uploads (needs a backend; start with a hand-curated static gallery that opens specimens).
