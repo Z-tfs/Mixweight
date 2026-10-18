@@ -119,6 +119,18 @@ The personal gallery that was part of this step is parked for V4.x (see below).
 - Validate input defensively (a pasted specimen may be hand-edited or from a newer version): ignore unknown keys, normalise through the same path as saved sessions, never throw.
 - Check: save a specimen, change everything, load it back: identical result. Load it with a font removed from the pool: the message is right and nothing crashes. Load a specimen made by the previous step's version.
 
+### 6. Look presets (last step, gated)
+One click sets a whole look from the settings that already exist, so it needs no new engine work and no change to the `.jsx` templates. Start this step only after steps 1 to 5 are merged and the owner says so; if she does not, it becomes V4.1.
+- Four presets, kept in one `LOOKS` constant next to `PALETTES`, shown as a small row in the left panel with the existing option-button pattern. Working names (from the owner's demos): **Riso Block**, **Stacked Bands**, **Tone on Tone**, **Dark Glow**.
+  - **Riso Block**: paper palette with three block inks, letter boxes on Multiply (Height Glyph, Width Advance), dots pattern, with Size range, Base jitter and Rotation jitter turned up so it does not look flat.
+  - **Stacked Bands**: one band per line, each its own palette colour, stepped widths, boxes small or off, a darker band with light text, grid and registration marks. Modest size range.
+  - **Tone on Tone**: blue and beige palette, beige bands, outline letters in the text colour, crosses pattern. Modest size range.
+  - **Dark Glow**: dark palette, letter boxes on Screen (Height Line, Width Advance), grid and registration marks.
+- A look sets only the style settings (palette roles, pattern, marks, box and band style, blend, jitter ranges). It never changes the text, the seed, the fonts or the manual per-letter overrides. Applying a look is one undo step.
+- A look is a starting point: the user can change every setting afterwards. Looks are not saved state; only the settings they set are.
+- If a look needs something awkward (for example creating one band per line with different colours), stop and discuss with the owner before building it.
+- Check: apply each look to the same text, then to different text and a different font; undo; reload; the result matches the owner's demos in spirit (she checks it by eye).
+
 ### Not in V4 (V4.x or later)
 - Static labels and the personal gallery (specs parked below); labels in the `.jsx` export (first as plain text lines without the grey highlight boxes, whose widths would not match in the Adobe apps).
 - Grain / noise texture over the canvas (V4.x); auto-contrast text colour for selected letters (V4.x, black or white chosen from the box or band behind).
