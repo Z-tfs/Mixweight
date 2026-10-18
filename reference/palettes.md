@@ -30,6 +30,12 @@ These are a **style reference, not an exact spec**. Copy them into one `PALETTES
 - block: `#62BAAB`
 - extras: `#FB9997` `#3E3D3F`
 
+### Blue and beige
+- text: `#767266`
+- background: `#6BA1EA`
+- block: `#DCD6C0`
+- extras: `#ACA591`
+
 ### Aqua, brown band
 - text: `#F0CEC2`
 - background: `#93F9F5`
