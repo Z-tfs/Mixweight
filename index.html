@@ -102,6 +102,29 @@ button { background: none; border: 0; padding: 0; cursor: pointer; }
 .ctl output { color: var(--g4); font-variant-numeric: tabular-nums; text-align: right; text-transform: uppercase; }
 .ctl input[type=range] { grid-column: 1 / -1; }
 .pair { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 18px; }
+/* Colour control: label, then swatch (the system picker) and hex; recent colours under it. */
+.colc { display: grid; gap: 5px; min-width: 0; }
+.colc > label { text-transform: uppercase; }
+.col-row { display: flex; align-items: center; gap: 7px; }
+.col-row input[type=color] { -webkit-appearance: none; appearance: none; width: 18px; height: 18px; padding: 0; border: var(--rule); border-radius: 0; background: none; cursor: pointer; flex: none; }
+.col-row input[type=color]::-webkit-color-swatch-wrapper { padding: 0; }
+.col-row input[type=color]::-webkit-color-swatch { border: 0; border-radius: 0; }
+.col-row input[type=color]::-moz-color-swatch { border: 0; border-radius: 0; }
+.col-row .hex { width: 8ch; min-width: 0; border: 0; border-bottom: var(--rule); background: transparent; text-transform: uppercase; font-variant-numeric: tabular-nums; padding: 0 1px; border-radius: 0; }
+.col-row .hex:focus { outline: 0; background: var(--g1); }
+.col-row .hex::placeholder { color: var(--g4); }
+.col-recent { display: flex; flex-wrap: wrap; gap: 3px; min-height: 11px; }
+.col-recent button, .pal .sw { width: 11px; height: 11px; border: 1px solid var(--g3); padding: 0; flex: none; }
+.col-recent button:hover { border-color: var(--ink); }
+.pals { display: grid; gap: 2px; }
+.pal { display: flex; align-items: center; gap: 8px; padding: 3px 0; text-transform: uppercase; color: var(--g4); text-align: left; }
+.pal:hover, .pal[aria-pressed="true"] { color: var(--ink); }
+.pal .chipc { width: 34px; height: 18px; display: inline-grid; place-items: center; font-size: var(--s-sm); font-weight: 700; border: 1px solid var(--g3); flex: none; text-transform: none; }
+.pal[aria-pressed="true"] .chipc { border-color: var(--ink); }
+.pal .sws { display: inline-flex; gap: 2px; width: 72px; flex: none; overflow: hidden; }
+.pal .sw { border-color: transparent; }
+.pal .nm { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pal[aria-pressed="true"] .nm::before { content: ""; display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--ink); margin-right: 5px; vertical-align: 1px; }
 
 input[type=range] { -webkit-appearance: none; appearance: none; width: 100%; height: 14px; background: transparent; margin: 0; cursor: pointer; }
 input[type=range]::-webkit-slider-runnable-track { height: 1px; background: var(--ink); }
@@ -440,6 +463,7 @@ body.resizing, body.resizing * { cursor: col-resize !important; user-select: non
         <button type="button" data-v="cap">Cap height</button>
         <button type="button" data-v="asc">Ascender</button>
       </div>
+      <div class="colc" id="col-guide" data-label="Colour"></div>
       <label class="chk"><input type="checkbox" id="exp-guides"> Include in export</label>
       <p class="hint">Lines at the base style's metrics: baseline, x-height, cap height and ascender, at the set size.</p>
     </section>
@@ -509,6 +533,8 @@ body.resizing, body.resizing * { cursor: col-resize !important; user-select: non
           <button type="button" data-v="outline">Outline</button>
         </div>
         <div class="ctl"><label for="sel-sw">Stroke</label><output id="sel-sw-o"></output><input type="range" id="sel-sw" min="0.25" max="8" step="0.25"></div>
+        <div class="colc" id="col-sel" data-label="Colour"></div>
+        <div class="btns"><button class="btn sm" type="button" id="col-sel-auto">Use text colour</button></div>
       </section>
 
       <section class="cell">
@@ -537,11 +563,23 @@ body.resizing, body.resizing * { cursor: col-resize !important; user-select: non
       </section>
 
       <section class="cell">
+        <div class="cell-h"><span>Colour</span><span class="r" id="sum-col"></span></div>
+        <div class="pair">
+          <div class="colc" id="col-text" data-label="Text"></div>
+          <div class="colc" id="col-bg" data-label="Background"></div>
+        </div>
+        <div class="ctl"><label>Palettes</label><output id="pal-o"></output></div>
+        <div class="pals" id="pals" role="group" aria-label="Palettes"></div>
+        <div class="btns"><button class="btn sm" type="button" id="col-reset">Black on white</button></div>
+        <p class="hint">A palette sets the text and background colours, and the box and band fill when it has a block colour. Letters you coloured by hand keep their colour. The background fills the text block plus a margin, the same area the PNG export crops to.</p>
+      </section>
+
+      <section class="cell">
         <div class="cell-h"><span>Fill</span><span class="r" id="sum-fill"></span></div>
         <div class="ctl"><label for="outline">Random outline</label><output id="outline-o"></output><input type="range" id="outline" min="0" max="100" step="1"></div>
         <div class="ctl"><label for="strokew">Stroke</label><output id="strokew-o"></output><input type="range" id="strokew" min="0.25" max="8" step="0.25"></div>
         <div class="btns"><button class="btn sm" type="button" id="outline-re">Reroll outlines</button></div>
-        <p class="hint">Solid ↔ outline. Random outline picks a share of the letters to set as outline only: no fill, black stroke. It exports as live text with a stroke. Select letters to set them by hand.</p>
+        <p class="hint">Solid ↔ outline. Random outline picks a share of the letters to set as outline only: no fill, a stroke in the text colour. It exports as live text with a stroke. Select letters to set them by hand.</p>
       </section>
 
       <section class="cell">
@@ -572,10 +610,18 @@ body.resizing, body.resizing * { cursor: col-resize !important; user-select: non
         <button type="button" data-v="letters">Letter boxes</button>
       </div>
       <div class="pair">
-        <div class="ctl"><label for="bx-fill">Fill grey</label><output id="bx-fill-o"></output><input type="range" id="bx-fill" min="0" max="100" step="1"></div>
+        <div class="colc" id="col-bx-fill" data-label="Fill"></div>
+        <div class="colc" id="col-bx-stroke" data-label="Stroke colour"></div>
         <div class="ctl"><label for="bx-op">Opacity</label><output id="bx-op-o"></output><input type="range" id="bx-op" min="0" max="100" step="1"></div>
-        <div class="ctl"><label for="bx-stroke">Stroke grey</label><output id="bx-stroke-o"></output><input type="range" id="bx-stroke" min="0" max="100" step="1"></div>
         <div class="ctl"><label for="bx-sw">Stroke</label><output id="bx-sw-o"></output><input type="range" id="bx-sw" min="0" max="8" step="0.25"></div>
+      </div>
+      <div class="ctl"><label>Blend</label><output></output></div>
+      <div class="opts" id="bx-blend" role="group" aria-label="Blend mode">
+        <button type="button" data-v="normal">Normal</button>
+        <button type="button" data-v="multiply">Multiply</button>
+        <button type="button" data-v="screen">Screen</button>
+        <button type="button" data-v="overlay">Overlay</button>
+        <button type="button" data-v="difference">Difference</button>
       </div>
       <div class="ctl"><label for="bx-pad">Expand</label><output id="bx-pad-o"></output><input type="range" id="bx-pad" min="-10" max="40" step="0.5"></div>
       <div class="ctl"><label>Corners</label><output></output></div>
@@ -625,7 +671,8 @@ body.resizing, body.resizing * { cursor: col-resize !important; user-select: non
       <section><h4>Letter align</h4><p>Top, middle and bottom alignment are written as baseline shift values. If you change a letter or its font afterwards, export again to re-align.</p></section>
       <section><h4>Group titles</h4><p>Click a group title in the left panel to fold the group to its title row (▸) or open it again (▾); each group remembers its own state. Folding Font pool hides every family; the family names fold just their own styles. The right side of each title row sums up what the group is set to, and follows every change; hover it for the full text if it is cut short. Groups with a short note have a <b>?</b> next to their title: click it to show the note, again to hide it.</p></section>
       <section><h4>Right panel</h4><p>Selecting letters opens it with their font, size, shift and tracking at the top, then weight, align, <b>rotation</b>, <b>fill</b> and <b>boxes</b>. With nothing selected, the handle on the right edge opens the paragraph settings: hover info, <b>fill</b> (random outline, stroke), the paragraph band, random letter boxes. Clear edits there also sets Random outline and Stroke back to their defaults. A drag that starts on empty canvas selects the letters it sweeps over. The panel keeps its place: selecting other letters, deselecting and reselecting, or switching between selection and paragraph brings back the group you were using.</p></section>
-      <section><h4>Boxes</h4><p>Letter boxes follow each letter's ink, size and shift, and turn with it. A band runs under the selection, as tall as its tallest letter or stepping with each one; the paragraph band does the same for every line. Greys only. They export under the text as vector shapes: InDesign rectangles keep live corner options, Illustrator and Photoshop get the exact path.</p></section>
+      <section><h4>Boxes</h4><p>Letter boxes follow each letter's ink, size and shift, and turn with it. A band runs under the selection, as tall as its tallest letter or stepping with each one; the paragraph band does the same for every line. They export under the text as vector shapes: InDesign rectangles keep live corner options, Illustrator and Photoshop get the exact path. For now the .jsx export draws box colours as greys of the same lightness.</p></section>
+      <section><h4>Colour</h4><p>With nothing selected, the Colour group sets the <b>text</b> and <b>background</b> colours, as RGB hex: click the swatch for the system picker, or type a hex value and press Enter. The row under each colour holds the last eight colours used. A <b>palette</b> sets text and background in one click, and the box and band fill too when it has a block colour; Black on white goes back to the start. Selected letters get their own colour under Fill (Use text colour removes it); outline letters stroke in their colour. Box style has Fill and Stroke colours and a <b>blend</b> mode (Normal, Multiply, Screen, Overlay, Difference), which mixes a box with the background and the boxes under it, never with the text. The background fills the text block plus a margin, the same area the PNG crops to. The guidelines' colour is under Guidelines. Colours are on the canvas and in the PNG; the .jsx export does not carry them yet.</p></section>
       <section><h4>Outline and rotation</h4><p>Outline letters export as live text with no fill and a black stroke; rotation as character rotation, about the centre of the em box. Photoshop can do neither per letter inside one type layer, so those letters become their own type layers (outline as a layer-style stroke) and the main layer keeps a space of the same width.</p></section>
       <section><h4>Guidelines</h4><p>Baseline, x-height, cap height and ascender of the base style at the set size. Tick Include in export under Guidelines to export them as plain lines on their own layer or group, named Mixweight guidelines.</p></section>
       <section><h4>PNG</h4><p><b>PNG</b> in the top bar saves a picture of the text and its boxes exactly as on the canvas, cropped to the text block plus a margin, without selection marks, hover or zoom. Pick the scale (1× is one pixel per point), a transparent background, and whether the guidelines that are switched on come along (separate from Include in export). Download it, or copy it to the clipboard; if the browser won't copy, it downloads instead. It is a flat image, not editable text. Chrome or Edge.</p></section>
@@ -658,7 +705,7 @@ body.resizing, body.resizing * { cursor: col-resize !important; user-select: non
         <label class="chk"><input type="checkbox" id="png-transparent"> Transparent background</label>
         <label class="chk"><input type="checkbox" id="png-guides"> Include guidelines</label>
       </div>
-      <p class="hint">The text block and its boxes plus a margin, as on the canvas. Selection marks, hover and zoom are left out. 1× is one pixel per point.</p>
+      <p class="hint">The text block and its boxes plus a margin, as on the canvas. Selection marks, hover and zoom are left out. 1× is one pixel per point. With a transparent background, blend modes have nothing under them and look like Normal.</p>
       <div class="btns">
         <button class="btn solid" value="download" autofocus>Download PNG</button>
         <button class="btn" value="copy">Copy to clipboard</button>
@@ -1263,20 +1310,37 @@ const DEFAULTS = {
   panelW: { l: 320, r: 300 }, // panel widths in px; view state, not in undo
   collapsed: new Set(), // family names whose style list is folded; view state, not in undo
   groupsClosed: new Set(), // left-panel groups folded to their title row, by title; view state, not in undo
+  textCol: '#000000', bgCol: '#ffffff', guideCol: '#b4b4b4', // RGB hex
+  palette: '',                            // name of the preset applied last, '' for none
+  recent: [],                             // last colours used, newest first; not in undo
   boxAmt: 30, boxSeed: 11,
   boxStyle: defaultBoxStyle(),            // style for new boxes; follows the last box style edit
   bandFit: 'max',                         // height for new bands: 'max' (tallest letter) or 'each'
   bands: [],                              // {a, b, fit, dh, st}: a–b are letter indices, inclusive
   para: { on: false, fit: 'max', dh: 0, st: defaultBoxStyle() },
 };
-// Box style. Greys are ink %: 0 white, 100 black. Corners run TL, TR, BR, BL; s is round, bevel or inverse.
+// Box style. fill and stroke are RGB hex (v3.x kept grey ink %: 0 white, 100 black; normStyle migrates them).
+// blend is a BLENDS mode. Corners run TL, TR, BR, BL; s is round, bevel or inverse.
 function defaultBoxStyle() {
-  return { fill: 13, stroke: 0, sw: 0, op: 100, pad: 2, lock: true, c: [0, 1, 2, 3].map(() => ({ s: 'round', r: 0 })) };
+  return { fill: '#dedede', stroke: '#ffffff', sw: 0, op: 100, blend: 'normal', pad: 2, lock: true, c: [0, 1, 2, 3].map(() => ({ s: 'round', r: 0 })) };
 }
+const BLENDS = ['normal', 'multiply', 'screen', 'overlay', 'difference'];
+// '#abc', 'ABCDEF', '#AbCdEf' → '#aabbcc'; anything else → null.
+function hexOf(v) {
+  if (typeof v !== 'string') return null;
+  let t = v.trim().replace(/^#/, '').toLowerCase();
+  if (/^[0-9a-f]{3}$/.test(t)) t = t.replace(/./g, c => c + c);
+  return /^[0-9a-f]{6}$/.test(t) ? '#' + t : null;
+}
+const greyRGB = v => Math.round(255 * (1 - clamp(v, 0, 100) / 100));
+const greyHex = v => { const c = greyRGB(v).toString(16).padStart(2, '0'); return '#' + c + c + c; };
+const colOf = v => typeof v === 'number' && isFinite(v) ? greyHex(v) : hexOf(v);
 function normStyle(o) {
   const d = defaultBoxStyle();
   if (!o || typeof o !== 'object') return d;
-  for (const k of ['fill', 'stroke', 'sw', 'op', 'pad']) if (typeof o[k] === 'number' && isFinite(o[k])) d[k] = o[k];
+  for (const k of ['sw', 'op', 'pad']) if (typeof o[k] === 'number' && isFinite(o[k])) d[k] = o[k];
+  for (const k of ['fill', 'stroke']) d[k] = colOf(o[k]) || d[k];
+  if (BLENDS.includes(o.blend)) d.blend = o.blend;
   d.lock = o.lock !== false;
   if (Array.isArray(o.c)) o.c.slice(0, 4).forEach((c, q) => {
     if (c && ['round', 'bevel', 'inverse'].includes(c.s)) d.c[q].s = c.s;
@@ -1284,13 +1348,29 @@ function normStyle(o) {
   });
   return d;
 }
+// Preset palettes, from reference/palettes.md. block: boxes and bands; extras: more box colours (step 2b).
+// Two-colour presets have neither.
+const PALETTES = [
+  { name: 'Paper and pink blocks', text: '#2a2929', bg: '#f4f6f5', block: '#e3639f',
+    extras: ['#e36c66', '#8d4d74', '#e1a8d7', '#ac9daf', '#625356', '#616b64', '#92bbef', '#f8f8d0', '#cce7f3', '#c0bebe'] },
+  { name: 'Grey and pastel blocks', text: '#111111', bg: '#d9d9d9', block: '#eb7eb9', extras: ['#dcd51b', '#bc77d6', '#a2d2d9', '#bcdfbb', '#ecb77b'] },
+  { name: 'Olive on grey', text: '#6b6204', bg: '#bec4c3', block: '#62baab', extras: ['#fb9997', '#3e3d3f'] },
+  { name: 'Blue and beige', text: '#767266', bg: '#6ba1ea', block: '#dcd6c0', extras: ['#aca591'] },
+  { name: 'Aqua, brown band', text: '#f0cec2', bg: '#93f9f5', block: '#694542' },
+  { name: 'Salmon, grey band', text: '#f4e3c3', bg: '#fcb4a9', block: '#9e9694' },
+  { name: 'Violet, sage band', text: '#f1e8c4', bg: '#847cc0', block: '#8eaea9' },
+  { name: 'Mustard and blue', text: '#446ac8', bg: '#c5be94' },
+  { name: 'Lilac and lime', text: '#a4d555', bg: '#b095b9' },
+  { name: 'Periwinkle and orange', text: '#e29c44', bg: '#8e98bf' },
+  { name: 'Yellow and black', text: '#222209', bg: '#f5fc77' },
+];
 const S = Object.assign(structuredClone(DEFAULTS), {
   zoom: 1,
   styles: new Map(),      // id -> style
   families: [],           // {name, ids:[], on:Set, source, variable}
   baseId: null,
   // glyph index -> {style?: id, va?: 'baseline'|'top'|'middle'|'bottom', fill?: 'solid'|'outline', sw?: pt,
-  //                 rot?: deg, ra?: jitter deg, ru?: jitter unit −1…1, box?: box style}
+  //                 rot?: deg, ra?: jitter deg, ru?: jitter unit −1…1, box?: box style, col?: text colour hex}
   overrides: new Map(),
   sel: new Set(),
   anchor: null,
@@ -1674,7 +1754,8 @@ function compute() {
     const sw = outl ? Math.max(0.25, (ov && typeof ov.sw === 'number') ? ov.sw : S.strokeW) : 0;
     const rot = ov ? r1((ov.rot || 0) + (ov.ra || 0) * (ov.ru || 0)) : 0;
     const box = !space && ov && ov.box ? ov.box : null;
-    lines[lines.length - 1].push({ i, ch, st, size, jit, tr, va, bs: 0, sw, rot, box, ov: !ovEmpty(ov) });
+    const col = ov && ov.col || null;
+    lines[lines.length - 1].push({ i, ch, st, size, jit, tr, va, bs: 0, sw, rot, box, col, ov: !ovEmpty(ov) });
     pos++; linePos++;
   });
   for (const line of lines) { if (S.gaps) evenGaps(line); alignLine(line); }
@@ -1728,6 +1809,7 @@ function render() {
   S.gmap = new Map(lines.flat().map(g => [g.i, g]));
   const lead = r1(S.size * S.leading / 100);
   out.style.textAlign = S.align;
+  out.style.color = S.textCol;
   if (!S.styles.size) {
     out.innerHTML = '<p class="placeholder">Add fonts to start: Installed fonts in the top bar, or drop font files on the page.</p>';
     S.lb = []; deco.replaceChildren();
@@ -1753,7 +1835,8 @@ function render() {
       st.fontSize = g.size + 'px';
       st.letterSpacing = (g.tr / 1000) + 'em';
       if (g.bs) st.top = (-g.bs) + 'px';
-      if (g.sw) st.webkitTextStrokeWidth = g.sw + 'px';
+      if (g.sw) { st.webkitTextStrokeWidth = g.sw + 'px'; st.webkitTextStrokeColor = g.col || S.textCol; } // outline: no fill
+      else if (g.col) st.color = g.col;
       div.appendChild(sp);
     }
     frag.appendChild(div);
@@ -1797,8 +1880,6 @@ function layout() {
 // All shapes are in block coordinates: x from the text block's left edge, y down from the baseline of line k.
 // A path is a list of nodes {a, l, r}: anchor, incoming and outgoing handle, each [x, y].
 const KAPPA = 0.5523;
-const greyRGB = v => Math.round(255 * (1 - clamp(v, 0, 100) / 100));
-const greyHex = v => { const c = greyRGB(v).toString(16).padStart(2, '0'); return '#' + c + c + c; };
 // The letter's ink, top and bottom, y down from the baseline, baseline shift included. null for blank glyphs.
 const inkExt = g => g.inkTop == null ? null : { t: -(g.inkTop + g.bs), b: -(g.inkBot + g.bs) };
 const pivotOf = g => [g.x + g.adv / 2, -(g.bs + ROT_PIVOT * g.size)];
@@ -1977,17 +2058,26 @@ function drawSelMarks() {
   svg.setAttribute('height', Math.ceil(out.getBoundingClientRect().height / z));
   svg.innerHTML = d ? `<path class="halo" d="${d}"/><path class="tick" d="${d}"/>` : '';
 }
-// Boxes and guides as SVG markup in block coordinates, shared by the canvas and the PNG export. On the canvas
-// guides take the .gd class (a hairline at any zoom); in the PNG they are plain 0.75 pt lines.
-function decoMarkup(png, withGuides) {
+// The frame: the text block plus the export margin, in block coordinates. The background fills it, the PNG crops
+// to it.
+function frame() {
+  const { tw, th } = measure(), m = exportMargin();
+  return { x: -m, y: -m, w: tw + m * 2, h: th + m * 2, m };
+}
+const frameShown = () => S.bgCol !== '#ffffff';
+// Background, boxes and guides as SVG markup in block coordinates, shared by the canvas and the PNG export.
+// Boxes blend with what is under them in this SVG (background, other boxes), never with the text above it.
+// On the canvas guides take the .gd class (a hairline at any zoom); in the PNG they are plain 0.75 pt lines.
+function decoMarkup(png, withGuides, withBg) {
   let s = '';
+  if (withBg) { const f = frame(); s += `<rect x="${f.x}" y="${f.y}" width="${f.w}" height="${f.h}" fill="${S.bgCol}"/>`; }
   for (const sh of decoShapes()) {
     const st = sh.st;
-    s += `<path d="${svgPath(sh.pts, S.lb[sh.k])}" fill="${greyHex(st.fill)}"` + (st.op < 100 ? ` opacity="${st.op / 100}"` : '') +
-      (st.sw > 0 ? ` stroke="${greyHex(st.stroke)}" stroke-width="${st.sw}"` : '') + '/>';
+    s += `<path d="${svgPath(sh.pts, S.lb[sh.k])}" fill="${st.fill}"` + (st.op < 100 ? ` opacity="${st.op / 100}"` : '') +
+      (st.sw > 0 ? ` stroke="${st.stroke}" stroke-width="${st.sw}"` : '') + (st.blend !== 'normal' ? ` style="mix-blend-mode:${st.blend}"` : '') + '/>';
   }
   if (withGuides) {
-    const gs = png ? `fill="none" stroke="${getComputedStyle(document.documentElement).getPropertyValue('--guide').trim()}" stroke-width=".75"` : 'class="gd"';
+    const gs = png ? `fill="none" stroke="${S.guideCol}" stroke-width=".75"` : `class="gd" style="stroke:${S.guideCol}"`;
     for (const gl of guideLines()) {
       const y = r2(S.lb[gl.k] + gl.y);
       s += `<line ${gs} x1="${gl.x0}" x2="${r2(gl.x1)}" y1="${y}" y2="${y}"` + (gl.dash ? ` stroke-dasharray="${gl.dash}"` : '') + '/>';
@@ -1998,7 +2088,9 @@ function decoMarkup(png, withGuides) {
 function drawDeco() {
   deco.setAttribute('width', Math.ceil(S.W || 0));
   deco.setAttribute('height', Math.ceil(out.getBoundingClientRect().height / (S.zoom || 1)));
-  deco.innerHTML = decoMarkup(false, true);
+  deco.innerHTML = decoMarkup(false, true, true);
+  // A coloured frame gets room around it on the canvas, the same margin the exports use.
+  $('#sheet').style.margin = frameShown() ? exportMargin() + 'px' : '';
 }
 
 function corners() {
@@ -2248,6 +2340,8 @@ function renderSelPanel(gs) {
   $('#sel-fill-r').textContent = nOut ? `${nOut} outline` : 'All solid';
   const swg = gs.find(g => g.sw);
   setRange('sel-sw', swg ? swg.sw : S.strokeW, ptTxt(swg ? swg.sw : S.strokeW));
+  colCtl.sel?.sync();
+  $('#col-sel-auto').disabled = !gs.some(g => g.col);
 
   // box
   const nBox = gs.filter(g => g.box).length, bands = selBands();
@@ -2263,6 +2357,10 @@ function renderSelPanel(gs) {
 
 function renderParaPanel() {
   summary('sum-hov', S.hoverInfo ? 'On' : 'Off');
+  colCtl.text?.sync(); colCtl.bg?.sync(); renderPalettes();
+  summary('sum-col', S.palette || `${S.textCol.toUpperCase()} on ${S.bgCol.toUpperCase()}`);
+  $('#pal-o').textContent = S.palette ? '' : 'None';
+  $('#col-reset').disabled = S.textCol === DEFAULTS.textCol && S.bgCol === DEFAULTS.bgCol && !S.palette;
   summary('sum-fill', S.outlineAmt ? `${S.outlineAmt}% · ${ptTxt(S.strokeW)}` : 'Off');
   summary('sum-para', S.para.on ? `On · ${S.para.fit === 'each' ? 'Each letter' : 'Tallest letter'}` + (S.para.dh ? ` · ${dhTxt(S.para.dh)}` : '') : 'Off');
   press('#hov', S.hoverInfo ? 'on' : 'off');
@@ -2293,9 +2391,9 @@ function renderBoxEditor(gs) {
   press('#bx-tgt', bxTarget);
   const st = boxTargets(gs).list[0];
   $('#bx-ed-r').textContent = boxTargets(gs).label;
-  setRange('bx-fill', st.fill, st.fill + '%');
+  colCtl.bxFill?.sync(); colCtl.bxStroke?.sync();
+  press('#bx-blend', st.blend);
   setRange('bx-op', st.op, st.op + '%');
-  setRange('bx-stroke', st.stroke, st.stroke + '%');
   setRange('bx-sw', st.sw, ptTxt(st.sw));
   setRange('bx-pad', st.pad, ptTxt(st.pad));
   press('#bx-lock', st.lock ? 'all' : 'each');
@@ -2323,6 +2421,71 @@ function scatterBoxes(gs) {
     if (want && !(v && v.box)) ovFor(g.i).box = structuredClone(S.boxStyle);
     if (!want && v && v.box) { delete ovFor(g.i).box; cleanOv(g.i); }
   }
+}
+
+// Colour controls. get() → hex, or null when the targets differ; set(hex, key) changes state (key: one undo step
+// for a picker drag). The swatch opens the system picker; the hex field takes #RGB or #RRGGBB on Enter or blur;
+// the row under it holds the last colours used.
+const RECENT_MAX = 8;
+const colorCtls = [];
+function addRecent(hex) {
+  S.recent = [hex, ...S.recent.filter(c => c !== hex)].slice(0, RECENT_MAX);
+  save();
+  for (const c of colorCtls) c.syncRecent();
+}
+function colorCtl(id, get, set) {
+  const host = $('#' + id), name = host.dataset.label;
+  host.innerHTML = `<label for="${id}-hex">${name}</label><span class="col-row"><input type="color" aria-label="${name}: pick">` +
+    `<input type="text" class="hex" id="${id}-hex" maxlength="7" spellcheck="false" autocomplete="off"></span><span class="col-recent"></span>`;
+  const pick = host.querySelector('[type=color]'), hex = host.querySelector('.hex'), rec = host.querySelector('.col-recent');
+  const apply = (v, key) => { if (v && v !== get()) set(v, key); };
+  pick.addEventListener('input', () => apply(pick.value, 'col:' + id));
+  pick.addEventListener('change', () => addRecent(pick.value));
+  const commit = () => { const v = hexOf(hex.value); if (v) { apply(v); addRecent(v); } ctl.sync(); };
+  hex.addEventListener('keydown', e => { if (e.key === 'Enter') { commit(); hex.blur(); } else if (e.key === 'Escape') { ctl.sync(); hex.blur(); } });
+  hex.addEventListener('blur', commit);
+  rec.addEventListener('click', e => { const b = e.target.closest('button'); if (b) { apply(b.dataset.v); addRecent(b.dataset.v); } });
+  const ctl = {
+    sync() {
+      const v = get();
+      pick.value = v || '#000000';
+      if (document.activeElement !== hex) { hex.value = v ? v.toUpperCase() : ''; hex.placeholder = v ? '' : 'Mixed'; }
+    },
+    syncRecent() {
+      rec.innerHTML = S.recent.map(c => `<button type="button" data-v="${c}" style="background:${c}" title="${c.toUpperCase()}" aria-label="${name}: ${c}"></button>`).join('');
+    },
+  };
+  ctl.sync(); ctl.syncRecent();
+  colorCtls.push(ctl);
+  return ctl;
+}
+const colCtl = {};
+// Palettes: one click sets the roles the preset has, as one undo step.
+function applyPalette(P) {
+  record();
+  S.textCol = P.text; S.bgCol = P.bg; S.palette = P.name;
+  if (P.block) {
+    S.boxStyle.fill = P.block; S.para.st.fill = P.block;
+    for (const b of S.bands) b.st.fill = P.block;
+    for (const [k, v] of S.overrides) if (v.box) S.overrides.set(k, Object.assign({}, v, { box: Object.assign({}, v.box, { fill: P.block }) }));
+  }
+  render(); save();
+}
+function renderPalettes() {
+  const host = $('#pals');
+  if (!host.childElementCount) {
+    for (const P of PALETTES) {
+      const b = document.createElement('button');
+      b.type = 'button'; b.className = 'pal'; b.dataset.v = P.name;
+      const sws = [P.block, ...(P.extras || [])].filter(Boolean).map(c => `<span class="sw" style="background:${c}"></span>`).join('');
+      b.innerHTML = `<span class="chipc" style="background:${P.bg};color:${P.text}">Aa</span><span class="sws">${sws}</span><span class="nm"></span>`;
+      b.querySelector('.nm').textContent = P.name;
+      b.title = P.name + (P.block ? '' : ' · text and background only');
+      b.onclick = () => applyPalette(P);
+      host.appendChild(b);
+    }
+  }
+  press('#pals', S.palette);
 }
 
 function setSelFamily(name) {
@@ -2618,6 +2781,13 @@ function measure() {
   return { tw: Math.ceil(S.W || 0), th: Math.ceil(lead * Math.max(1, S.lines.length)) };
 }
 
+// The .jsx templates still take box colours as grey ink % (0 white, 100 black): a colour goes by its luminance.
+// Exact for the greys of v3.x sessions.
+function inkPct(hex) {
+  const n = parseInt(hex.slice(1), 16), l = 0.2126 * (n >> 16) + 0.7152 * (n >> 8 & 255) + 0.0722 * (n & 255);
+  return Math.round(100 * (1 - l / 255));
+}
+
 // Room around the text block in every export (.jsx and PNG).
 const exportMargin = () => Math.round(Math.max(36, S.size * 1.2));
 
@@ -2666,7 +2836,7 @@ function buildData(app) {
     k: sh.k, j: jOf.get(sh.g.i), ox: r2(sh.g.x), n: sh.n,
     p: sh.pts.map(nd => [...P(nd.a), ...P(nd.l), ...P(nd.r)]),
     r: sh.rect && Object.assign({}, sh.rect, { x0: r2(sh.rect.x0), y0: r2(sh.rect.y0), x1: r2(sh.rect.x1), y1: r2(sh.rect.y1), dx: r2(sh.rect.dx), dy: r2(sh.rect.dy) }),
-    f: sh.st.fill, s: sh.st.stroke, sw: sh.st.sw, op: sh.st.op,
+    f: inkPct(sh.st.fill), s: inkPct(sh.st.stroke), sw: sh.st.sw, op: sh.st.op,
   }));
   const guides = $('#exp-guides').checked ? guideLines().map(gl => ({ k: gl.k, j: jOf.get(gl.g.i), ox: r2(gl.g.x), y: r2(gl.y), x0: gl.x0, x1: r2(gl.x1), n: gl.n })) : [];
   const { tw, th } = measure();
@@ -2803,26 +2973,25 @@ function faceB64(css) {
 }
 // o: { scale, transparent, guides }. Crop: the text block plus the .jsx export's margin.
 function pngSVG(o) {
-  const { tw, th } = measure(), m = exportMargin(), W = tw + m * 2, H = th + m * 2;
+  const { w: W, h: H, m } = frame();
   const used = [...new Set(S.lines.flat().map(g => g.st.css))].filter(c => faceBytes.has(c));
   const faces = used.map(c => `@font-face{font-family:"${c}";src:url(data:font/sfnt;base64,${faceB64(c)})}`).join('');
   const txt = out.cloneNode(true);
   txt.removeAttribute('id');
   for (const sp of txt.querySelectorAll('.g')) sp.classList.remove('sel', 'hov');
-  const cs = getComputedStyle(out), ink = getComputedStyle(document.documentElement).getPropertyValue('--ink').trim();
+  const cs = getComputedStyle(out);
   Object.assign(txt.style, {
     position: 'absolute', left: m + 'px', top: m + 'px', width: S.W + 'px', margin: '0',
-    fontFamily: cs.fontFamily, fontSize: cs.fontSize, fontWeight: '400', fontStyle: 'normal', color: ink,
+    fontFamily: cs.fontFamily, fontSize: cs.fontSize, fontWeight: '400', fontStyle: 'normal', color: S.textCol,
     whiteSpace: 'pre', fontKerning: 'normal', fontSynthesis: 'none',
   });
   // The canvas rules for the letters (see #out in the CSS), minus selection and hover.
   const rules = `.ln{white-space:pre}.bl{display:inline-block;width:0;height:0;vertical-align:baseline}` +
-    `.g{position:relative;font-synthesis:none}.g.rot{display:inline-block}.g.stroke{color:transparent;-webkit-text-stroke-color:${ink}}`;
+    `.g{position:relative;font-synthesis:none}.g.rot{display:inline-block}.g.stroke{color:transparent}`;
   const w = Math.round(W * o.scale), h = Math.round(H * o.scale);
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${W} ${H}">` +
     `<style>${faces}${rules}</style>` +
-    (o.transparent ? '' : `<rect width="${W}" height="${H}" fill="#fff"/>`) +
-    `<g transform="translate(${m} ${m})">${decoMarkup(true, o.guides)}</g>` +
+    `<g transform="translate(${m} ${m})">${decoMarkup(true, o.guides, !o.transparent)}</g>` +
     `<foreignObject width="${W}" height="${H}"><div xmlns="http://www.w3.org/1999/xhtml" style="position:relative;width:${W}px;height:${H}px">` +
     new XMLSerializer().serializeToString(txt) + `</div></foreignObject></svg>`;
   return { svg, w, h };
@@ -2885,11 +3054,11 @@ async function pngOut(copy) {
 /* ---------------- persistence ---------------- */
 // Settings that live in the left panel and change how the text looks (Clear there resets these).
 const LEFT_KEYS = ['caseMode', 'caseAmt', 'mix', 'dist', 'wavePeriod', 'gran', 'valign', 'size', 'leading', 'sizeVar', 'baseJit',
-  'trackJit', 'track', 'gaps', 'match', 'align', 'guides'];
+  'trackJit', 'track', 'gaps', 'match', 'align', 'guides', 'guideCol'];
 // Paragraph settings in the right panel that its Clear edits resets.
 const RIGHT_KEYS = ['outlineAmt', 'strokeW'];
 const SAVE_KEYS = ['text', 'caseMode', 'caseAmt', 'mix', 'dist', 'gran', 'valign', 'size', 'leading', 'sizeVar', 'baseJit', 'trackJit', 'track', 'align', 'seed', 'match', 'wavePeriod', 'gaps',
-  'outlineAmt', 'outlineSeed', 'strokeW', 'guides', 'boxAmt', 'boxSeed', 'boxStyle', 'bandFit', 'bands', 'para'];
+  'outlineAmt', 'outlineSeed', 'strokeW', 'guides', 'boxAmt', 'boxSeed', 'boxStyle', 'bandFit', 'bands', 'para', 'textCol', 'bgCol', 'guideCol', 'palette'];
 // Saved state from older versions, or edited by hand: keep only well-formed decoration settings.
 function fixDeco() {
   const g = S.guides && typeof S.guides === 'object' ? S.guides : {};
@@ -2901,7 +3070,12 @@ function fixDeco() {
   S.bands = (Array.isArray(S.bands) ? S.bands : [])
     .filter(b => b && Number.isInteger(b.a) && Number.isInteger(b.b) && b.b >= b.a)
     .map(b => ({ a: b.a, b: b.b, fit: b.fit === 'each' ? 'each' : 'max', dh: typeof b.dh === 'number' ? b.dh : 0, st: normStyle(b.st) }));
-  for (const [k, v] of S.overrides) if (v.box) S.overrides.set(k, Object.assign({}, v, { box: normStyle(v.box) }));
+  for (const [k, v] of S.overrides) {
+    if (v.box) S.overrides.set(k, Object.assign({}, v, { box: normStyle(v.box) }));
+    if ('col' in v && !hexOf(v.col)) { const w = Object.assign({}, S.overrides.get(k)); delete w.col; S.overrides.set(k, w); }
+  }
+  for (const k of ['textCol', 'bgCol', 'guideCol']) S[k] = hexOf(S[k]) || DEFAULTS[k];
+  if (!PALETTES.some(P => P.name === S.palette)) S.palette = '';
 }
 function save() {
   try {
@@ -2917,6 +3091,7 @@ function save() {
     o.hoverInfo = S.hoverInfo;
     o.expAsk = S.expAsk;
     o.png = S.png;
+    o.recent = S.recent;
     o.panelW = S.panelW;
     o.groupsClosed = [...S.groupsClosed];
     o.collapsed = [...S.collapsed]; // all of it: installed families may not be loaded back yet when this runs
@@ -3014,7 +3189,7 @@ function setZoom(z, fit = false) {
 }
 function fitZoom() {
   const stage = $('#stage'), sheet = $('#sheet');
-  const w = sheet.getBoundingClientRect().width / (S.zoom || 1);
+  const w = sheet.getBoundingClientRect().width / (S.zoom || 1) + (frameShown() ? exportMargin() * 2 : 0);
   setZoom(clamp((stage.clientWidth - 96) / w, 0.25, 2), true);
 }
 
@@ -3110,6 +3285,7 @@ async function boot() {
     if (Array.isArray(saved.overrides)) S.overrides = new Map(saved.overrides.filter(e => e && e[1] && typeof e[1] === 'object'));
     if (typeof saved.hoverInfo === 'boolean') S.hoverInfo = saved.hoverInfo;
     if (saved.expAsk === 'howto' || saved.expAsk === 'script') S.expAsk = saved.expAsk;
+    if (Array.isArray(saved.recent)) S.recent = saved.recent.map(hexOf).filter(Boolean).slice(0, RECENT_MAX);
     if (saved.png && typeof saved.png === 'object') S.png = {
       scale: [1, 2, 4].includes(saved.png.scale) ? saved.png.scale : 2, transparent: !!saved.png.transparent, guides: !!saved.png.guides };
     if (saved.panelW) for (const k of ['l', 'r']) if (Number.isFinite(saved.panelW[k])) S.panelW[k] = saved.panelW[k];
@@ -3313,9 +3489,24 @@ async function boot() {
   $('#para-dh').addEventListener('input', e => { record('para-dh'); S.para.dh = +e.target.value; render(); save(); });
   // box style
   optClick('#bx-tgt', v => { bxTarget = v; renderInspector(); });
-  for (const [id, key] of [['bx-fill', 'fill'], ['bx-op', 'op'], ['bx-stroke', 'stroke'], ['bx-sw', 'sw'], ['bx-pad', 'pad']]) {
+  for (const [id, key] of [['bx-op', 'op'], ['bx-sw', 'sw'], ['bx-pad', 'pad']]) {
     $('#' + id).addEventListener('input', e => { const v = +e.target.value; editBox(key, st => { st[key] = v; }); });
   }
+  optClick('#bx-blend', v => editBox('blend', st => { st.blend = v; }));
+  for (const [c, key] of [['bxFill', 'fill'], ['bxStroke', 'stroke']]) {
+    colCtl[c] = colorCtl(c === 'bxFill' ? 'col-bx-fill' : 'col-bx-stroke', () => boxTargets(selectedGlyphs()).list[0][key],
+      (v, k) => editBox(key + (k ? ':' + k : ''), st => { st[key] = v; }));
+  }
+  // colour
+  const setState = (k, after) => (v, key) => { record(key); S[k] = v; if (after) after(); render(); save(); };
+  colCtl.text = colorCtl('col-text', () => S.textCol, setState('textCol'));
+  colCtl.bg = colorCtl('col-bg', () => S.bgCol, setState('bgCol', () => { if (zoomFit) requestAnimationFrame(fitZoom); }));
+  colCtl.guide = colorCtl('col-guide', () => S.guideCol, setState('guideCol', leftSummaries));
+  syncers.push(() => colCtl.guide.sync());
+  colCtl.sel = colorCtl('col-sel', () => { const cs = new Set(selectedGlyphs().map(g => g.col || S.textCol)); return cs.size === 1 ? [...cs][0] : null; },
+    (v, key) => { record(key); eachSel(o => { o.col = v; }); });
+  $('#col-sel-auto').onclick = () => { record(); eachSel(o => { delete o.col; }); };
+  $('#col-reset').onclick = () => { record(); S.textCol = DEFAULTS.textCol; S.bgCol = DEFAULTS.bgCol; S.palette = ''; render(); save(); };
   optClick('#bx-lock', v => {
     const lock = v === 'all';
     if (lock === boxTargets(selectedGlyphs()).list[0].lock) return;
