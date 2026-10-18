@@ -89,23 +89,24 @@ Reference: `POGO ALL NIGHT LONG`, where every letter sits on a column as tall as
 - It exports as the same rectangles; InDesign keeps the live corner options. If the current box geometry makes any combination awkward, stop and discuss before building.
 - Check: four lines in a heavy family, select all, add letter boxes and try all four combinations (columns, ragged skyline, slabs, v3.2 look); with Glyph + Glyph, a session saved in v3.2 looks exactly as before.
 
-### 3. Grid behind the text
-A square grid drawn behind the type, part of the layout-aids group (see below). Basic version only.
-- Settings: on/off (off by default), **Cell size** (pt), **Line weight** (pt), **Colour** (from the colour system, default a light grey). Square cells, lines only. Cell size is a slider the user can pull from very fine to coarse: **2 to 120 pt in 1 pt steps, default 16 pt** (a first look at 40 pt or more is too coarse for type this size). Line weight 0.25 to 4 pt, default 0.5 pt. Keep very fine grids cheap to draw (one SVG pattern, not thousands of lines).
-- The grid fills the frame (text block plus margin, the same frame the PNG crops to), starts at that frame's top-left corner so cells line up with the text block, and never runs over the whole canvas.
-- Draw order, bottom to top: background colour, grid, boxes and bands, text.
+### 3. Pattern behind the text (grid and friends)
+A pattern drawn behind the type, part of the layout-aids group (see below). Basic version only.
+- **Pattern type**, one at a time: **Grid** (square cells), **Dots**, **Crosses** (small plus marks at the cell corners), **Lines** (horizontal rules) and **Diagonal** (45° lines). Five types, no more in V4 (triangles, isometric, hex and graph paper with major lines are V4.x).
+- Settings: on/off (off by default), type (default Grid), **Cell size** (pt), **Line weight** (pt; for Dots it is the dot diameter), **Colour** (from the colour system, default a light grey). Cell size is a slider the user can pull from very fine to coarse: **2 to 120 pt in 1 pt steps, default 16 pt** (40 pt or more is too coarse for type this size). Line weight 0.25 to 4 pt, default 0.5 pt. Keep very fine patterns cheap to draw (one SVG `<pattern>`, not thousands of elements).
+- The pattern fills the frame (text block plus margin, the same frame the PNG crops to), starts at that frame's top-left corner so cells line up with the text block, and never runs over the whole canvas.
+- Draw order, bottom to top: background colour, pattern, boxes and bands, text. Box blend modes act on the pattern too.
 - It is part of the canvas and of the PNG. It is **not** exported to the `.jsx` in V4 (say so in Help).
-- Settings are state: `DEFAULTS`, `SAVE_KEYS`, `fixDeco()`, undo/redo.
-- Check: turn it on at a few cell sizes, change the text (the frame and grid follow), boxes and text stay above it, PNG export with and without a coloured background.
+- Settings are state: `DEFAULTS`, `SAVE_KEYS`, `fixDeco()`, undo/redo; sessions saved before load with the pattern off.
+- Check: turn it on, try all five types at a few cell sizes, change the text (the frame and pattern follow), boxes and text stay above it, PNG export with and without a coloured background.
 
 ### 4. Registration marks
-Crosshair marks at the four corners of the frame, as on the `POGO ALL NIGHT LONG` poster. Same group as the grid.
+Crosshair marks at the four corners of the frame, as on the `POGO ALL NIGHT LONG` poster. Same group as the pattern.
 - Settings: on/off (off by default), **Size** (pt), **Line weight** (pt), **Inset** from the frame's corner (pt), **Colour**.
-- Marks sit at the corners of the same frame as the grid and the PNG crop, so they are always inside the PNG.
+- Marks sit at the corners of the same frame as the pattern and the PNG crop, so they are always inside the PNG.
 - Canvas and PNG only; not exported to the `.jsx` in V4 (say so in Help).
 - Check: on/off, resize, a coloured background, PNG export shows all four marks and nothing is cropped.
 
-**Layout aids group.** To keep the left panel from growing, put the grid and the marks in one group with the existing Guidelines (title: **Layout aids**), folded by default, each aid with its own switch. Keep the Guidelines wording and its Include in export checkbox exactly as they are.
+**Layout aids group.** To keep the left panel from growing, put the pattern and the marks in one group with the existing Guidelines (title: **Layout aids**), folded by default, each aid with its own switch. Keep the Guidelines wording and its Include in export checkbox exactly as they are.
 
 ### 5. Specimen (seed archive)
 Save and share the whole look of a result as parameters only, with no font files. The UI word is **Specimen** ("Seed" stays the random number).
