@@ -112,7 +112,7 @@ Crosshair marks at the four corners of the frame, as on the `POGO ALL NIGHT LONG
 Save and share the whole look of a result as parameters only, with no font files. The UI word is **Specimen** ("Seed" stays the random number).
 The personal gallery that was part of this step is parked for V4.x (see below).
 
-- A specimen is a JSON object holding everything in `SAVE_KEYS` plus the manual per-letter overrides, the text, colours, grid and marks, plus: a **specimen version** number (so old specimens keep loading in newer versions), the tool version, and the **names of the fonts it uses** (family and style names, plus PostScript names, as the `.jsx` export already matches them), not the font data. Optional metadata fields for later gallery use: `title`, `author`.
+- A specimen is a JSON object holding everything in `SAVE_KEYS` plus the manual per-letter overrides, the text, colours, pattern and marks, plus: a **specimen version** number (so old specimens keep loading in newer versions), the tool version, and the **names of the fonts it uses** (family and style names, plus PostScript names, as the `.jsx` export already matches them), not the font data. Optional metadata fields for later gallery use: `title`, `author`.
 - UI: **Copy specimen** (text to clipboard), **Download specimen** (`.json`), and **Load specimen** (paste or choose a file). Loading is one undo step.
 - Loading a specimen whose fonts the user doesn't have: list the missing fonts in a clear message, apply the specimen with the base style or default font standing in for them, and say that layout will differ because widths differ. A specimen made with the same fonts must reproduce the result exactly.
 - Everything works offline from `file://`; no server, no links.
@@ -122,7 +122,7 @@ The personal gallery that was part of this step is parked for V4.x (see below).
 ### Not in V4 (V4.x or later)
 - Static labels and the personal gallery (specs parked below); labels in the `.jsx` export (first as plain text lines without the grey highlight boxes, whose widths would not match in the Adobe apps).
 - SVG export; CMYK; gradients; palette extraction from images; random text colour from the palette (random box colours are step 2b); palette editing.
-- Grid and registration marks in the `.jsx` export.
+- Pattern and registration marks in the `.jsx` export.
 - Type animation templates (its own release); a floating panel, only if the sidebars stop being enough (to be discussed with the owner first).
 - A public gallery with user uploads (needs a backend; start with a hand-curated static gallery that opens specimens). A share link that packs a specimen into the URL.
 
