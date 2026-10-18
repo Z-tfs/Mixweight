@@ -77,13 +77,15 @@ Reference: letter boxes in several colours under black text (the `POGO ALL NIGHT
 - It exports as ordinary RGB box fills, covered by step 2's `.jsx` commit. If this step ships before that commit, say so in the PR.
 - Check: scatter boxes at about 50% with a palette, reroll, undo/redo, reload (same colours), set one box by hand then reroll (it stays).
 
-### 2c. Letter-box height: glyph or line
-Reference: `POGO ALL NIGHT LONG`, where every letter sits on a column as tall as its line and the columns touch.
-- New option in the Box group for letter boxes: **Height: Glyph / Line**. It is part of the box style, so it works per selection like the other box parameters.
-- **Glyph** is today's behaviour (the box follows the letter's own ink). **Line**: every box in a line is as tall as that line's tallest letter (the same rule as a band's "Tallest letter") and as wide as the letter's advance width rather than its ink, so neighbouring boxes touch. Expand, corners, fill and stroke still apply, and a rotated letter's box still turns with it.
-- Default Glyph; sessions saved before load as Glyph (handle it in `normStyle()`).
-- It exports as the same rectangles; InDesign keeps the live corner options. If the current box geometry makes Line awkward, stop and discuss before building.
-- Check: four lines in a heavy family, select all, add letter boxes with Line: a clean grid of columns; with Glyph, a session saved in v3.2 looks exactly as before.
+### 2c. Letter-box fit: height and width
+Reference: `POGO ALL NIGHT LONG`, where every letter sits on a column as tall as its line and the columns touch. A full-line grid alone looks too uniform, so height and width are **two independent choices**, and the box can hug the letter on either axis.
+- Two options in the Box group for letter boxes, part of the box style so they work per selection like the other box parameters:
+  - **Height: Glyph / Line**. Glyph: the box is as tall as the letter's own ink (today's behaviour). Line: as tall as the line's tallest letter (the same rule as a band's "Tallest letter").
+  - **Width: Glyph / Advance**. Glyph: as wide as the letter's ink (today's behaviour). Advance: as wide as the letter's advance width, so neighbouring boxes touch.
+- The four combinations give different looks: Glyph + Glyph is v3.2; Glyph height + Advance width gives touching boxes that follow each letter's own height (a ragged skyline); Line height + Glyph width gives tall slabs with gaps; Line + Advance gives the POGO grid of columns. Expand, corners, fill and stroke still apply to all of them, and a rotated letter's box still turns with it.
+- Defaults Glyph and Glyph; sessions saved before load as Glyph / Glyph (handle both in `normStyle()`).
+- It exports as the same rectangles; InDesign keeps the live corner options. If the current box geometry makes any combination awkward, stop and discuss before building.
+- Check: four lines in a heavy family, select all, add letter boxes and try all four combinations (columns, ragged skyline, slabs, v3.2 look); with Glyph + Glyph, a session saved in v3.2 looks exactly as before.
 
 ### 3. Grid behind the text
 A square grid drawn behind the type, part of the layout-aids group (see below). Basic version only.
