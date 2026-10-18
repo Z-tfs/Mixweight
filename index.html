@@ -623,7 +623,12 @@ body.resizing, body.resizing * { cursor: col-resize !important; user-select: non
         <button type="button" data-v="overlay">Overlay</button>
         <button type="button" data-v="difference">Difference</button>
       </div>
-      <div class="ctl"><label for="bx-pad">Expand</label><output id="bx-pad-o"></output><input type="range" id="bx-pad" min="-10" max="40" step="0.5"></div>
+      <div class="pair">
+        <div class="ctl"><label for="bx-px">Expand X</label><output id="bx-px-o"></output><input type="range" id="bx-px" min="-10" max="40" step="0.5"></div>
+        <div class="ctl"><label for="bx-py">Expand Y</label><output id="bx-py-o"></output><input type="range" id="bx-py" min="-10" max="40" step="0.5"></div>
+        <div class="ctl"><label for="bx-dx">Move X</label><output id="bx-dx-o"></output><input type="range" id="bx-dx" min="-60" max="60" step="0.5"></div>
+        <div class="ctl"><label for="bx-dy">Move Y</label><output id="bx-dy-o"></output><input type="range" id="bx-dy" min="-60" max="60" step="0.5"></div>
+      </div>
       <div class="ctl"><label>Corners</label><output></output></div>
       <div class="opts" id="bx-lock" role="group" aria-label="Corners">
         <button type="button" data-v="all">Same for all corners</button>
@@ -671,7 +676,7 @@ body.resizing, body.resizing * { cursor: col-resize !important; user-select: non
       <section><h4>Letter align</h4><p>Top, middle and bottom alignment are written as baseline shift values. If you change a letter or its font afterwards, export again to re-align.</p></section>
       <section><h4>Group titles</h4><p>Click a group title in the left panel to fold the group to its title row (▸) or open it again (▾); each group remembers its own state. Folding Font pool hides every family; the family names fold just their own styles. The right side of each title row sums up what the group is set to, and follows every change; hover it for the full text if it is cut short. Groups with a short note have a <b>?</b> next to their title: click it to show the note, again to hide it.</p></section>
       <section><h4>Right panel</h4><p>Selecting letters opens it with their font, size, shift and tracking at the top, then weight, align, <b>rotation</b>, <b>fill</b> and <b>boxes</b>. With nothing selected, the handle on the right edge opens the paragraph settings: hover info, <b>fill</b> (random outline, stroke), the paragraph band, random letter boxes. Clear edits there also sets Random outline and Stroke back to their defaults. A drag that starts on empty canvas selects the letters it sweeps over. The panel keeps its place: selecting other letters, deselecting and reselecting, or switching between selection and paragraph brings back the group you were using.</p></section>
-      <section><h4>Boxes</h4><p>Letter boxes follow each letter's ink, size and shift, and turn with it. A band runs under the selection, as tall as its tallest letter or stepping with each one; the paragraph band does the same for every line. They export under the text as vector shapes: InDesign rectangles keep live corner options, Illustrator and Photoshop get the exact path. For now the .jsx export draws box colours as greys of the same lightness.</p></section>
+      <section><h4>Boxes</h4><p>Letter boxes follow each letter's ink, size and shift, and turn with it. A band runs under the selection, as tall as its tallest letter or stepping with each one; the paragraph band does the same for every line. In Box style, Expand X and Y make a box wider or taller than the ink (negative values make it smaller), and Move X and Y shift it right and up; a rotated letter's box moves along the letter's own axes. They export under the text as vector shapes: InDesign rectangles keep live corner options, Illustrator and Photoshop get the exact path. For now the .jsx export draws box colours as greys of the same lightness.</p></section>
       <section><h4>Colour</h4><p>With nothing selected, the Colour group sets the <b>text</b> and <b>background</b> colours, as RGB hex: click the swatch for the system picker, or type a hex value and press Enter. The row under each colour holds the last eight colours used. A <b>palette</b> sets text and background in one click, and the box and band fill too when it has a block colour; Black on white goes back to the start. Selected letters get their own colour under Fill (Use text colour removes it); outline letters stroke in their colour. Box style has Fill and Stroke colours and a <b>blend</b> mode (Normal, Multiply, Screen, Overlay, Difference), which mixes a box with the background and the boxes under it, never with the text. The background fills the text block plus a margin, the same area the PNG crops to. The guidelines' colour is under Guidelines. Colours are on the canvas and in the PNG; the .jsx export does not carry them yet.</p></section>
       <section><h4>Outline and rotation</h4><p>Outline letters export as live text with no fill and a black stroke; rotation as character rotation, about the centre of the em box. Photoshop can do neither per letter inside one type layer, so those letters become their own type layers (outline as a layer-style stroke) and the main layer keeps a space of the same width.</p></section>
       <section><h4>Guidelines</h4><p>Baseline, x-height, cap height and ascender of the base style at the set size. Tick Include in export under Guidelines to export them as plain lines on their own layer or group, named Mixweight guidelines.</p></section>
@@ -1320,9 +1325,10 @@ const DEFAULTS = {
   para: { on: false, fit: 'max', dh: 0, st: defaultBoxStyle() },
 };
 // Box style. fill and stroke are RGB hex (v3.x kept grey ink %: 0 white, 100 black; normStyle migrates them).
-// blend is a BLENDS mode. Corners run TL, TR, BR, BL; s is round, bevel or inverse.
+// blend is a BLENDS mode. px / py expand the box sideways / up and down (v3.x had one pad for both); dx / dy move
+// it right / up, all in pt. Corners run TL, TR, BR, BL; s is round, bevel or inverse.
 function defaultBoxStyle() {
-  return { fill: '#dedede', stroke: '#ffffff', sw: 0, op: 100, blend: 'normal', pad: 2, lock: true, c: [0, 1, 2, 3].map(() => ({ s: 'round', r: 0 })) };
+  return { fill: '#dedede', stroke: '#ffffff', sw: 0, op: 100, blend: 'normal', px: 2, py: 2, dx: 0, dy: 0, lock: true, c: [0, 1, 2, 3].map(() => ({ s: 'round', r: 0 })) };
 }
 const BLENDS = ['normal', 'multiply', 'screen', 'overlay', 'difference'];
 // '#abc', 'ABCDEF', '#AbCdEf' → '#aabbcc'; anything else → null.
@@ -1338,7 +1344,9 @@ const colOf = v => typeof v === 'number' && isFinite(v) ? greyHex(v) : hexOf(v);
 function normStyle(o) {
   const d = defaultBoxStyle();
   if (!o || typeof o !== 'object') return d;
-  for (const k of ['sw', 'op', 'pad']) if (typeof o[k] === 'number' && isFinite(o[k])) d[k] = o[k];
+  const n = v => typeof v === 'number' && isFinite(v);
+  if (n(o.pad)) d.px = d.py = o.pad;
+  for (const k of ['sw', 'op', 'px', 'py', 'dx', 'dy']) if (n(o[k])) d[k] = o[k];
   for (const k of ['fill', 'stroke']) d[k] = colOf(o[k]) || d[k];
   if (BLENDS.includes(o.blend)) d.blend = o.blend;
   d.lock = o.lock !== false;
@@ -1927,8 +1935,8 @@ function rectShape(k, g, st, x0, y0, x1, y1, name, rot, P) {
 function letterShape(g, st) {
   const e = inkExt(g);
   if (!e) return null;
-  const p = st.pad;
-  return rectShape(g.k, g, st, g.x - p, e.t - p, g.x + g.adv + p, e.b + p, 'Box ' + g.ch, g.rot, pivotOf(g));
+  const { px, py, dx, dy } = st;
+  return rectShape(g.k, g, st, g.x - px + dx, e.t - py - dy, g.x + g.adv + px + dx, e.b + py - dy, 'Box ' + g.ch, g.rot, pivotOf(g));
 }
 // A straight band under a run of letters on one line. fit 'max': one rectangle as tall as the tallest letter;
 // 'each': steps up and down with each letter's own height. dh adds height, half above and half below.
@@ -1936,12 +1944,12 @@ function bandShape(gs, fit, dh, st, name) {
   const inked = gs.filter(g => g.inkTop != null);
   if (!inked.length) return null;
   const run = gs.slice(gs.indexOf(inked[0]), gs.indexOf(inked[inked.length - 1]) + 1);
-  const p = st.pad, first = run[0], last = run[run.length - 1];
-  const x0 = first.x - p, x1 = last.x + last.adv + p;
+  const { px, py, dx, dy } = st, first = run[0], last = run[run.length - 1];
+  const x0 = first.x - px, x1 = last.x + last.adv + px;
   if (fit !== 'each') {
     const ext = inked.map(inkExt);
-    const t = Math.min(...ext.map(e => e.t)) - p - dh / 2, b = Math.max(...ext.map(e => e.b)) + p + dh / 2;
-    return rectShape(first.k, first, st, x0, t, x1, b, name);
+    const t = Math.min(...ext.map(e => e.t)) - py - dh / 2, b = Math.max(...ext.map(e => e.b)) + py + dh / 2;
+    return rectShape(first.k, first, st, x0 + dx, t - dy, x1 + dx, b - dy, name);
   }
   const cols = [];
   let e = null;
@@ -1949,7 +1957,7 @@ function bandShape(gs, fit, dh, st, name) {
     e = inkExt(g) || e;
     const cx0 = q === 0 ? x0 : Math.max(g.x, cols.length ? cols[cols.length - 1].x1 : x0);
     const cx1 = q === run.length - 1 ? x1 : Math.max(cx0, run[q + 1].x);
-    const t = e.t - p - dh / 2, b = e.b + p + dh / 2;
+    const t = e.t - py - dh / 2, b = e.b + py + dh / 2;
     const prev = cols[cols.length - 1];
     if (prev && Math.abs(prev.t - t) < 0.01 && Math.abs(prev.b - b) < 0.01) prev.x1 = cx1;
     else if (cx1 > cx0 + 0.01 || !prev) cols.push({ x0: cx0, x1: cx1, t, b });
@@ -1969,7 +1977,7 @@ function bandShape(gs, fit, dh, st, name) {
   for (const pnt of v) {
     const q = clean[clean.length - 1];
     if (q && Math.abs(q.x - pnt.x) < 0.01 && Math.abs(q.y - pnt.y) < 0.01) { q.c = q.c || pnt.c; continue; }
-    clean.push(Object.assign({}, pnt));
+    clean.push(Object.assign({}, pnt, { x: pnt.x + dx, y: pnt.y - dy }));
   }
   const vs = clean.filter((pnt, i) => {
     if (pnt.c) return true;
@@ -2395,7 +2403,10 @@ function renderBoxEditor(gs) {
   press('#bx-blend', st.blend);
   setRange('bx-op', st.op, st.op + '%');
   setRange('bx-sw', st.sw, ptTxt(st.sw));
-  setRange('bx-pad', st.pad, ptTxt(st.pad));
+  setRange('bx-px', st.px, ptTxt(st.px));
+  setRange('bx-py', st.py, ptTxt(st.py));
+  setRange('bx-dx', st.dx, dhTxt(st.dx));
+  setRange('bx-dy', st.dy, dhTxt(st.dy));
   press('#bx-lock', st.lock ? 'all' : 'each');
   for (const row of $$('#bx-corners .corner-row')) {
     const all = row.dataset.c === 'all';
@@ -3489,7 +3500,7 @@ async function boot() {
   $('#para-dh').addEventListener('input', e => { record('para-dh'); S.para.dh = +e.target.value; render(); save(); });
   // box style
   optClick('#bx-tgt', v => { bxTarget = v; renderInspector(); });
-  for (const [id, key] of [['bx-op', 'op'], ['bx-sw', 'sw'], ['bx-pad', 'pad']]) {
+  for (const [id, key] of [['bx-op', 'op'], ['bx-sw', 'sw'], ['bx-px', 'px'], ['bx-py', 'py'], ['bx-dx', 'dx'], ['bx-dy', 'dy']]) {
     $('#' + id).addEventListener('input', e => { const v = +e.target.value; editBox(key, st => { st[key] = v; }); });
   }
   optClick('#bx-blend', v => editBox('blend', st => { st.blend = v; }));
