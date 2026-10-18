@@ -8,7 +8,7 @@ How to read a preset:
 - **extras** are further colours that step 2b ("random box colours") draws from, together with the block colour.
 - A preset without a block colour is a two-colour preset. Applying it sets only text and background, and "From palette" box colours is disabled for it.
 
-Copy these into one `PALETTES` constant. Do not add, remove or adjust colours without asking the owner.
+These are a **style reference, not an exact spec**. Copy them into one `PALETTES` constant as a starting point. You may tune a hex value for contrast or harmony, but keep each preset's character, and report every change in the PR. Do not add presets without asking the owner.
 
 ## With block colours
 
