@@ -6,7 +6,7 @@ The owner is a graphic designer, and Mixweight is a visual tool for designers, n
 
 ## Hard rules
 
-1. **The `.jsx` export must stay editable.** Nothing in it gets outlined or rasterised. Each letter run is `[text, fontIndex, size, baselineShift, tracking, rotation, strokeWidth]` (see `buildData()`); boxes, guidelines and Photoshop's separate letter layers travel as `shapes`, `guides` and `sp`. Export is built by `buildData()` / `buildScript()` and the three templates (`<script type="text/plain" id="jsx-ai">`, `jsx-id`, `jsx-ps`).
+1. **The `.jsx` export must stay editable.** Nothing in it gets outlined or rasterised. Each letter run is `[text, fontIndex, size, baselineShift, tracking, rotation, strokeWidth, colour?]` (see `buildData()`; colour only when not black); boxes, guidelines, Photoshop's separate letter layers and the background travel as `shapes`, `guides`, `sp` and `bg`. Export is built by `buildData()` / `buildScript()` and the three templates (`<script type="text/plain" id="jsx-ai">`, `jsx-id`, `jsx-ps`).
    - A feature that can be expressed through the existing fields needs **no** change to the templates. Prefer this.
    - Anything that adds a field or changes what a template does must update **all three** templates, and must be flagged to the owner **before you start**, because she tests each Adobe app by hand. Do it as its own commit so it can be reviewed and reverted on its own.
    - Other output formats (PNG, and anything added later) are separate code paths. They must never change what `buildData()` returns for the existing features.
@@ -27,7 +27,7 @@ Everything is in `index.html` (~3300 lines) plus `demo-fonts.js`. Line numbers d
 - `compute()` builds `S.lines`: one object per character (`st`, `size`, `jit`, `tr`, `va`, `bs`, plus rotation and stroke). Per-letter size, baseline or tracking changes belong there or in a pass right after it.
 - `render()` draws the text as one HTML `<span>` per letter (family from `g.st.css`, variable instance from `g.st.fvs`) inside `#out`, then `layout()` measures every letter into `S.gmap` (`g.x`, `g.adv`, `g.y`, `S.lb[k]` baselines). Boxes, guidelines and all exports work from those numbers, in block coordinates (x from the text block's left edge, y down from the line's baseline). Rotation turns about the centre of the em box (`ROT_PIVOT`).
 - `S.overrides` holds the user's manual per-letter edits (`style`, `va`, `fill`, `sw`, `rot`, `ra`, `ru`, `box`). Manual edits always win over automatic choices.
-- Box style colours are currently grey ink percentages (0 white, 100 black) via `greyHex()` / `greyRGB()`.
+- Colours are RGB hex in state (box style `fill` / `stroke`, `textCol`, `bgCol`, `guideCol`, letter override `col`); `normStyle()` migrates v3.x grey ink percentages. The export writes them through `xcol()`: a neutral grey as ink % (0 white, 100 black), any other colour as `'rrggbb'`.
 - Terminology: "Seed" in the UI is the random-number seed (`S.seed`, typeable). Do not reuse that word for anything new without checking with the owner.
 
 ## How to work

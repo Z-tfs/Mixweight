@@ -676,9 +676,9 @@ body.resizing, body.resizing * { cursor: col-resize !important; user-select: non
       <section><h4>Letter align</h4><p>Top, middle and bottom alignment are written as baseline shift values. If you change a letter or its font afterwards, export again to re-align.</p></section>
       <section><h4>Group titles</h4><p>Click a group title in the left panel to fold the group to its title row (▸) or open it again (▾); each group remembers its own state. Folding Font pool hides every family; the family names fold just their own styles. The right side of each title row sums up what the group is set to, and follows every change; hover it for the full text if it is cut short. Groups with a short note have a <b>?</b> next to their title: click it to show the note, again to hide it.</p></section>
       <section><h4>Right panel</h4><p>Selecting letters opens it with their font, size, shift and tracking at the top, then weight, align, <b>rotation</b>, <b>fill</b> and <b>boxes</b>. With nothing selected, the handle on the right edge opens the paragraph settings: hover info, <b>fill</b> (random outline, stroke), the paragraph band, random letter boxes. Clear edits there also sets Random outline and Stroke back to their defaults. A drag that starts on empty canvas selects the letters it sweeps over. The panel keeps its place: selecting other letters, deselecting and reselecting, or switching between selection and paragraph brings back the group you were using.</p></section>
-      <section><h4>Boxes</h4><p>Letter boxes follow each letter's ink, size and shift, and turn with it. A band runs under the selection, as tall as its tallest letter or stepping with each one; the paragraph band does the same for every line. In Box style, Expand X and Y make a box wider or taller than the ink (negative values make it smaller), and Move X and Y shift it right and up; a rotated letter's box moves along the letter's own axes. They export under the text as vector shapes: InDesign rectangles keep live corner options, Illustrator and Photoshop get the exact path. For now the .jsx export draws box colours as greys of the same lightness.</p></section>
-      <section><h4>Colour</h4><p>With nothing selected, the Colour group sets the <b>text</b> and <b>background</b> colours, as RGB hex: click the swatch for the system picker, or type a hex value and press Enter. The row under each colour holds the last eight colours used. A <b>palette</b> sets text and background in one click, and the box and band fill too when it has a block colour; Black on white goes back to the start. Selected letters get their own colour under Fill (Use text colour removes it); outline letters stroke in their colour. Box style has Fill and Stroke colours and a <b>blend</b> mode (Normal, Multiply, Screen, Overlay, Difference), which mixes a box with the background and the boxes under it, never with the text. The background fills the text block plus a margin, the same area the PNG crops to. The guidelines' colour is under Guidelines. Colours are on the canvas and in the PNG; the .jsx export does not carry them yet.</p></section>
-      <section><h4>Outline and rotation</h4><p>Outline letters export as live text with no fill and a black stroke; rotation as character rotation, about the centre of the em box. Photoshop can do neither per letter inside one type layer, so those letters become their own type layers (outline as a layer-style stroke) and the main layer keeps a space of the same width.</p></section>
+      <section><h4>Boxes</h4><p>Letter boxes follow each letter's ink, size and shift, and turn with it. A band runs under the selection, as tall as its tallest letter or stepping with each one; the paragraph band does the same for every line. In Box style, Expand X and Y make a box wider or taller than the ink (negative values make it smaller), and Move X and Y shift it right and up; a rotated letter's box moves along the letter's own axes. They export under the text as vector shapes: InDesign rectangles keep live corner options, Illustrator and Photoshop get the exact path.</p></section>
+      <section><h4>Colour</h4><p>With nothing selected, the Colour group sets the <b>text</b> and <b>background</b> colours, as RGB hex: click the swatch for the system picker, or type a hex value and press Enter. The row under each colour holds the last eight colours used. A <b>palette</b> sets text and background in one click, and the box and band fill too when it has a block colour; Black on white goes back to the start. Selected letters get their own colour under Fill (Use text colour removes it); outline letters stroke in their colour. Box style has Fill and Stroke colours and a <b>blend</b> mode (Normal, Multiply, Screen, Overlay, Difference), which mixes a box with the background and the boxes under it, never with the text. The background fills the text block plus a margin, the same area the PNG crops to. The guidelines' colour is under Guidelines. Everything exports: text colour per letter, RGB fills and strokes (neutral greys stay greys, a Black tint in InDesign), blend modes, and the guideline colour. A background that isn't white becomes a rectangle at the very back, named Mixweight background, on its own layer (Illustrator, InDesign) or as the bottom shape layer (Photoshop). InDesign adds each RGB colour as a swatch named Mixweight #RRGGBB.</p></section>
+      <section><h4>Outline and rotation</h4><p>Outline letters export as live text with no fill and a stroke in the letter's colour; rotation as character rotation, about the centre of the em box. Photoshop can do neither per letter inside one type layer, so those letters become their own type layers (outline as a layer-style stroke) and the main layer keeps a space of the same width.</p></section>
       <section><h4>Guidelines</h4><p>Baseline, x-height, cap height and ascender of the base style at the set size. Tick Include in export under Guidelines to export them as plain lines on their own layer or group, named Mixweight guidelines.</p></section>
       <section><h4>PNG</h4><p><b>PNG</b> in the top bar saves a picture of the text and its boxes exactly as on the canvas, cropped to the text block plus a margin, without selection marks, hover or zoom. Pick the scale (1× is one pixel per point), a transparent background, and whether the guidelines that are switched on come along (separate from Include in export). Download it, or copy it to the clipboard; if the browser won't copy, it downloads instead. It is a flat image, not editable text. Chrome or Edge.</p></section>
     </div>
@@ -792,6 +792,13 @@ body.resizing, body.resizing * { cursor: col-resize !important; user-select: non
     D.align == 'center' ? Justification.CENTER : (D.align == 'right' ? Justification.RIGHT : Justification.LEFT);
 
   function grey(v) { var c = new GrayColor(); c.gray = v; return c; }
+  // A colour from the data: grey ink % or 'rrggbb'.
+  function col(v) {
+    if (typeof v === 'number') return grey(v);
+    var c = new RGBColor(); c.red = parseInt(v.substr(0, 2), 16); c.green = parseInt(v.substr(2, 2), 16); c.blue = parseInt(v.substr(4, 2), 16);
+    return c;
+  }
+  var BM = { multiply: BlendModes.MULTIPLY, screen: BlendModes.SCREEN, overlay: BlendModes.OVERLAY, difference: BlendModes.DIFFERENCE };
   var chars = tf.textRange.characters, n = chars.length, j = 0;
   for (var k = 0; k < n && j < flat.length; k++) {
     var c = chars[k], cc = c.contents;
@@ -802,7 +809,8 @@ body.resizing, body.resizing * { cursor: col-resize !important; user-select: non
     if (g[3] !== 0) ca.baselineShift = g[3];
     if (g[4] !== D.track) ca.tracking = g[4];
     if (g[5]) ca.rotation = g[5];
-    if (g[6]) { ca.fillColor = new NoColor(); ca.strokeColor = grey(100); ca.strokeWeight = g[6]; }
+    if (g[6]) { ca.fillColor = new NoColor(); ca.strokeColor = g[7] != null ? col(g[7]) : grey(100); ca.strokeWeight = g[6]; }
+    else if (g[7] != null) ca.fillColor = col(g[7]);
   }
 
   try {
@@ -816,25 +824,37 @@ body.resizing, body.resizing * { cursor: col-resize !important; user-select: non
   // the anchor is the start of the first baseline, and the block's left edge sits align × width to its left.
   var an = tf.anchor, fx = D.align == 'center' ? 0.5 : (D.align == 'right' ? 1 : 0);
   function pt(x, y, k) { return [an[0] - fx * D.W + x, an[1] - k * D.lead - y]; }
+  function path(into, sh) {
+    var pa = into.pathItems.add();
+    for (var q = 0; q < sh.p.length; q++) {
+      var v = sh.p[q], pp = pa.pathPoints.add();
+      pp.anchor = pt(v[0], v[1], sh.k);
+      pp.leftDirection = pt(v[2], v[3], sh.k);
+      pp.rightDirection = pt(v[4], v[5], sh.k);
+      pp.pointType = PointType.CORNER;
+    }
+    pa.closed = true;
+    pa.filled = true; pa.fillColor = col(sh.f);
+    pa.name = sh.n;
+    return pa;
+  }
   if (D.shapes.length) {
     var grp = doc.groupItems.add();
     grp.name = 'Mixweight boxes';
     for (var b = 0; b < D.shapes.length; b++) {
-      var sh = D.shapes[b], pa = grp.pathItems.add();
-      for (var q = 0; q < sh.p.length; q++) {
-        var v = sh.p[q], pp = pa.pathPoints.add();
-        pp.anchor = pt(v[0], v[1], sh.k);
-        pp.leftDirection = pt(v[2], v[3], sh.k);
-        pp.rightDirection = pt(v[4], v[5], sh.k);
-        pp.pointType = PointType.CORNER;
-      }
-      pa.closed = true;
-      pa.filled = true; pa.fillColor = grey(sh.f);
-      if (sh.sw > 0) { pa.stroked = true; pa.strokeColor = grey(sh.s); pa.strokeWidth = sh.sw; } else pa.stroked = false;
+      var sh = D.shapes[b], pa = path(grp, sh);
+      if (sh.sw > 0) { pa.stroked = true; pa.strokeColor = col(sh.s); pa.strokeWidth = sh.sw; } else pa.stroked = false;
       if (sh.op < 100) pa.opacity = sh.op;
-      pa.name = sh.n;
+      if (sh.bm) pa.blendingMode = BM[sh.bm];
     }
     grp.move(tf, ElementPlacement.PLACEAFTER);
+  }
+  // Background: its own layer at the bottom.
+  if (D.bg) {
+    var bl = doc.layers.add();
+    bl.name = 'Mixweight background';
+    path(bl, D.bg).stroked = false;
+    bl.zOrder(ZOrderMethod.SENDTOBACK);
   }
   if (D.guides.length) {
     var gl = doc.layers.add();
@@ -842,7 +862,7 @@ body.resizing, body.resizing * { cursor: col-resize !important; user-select: non
     for (var u = 0; u < D.guides.length; u++) {
       var G = D.guides[u], li = gl.pathItems.add();
       li.setEntirePath([pt(G.x0, G.y, G.k), pt(G.x1, G.y, G.k)]);
-      li.filled = false; li.stroked = true; li.strokeColor = grey(35); li.strokeWidth = 0.5;
+      li.filled = false; li.stroked = true; li.strokeColor = D.gc != null ? col(D.gc) : grey(35); li.strokeWidth = 0.5;
       li.name = G.n;
     }
   }
@@ -920,6 +940,19 @@ body.resizing, body.resizing * { cursor: col-resize !important; user-select: non
     try { all.fillColor = doc.swatches.itemByName('Black'); } catch (e) {}
 
     var sw = doc.swatches;
+    function grey(it, prop, v) {
+      if (v <= 0) it[prop + 'Color'] = sw.itemByName('Paper');
+      else { it[prop + 'Color'] = sw.itemByName('Black'); it[prop + 'Tint'] = v; }
+    }
+    // A colour from the data: grey ink % (a Black tint) or 'rrggbb' (an RGB swatch named after its hex, reused).
+    function paint(it, prop, v) {
+      if (typeof v === 'number') { grey(it, prop, v); return; }
+      var nm = 'Mixweight #' + v.toUpperCase(), c = doc.colors.itemByName(nm);
+      if (!c.isValid) c = doc.colors.add({ name: nm, model: ColorModel.PROCESS, space: ColorSpace.RGB,
+        colorValue: [parseInt(v.substr(0, 2), 16), parseInt(v.substr(2, 2), 16), parseInt(v.substr(4, 2), 16)] });
+      it[prop + 'Color'] = c;
+    }
+    var BM = { multiply: BlendMode.MULTIPLY, screen: BlendMode.SCREEN, overlay: BlendMode.OVERLAY, difference: BlendMode.DIFFERENCE };
     var chars = st.characters.everyItem().getElements(), j = 0, refs = [];
     for (var c = 0; c < chars.length && j < flat.length; c++) {
       var ch = chars[c], cc = ch.contents;
@@ -931,7 +964,10 @@ body.resizing, body.resizing * { cursor: col-resize !important; user-select: non
       if (g[3] !== 0) ch.baselineShift = g[3];
       if (g[4] !== D.track) ch.tracking = g[4];
       if (g[5]) ch.characterRotation = g[5];
-      if (g[6]) { ch.fillColor = sw.itemByName('None'); ch.strokeColor = sw.itemByName('Black'); ch.strokeWeight = g[6]; }
+      if (g[6]) {
+        ch.fillColor = sw.itemByName('None'); ch.strokeWeight = g[6];
+        if (g[7] != null) paint(ch, 'stroke', g[7]); else ch.strokeColor = sw.itemByName('Black');
+      } else if (g[7] != null) paint(ch, 'fill', g[7]);
     }
 
     try {
@@ -946,10 +982,6 @@ body.resizing, body.resizing * { cursor: col-resize !important; user-select: non
     // Boxes and guides hang on the composed letters: x from the letter's own position (its x in the data is ox),
     // y down from the baseline of its line.
     function at(o) { var r = refs[o.j]; return [r.horizontalOffset - o.ox, r.lines[0].baseline]; }
-    function grey(it, prop, v) {
-      if (v <= 0) it[prop + 'Color'] = sw.itemByName('Paper');
-      else { it[prop + 'Color'] = sw.itemByName('Black'); it[prop + 'Tint'] = v; }
-    }
     var CO = { round: CornerOptions.ROUNDED_CORNER, bevel: CornerOptions.BEVEL_CORNER, inverse: CornerOptions.INVERSE_ROUNDED_CORNER };
     var CN = ['topLeft', 'topRight', 'bottomRight', 'bottomLeft'];
     // A rectangle with InDesign's own corner options, so the corners stay editable there.
@@ -984,13 +1016,14 @@ body.resizing, body.resizing * { cursor: col-resize !important; user-select: non
       var sh = D.shapes[bi], o = at(sh), it = null;
       if (sh.r) { try { it = nativeRect(sh, o); } catch (e) { it = null; } }
       if (!it) it = pathShape(sh, o);
-      grey(it, 'fill', sh.f);
+      paint(it, 'fill', sh.f);
       if (sh.sw > 0) {
-        grey(it, 'stroke', sh.s);
+        paint(it, 'stroke', sh.s);
         it.strokeWeight = sh.sw;
         try { it.strokeAlignment = StrokeAlignment.CENTER_ALIGNMENT; } catch (e) {}
       } else { it.strokeColor = sw.itemByName('None'); it.strokeWeight = 0; }
       if (sh.op < 100) it.transparencySettings.blendingSettings.opacity = sh.op;
+      if (sh.bm) it.transparencySettings.blendingSettings.blendMode = BM[sh.bm];
       it.name = sh.n;
       boxes.push(it);
     }
@@ -998,6 +1031,17 @@ body.resizing, body.resizing * { cursor: col-resize !important; user-select: non
       var bg = boxes.length > 1 ? page.groups.add(boxes) : boxes[0];
       if (boxes.length > 1) bg.name = 'Mixweight boxes';
       try { bg.sendToBack(tf); } catch (e) { try { bg.sendToBack(); } catch (e2) {} }
+    }
+    // Background: a rectangle on its own layer, at the bottom of the layer list. Reused on later exports.
+    if (D.bg) {
+      var bl = doc.layers.itemByName('Mixweight background');
+      if (!bl.isValid) bl = doc.layers.add({ name: 'Mixweight background' });
+      try { bl.move(LocationOptions.AT_END); } catch (e) {}
+      var bo = at(D.bg), br = page.rectangles.add({ itemLayer: bl,
+        geometricBounds: [bo[1] + D.bg.r.y0, bo[0] + D.bg.r.x0, bo[1] + D.bg.r.y1, bo[0] + D.bg.r.x1] });
+      paint(br, 'fill', D.bg.f);
+      br.strokeColor = sw.itemByName('None'); br.strokeWeight = 0;
+      br.name = D.bg.n;
     }
     if (D.guides.length) {
       // Reuse the layer from an earlier export; one made before V3.2 is still called Mixweight guides.
@@ -1011,7 +1055,8 @@ body.resizing, body.resizing * { cursor: col-resize !important; user-select: non
       for (var u = 0; u < D.guides.length; u++) {
         var G = D.guides[u], go = at(G), ln = page.graphicLines.add({ itemLayer: gl });
         ln.paths[0].entirePath = [[go[0] + G.x0, go[1] + G.y], [go[0] + G.x1, go[1] + G.y]];
-        ln.strokeWeight = 0.5; ln.strokeColor = sw.itemByName('Black'); ln.strokeTint = 35;
+        ln.strokeWeight = 0.5;
+        if (D.gc != null) paint(ln, 'stroke', D.gc); else { ln.strokeColor = sw.itemByName('Black'); ln.strokeTint = 35; }
         ln.name = G.n;
         gls.push(ln);
       }
@@ -1061,6 +1106,17 @@ body.resizing, body.resizing * { cursor: col-resize !important; user-select: non
     resolved.push(ps);
   }
 
+  // A colour from the data: grey ink % or 'rrggbb', as [r, g, b] and as an RGB descriptor.
+  function rgb3(v) {
+    if (typeof v === 'number') { var x = Math.round(255 * (1 - v / 100)); return [x, x, x]; }
+    return [parseInt(v.substr(0, 2), 16), parseInt(v.substr(2, 2), 16), parseInt(v.substr(4, 2), 16)];
+  }
+  function rgb(v) {
+    var c = new ActionDescriptor(), a = rgb3(v);
+    c.putDouble(c2t('Rd  '), a[0]); c.putDouble(c2t('Grn '), a[1]); c.putDouble(c2t('Bl  '), a[2]);
+    return c;
+  }
+  var BM = { multiply: BlendMode.MULTIPLY, screen: BlendMode.SCREEN, overlay: BlendMode.OVERLAY, difference: BlendMode.DIFFERENCE };
   var oldRuler = app.preferences.rulerUnits, oldType = app.preferences.typeUnits;
   app.preferences.rulerUnits = Units.PIXELS;
   app.preferences.typeUnits = TypeUnits.POINTS;
@@ -1069,10 +1125,10 @@ body.resizing, body.resizing * { cursor: col-resize !important; user-select: non
 
     var text = '', ranges = [];
     for (var l = 0; l < LINES.length; l++) {
-      if (l > 0) { ranges.push([text.length, text.length + 1, 0, D.size, 0, D.track]); text += '\r'; }
+      if (l > 0) { ranges.push([text.length, text.length + 1, 0, D.size, 0, D.track, 100]); text += '\r'; }
       for (var r = 0; r < LINES[l].length; r++) {
         var run = LINES[l][r];
-        ranges.push([text.length, text.length + run[0].length, run[1], run[2], run[3], run[4]]);
+        ranges.push([text.length, text.length + run[0].length, run[1], run[2], run[3], run[4], run[7] != null ? run[7] : 100]);
         text += run[0];
       }
     }
@@ -1104,9 +1160,7 @@ body.resizing, body.resizing * { cursor: col-resize !important; user-select: non
       sd.putInteger(s2t('tracking'), R[5]);
       sd.putBoolean(s2t('autoLeading'), false);
       sd.putUnitDouble(s2t('leading'), s2t('pointsUnit'), D.lead);
-      var cd = new ActionDescriptor();
-      cd.putDouble(c2t('Rd  '), 0); cd.putDouble(c2t('Grn '), 0); cd.putDouble(c2t('Bl  '), 0);
-      sd.putObject(s2t('color'), s2t('RGBColor'), cd);
+      sd.putObject(s2t('color'), s2t('RGBColor'), rgb(R[6]));
       rd.putObject(s2t('textStyle'), s2t('textStyle'), sd);
       list.putObject(s2t('textStyleRange'), rd);
     }
@@ -1128,11 +1182,6 @@ body.resizing, body.resizing * { cursor: col-resize !important; user-select: non
     // Positions: x from the text block's left edge, y down from line k's baseline (72 ppi, so px = pt).
     var fx = D.align == 'center' ? 0.5 : (D.align == 'right' ? 1 : 0);
     var ax = px / 100 * D.w - fx * D.W, ay = D.m + D.size;
-    function rgb(v) {
-      var c = new ActionDescriptor(), x = Math.round(255 * (1 - v / 100));
-      c.putDouble(c2t('Rd  '), x); c.putDouble(c2t('Grn '), x); c.putDouble(c2t('Bl  '), x);
-      return c;
-    }
     // A layer-style stroke on the active layer: for outline letters, and for boxes if a vector stroke fails.
     function fxStroke(w, v) {
       var d = new ActionDescriptor(), r = new ActionReference();
@@ -1215,17 +1264,25 @@ body.resizing, body.resizing * { cursor: col-resize !important; user-select: non
         var L = shape([pts], sh.f, sh.n);
         if (sh.sw > 0) shapeStroke(sh.sw, sh.s);
         if (sh.op < 100) L.opacity = sh.op;
+        if (sh.bm) L.blendMode = BM[sh.bm];
         L.move(boxSet, ElementPlacement.PLACEATEND);
       }
       try { boxSet.move(doc.layers[doc.layers.length - 1], ElementPlacement.PLACEBEFORE); } catch (e) {}
     }
+    // Background: a shape layer at the bottom, just above the white Background layer.
+    if (D.bg) {
+      doc.activeLayer = main;
+      var bp = [];
+      for (var q = 0; q < D.bg.p.length; q++) bp.push(place(D.bg.p[q], D.bg.k));
+      var BL = shape([bp], D.bg.f, D.bg.n);
+      try { BL.move(doc.layers[doc.layers.length - 1], ElementPlacement.PLACEBEFORE); } catch (e) {}
+    }
 
     // Rotated and outline letters: their own type layers, above the main one.
     if (D.sp.length) {
-      var black = new SolidColor();
-      black.rgb.red = 0; black.rgb.green = 0; black.rgb.blue = 0;
       for (var u = 0; u < D.sp.length; u++) {
-        var G = D.sp[u];
+        var G = D.sp[u], gc = G.c != null ? G.c : 100, ca = rgb3(gc), tcol = new SolidColor();
+        tcol.rgb.red = ca[0]; tcol.rgb.green = ca[1]; tcol.rgb.blue = ca[2];
         doc.activeLayer = main;
         var T = doc.artLayers.add();
         T.kind = LayerKind.TEXT;
@@ -1233,7 +1290,7 @@ body.resizing, body.resizing * { cursor: col-resize !important; user-select: non
         ti.contents = G.ch;
         ti.font = resolved[G.f];
         ti.size = G.size;
-        ti.color = black;
+        ti.color = tcol;
         if (G.tr) ti.tracking = G.tr;
         if (G.bs) ti.baselineShift = G.bs;
         var by = ay + G.k * D.lead;
@@ -1247,7 +1304,7 @@ body.resizing, body.resizing * { cursor: col-resize !important; user-select: non
           T.rotate(-G.rot, AnchorPosition.MIDDLECENTER);
           T.translate(vx - (vx * co + vy * si), vy - (-vx * si + vy * co));
         }
-        if (G.sw) { T.fillOpacity = 0; fxStroke(G.sw, 100); }
+        if (G.sw) { T.fillOpacity = 0; fxStroke(G.sw, gc); }
       }
     }
 
@@ -1265,7 +1322,7 @@ body.resizing, body.resizing * { cursor: col-resize !important; user-select: non
       gSet.name = 'Mixweight guidelines';
       for (var o = 0; o < order.length; o++) {
         doc.activeLayer = main;
-        var GL = shape(kinds[order[o]], 45, order[o]);
+        var GL = shape(kinds[order[o]], D.gc != null ? D.gc : 45, order[o]);
         GL.move(gSet, ElementPlacement.PLACEATEND);
       }
       try { gSet.move(doc.layers[0], ElementPlacement.PLACEBEFORE); } catch (e) {}
@@ -2792,11 +2849,11 @@ function measure() {
   return { tw: Math.ceil(S.W || 0), th: Math.ceil(lead * Math.max(1, S.lines.length)) };
 }
 
-// The .jsx templates still take box colours as grey ink % (0 white, 100 black): a colour goes by its luminance.
-// Exact for the greys of v3.x sessions.
-function inkPct(hex) {
-  const n = parseInt(hex.slice(1), 16), l = 0.2126 * (n >> 16) + 0.7152 * (n >> 8 & 255) + 0.0722 * (n & 255);
-  return Math.round(100 * (1 - l / 255));
+// Colours in the export data: a neutral grey as ink % (0 white, 100 black), so it stays a grey (a Black tint in
+// InDesign) and v3.x boxes export as before; any other colour as 'rrggbb'.
+function xcol(hex) {
+  const n = parseInt(hex.slice(1), 16), r = n >> 16, v = Math.round(100 * (1 - r / 255));
+  return r === (n >> 8 & 255) && r === (n & 255) && greyHex(v) === hex ? v : hex.slice(1);
 }
 
 // Room around the text block in every export (.jsx and PNG).
@@ -2824,6 +2881,8 @@ function buildData(app) {
   // Photoshop has no per-letter rotation or outline in one type layer: those letters become their own type layers,
   // and the main layer keeps a space there, tracked to the letter's width so the rest stays in place.
   const own = app === 'ps' ? (g => !!(g.rot || g.sw)) : (() => false);
+  // A letter's colour; left out for black, so an export without colour is the same as before.
+  const tc = g => { const c = g.col || S.textCol; return c === '#000000' ? undefined : xcol(c); };
   const sp = [];
   const lines = S.lines.map(line => {
     const runs = [];
@@ -2832,32 +2891,42 @@ function buildData(app) {
       let ch = g.ch, tr = g.tr, rot = g.rot, sw = g.sw;
       if (own(g)) {
         const P = pivotOf(g);
-        sp.push({ ch: g.ch, f, size: g.size, bs: g.bs, tr: g.tr, rot: g.rot, sw: g.sw, k: g.k, x: r2(g.x), px: r2(P[0]), py: r2(P[1]) });
+        sp.push({ ch: g.ch, f, size: g.size, bs: g.bs, tr: g.tr, rot: g.rot, sw: g.sw, c: tc(g), k: g.k, x: r2(g.x), px: r2(P[0]), py: r2(P[1]) });
         tr = Math.round(g.tr + (g.adv / g.size - spaceEm(g.st)) * 1000);
         ch = ' '; rot = 0; sw = 0;
       }
-      const last = runs[runs.length - 1];
-      if (last && last[1] === f && last[2] === g.size && last[3] === g.bs && last[4] === tr && last[5] === rot && last[6] === sw) last[0] += ch;
-      else runs.push([ch, f, g.size, g.bs, tr, rot, sw]);
+      const last = runs[runs.length - 1], c = tc(g);
+      if (last && last[1] === f && last[2] === g.size && last[3] === g.bs && last[4] === tr && last[5] === rot && last[6] === sw && last[7] === c) last[0] += ch;
+      else runs.push(c === undefined ? [ch, f, g.size, g.bs, tr, rot, sw] : [ch, f, g.size, g.bs, tr, rot, sw, c]);
     }
     return runs;
   });
   const P = p => [r2(p[0]), r2(p[1])];
-  const shapes = decoShapes().map(sh => ({
+  const shapes = decoShapes().map(sh => Object.assign({
     k: sh.k, j: jOf.get(sh.g.i), ox: r2(sh.g.x), n: sh.n,
     p: sh.pts.map(nd => [...P(nd.a), ...P(nd.l), ...P(nd.r)]),
     r: sh.rect && Object.assign({}, sh.rect, { x0: r2(sh.rect.x0), y0: r2(sh.rect.y0), x1: r2(sh.rect.x1), y1: r2(sh.rect.y1), dx: r2(sh.rect.dx), dy: r2(sh.rect.dy) }),
-    f: inkPct(sh.st.fill), s: inkPct(sh.st.stroke), sw: sh.st.sw, op: sh.st.op,
-  }));
+    f: xcol(sh.st.fill), s: xcol(sh.st.stroke), sw: sh.st.sw, op: sh.st.op,
+  }, sh.st.blend !== 'normal' ? { bm: sh.st.blend } : {}));
   const guides = $('#exp-guides').checked ? guideLines().map(gl => ({ k: gl.k, j: jOf.get(gl.g.i), ox: r2(gl.g.x), y: r2(gl.y), x0: gl.x0, x1: r2(gl.x1), n: gl.n })) : [];
   const { tw, th } = measure();
   const m = exportMargin();
-  return {
+  const D = {
     fonts, lines,
     size: S.size, lead: r1(S.size * S.leading / 100), track: S.track, align: S.align,
     tw, th, m, w: tw + m * 2, h: th + m * 2,
     W: r2(S.W || 0), shapes, guides, sp,
   };
+  if (S.guideCol !== DEFAULTS.guideCol) D.gc = xcol(S.guideCol);
+  // Background: the frame (text block plus margin) as a rectangle, hung on the first letter like the boxes.
+  const g0 = flat[0];
+  if (frameShown() && g0) {
+    const fr = frame(), y0 = r2(fr.y - S.lb[g0.k]), y1 = r2(fr.y + fr.h - S.lb[g0.k]), x1 = fr.x + fr.w, c = q => [q[0], q[1], q[0], q[1], q[0], q[1]];
+    D.bg = { k: g0.k, j: 0, ox: r2(g0.x), n: 'Mixweight background', f: xcol(S.bgCol),
+      p: [c([fr.x, y0]), c([x1, y0]), c([x1, y1]), c([fr.x, y1])],
+      r: { x0: fr.x, y0, x1, y1, c: [0, 1, 2, 3].map(() => ['round', 0]), rot: 0, dx: 0, dy: 0 } };
+  }
+  return D;
 }
 
 const MSG = {
@@ -2908,10 +2977,11 @@ const HOWTO_STEPS = {
   ],
 };
 const HOWTO_AFTER = [
+  'Colours come along: text colour per letter, box and band colours and blend modes, the guideline colour, and a background that isn\'t white as a rectangle named Mixweight background at the very back. InDesign adds RGB colours as swatches named Mixweight #RRGGBB.',
   'The type is fully editable. Change words or fonts as usual.',
   'If the app says some fonts weren\'t found, they aren\'t installed on that computer; those letters fall back to the app\'s default font. Install the font, select those letters and reapply it. The sample fonts (Inter, Lora) only match if they are installed.',
   'Fonts are matched by family and style name, then PostScript name. Variable fonts use their named instances (Light, Bold...), so the app shows what the preview shows.',
-  'Outline letters are live text with no fill and a black stroke. Rotated letters use character rotation, which Illustrator and InDesign apply about the centre of the letter\'s em box; Mixweight rotates about the same point, so boxes stay with their letters.',
+  'Outline letters are live text with no fill and a stroke in the letter\'s colour. Rotated letters use character rotation, which Illustrator and InDesign apply about the centre of the letter\'s em box; Mixweight rotates about the same point, so boxes stay with their letters.',
   'Photoshop has no per-letter rotation or outline inside one type layer, so those letters become their own type layers (outline as a layer-style stroke, fill at 0%), and the main layer keeps a space tracked to the same width. Everything is still live type.',
   'Top / middle / bottom letter alignment is written as baseline shift values worked out for those exact glyphs. If you change a letter or its font in the app, export again from Mixweight to re-align.',
 ];
