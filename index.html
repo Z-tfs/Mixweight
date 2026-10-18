@@ -251,7 +251,10 @@ dialog::backdrop { background: rgba(255, 255, 255, .7); }
 .dlg li button[data-state="added"] .ct { color: var(--ink); }
 .dlg footer { padding: 9px 14px; border-top: var(--rule); display: flex; justify-content: space-between; align-items: center; gap: 12px; }
 .dlg.two { grid-template-rows: auto minmax(0, 1fr) auto; }
-#exp-ask { width: min(400px, calc(100% - 32px)); }
+#exp-ask, #png-ask { width: min(400px, calc(100% - 32px)); }
+.png-set { display: grid; gap: 10px; }
+.png-row { display: flex; justify-content: space-between; align-items: baseline; gap: 14px; text-transform: uppercase; }
+.ask-b .png-set .chk { font-size: inherit; color: var(--ink); text-transform: uppercase; }
 .dlg.ask { grid-template-rows: auto auto; }
 .ask-b { padding: 14px; display: grid; gap: 14px; }
 .dlg header .hd-r { display: inline-flex; align-items: baseline; gap: 14px; }
@@ -304,6 +307,7 @@ body.resizing, body.resizing * { cursor: col-resize !important; user-select: non
         <button type="button" data-exp="ai">AI</button>
         <button type="button" data-exp="id">ID</button>
         <button type="button" data-exp="ps">PS</button>
+        <button type="button" id="exp-png">PNG</button>
       </span>
     </nav>
   </header>
@@ -624,6 +628,7 @@ body.resizing, body.resizing * { cursor: col-resize !important; user-select: non
       <section><h4>Boxes</h4><p>Letter boxes follow each letter's ink, size and shift, and turn with it. A band runs under the selection, as tall as its tallest letter or stepping with each one; the paragraph band does the same for every line. Greys only. They export under the text as vector shapes: InDesign rectangles keep live corner options, Illustrator and Photoshop get the exact path.</p></section>
       <section><h4>Outline and rotation</h4><p>Outline letters export as live text with no fill and a black stroke; rotation as character rotation, about the centre of the em box. Photoshop can do neither per letter inside one type layer, so those letters become their own type layers (outline as a layer-style stroke) and the main layer keeps a space of the same width.</p></section>
       <section><h4>Guidelines</h4><p>Baseline, x-height, cap height and ascender of the base style at the set size. Tick Include in export under Guidelines to export them as plain lines on their own layer or group, named Mixweight guidelines.</p></section>
+      <section><h4>PNG</h4><p><b>PNG</b> in the top bar saves a picture of the text and its boxes exactly as on the canvas, cropped to the text block plus a margin, without selection marks, hover or zoom. Pick the scale (1× is one pixel per point), a transparent background, and whether the guidelines that are switched on come along (separate from Include in export). Download it, or copy it to the clipboard; if the browser won't copy, it downloads instead. It is a flat image, not editable text. Chrome or Edge.</p></section>
     </div>
     <footer><span></span><button class="btn solid" value="close">Close</button></footer>
   </form>
@@ -642,6 +647,26 @@ body.resizing, body.resizing * { cursor: col-resize !important; user-select: non
   </form>
 </dialog>
 
+<dialog id="png-ask">
+  <form method="dialog" class="dlg ask">
+    <header><span>Export PNG</span><span class="hd-r"><span>Image</span><button class="x-close" value="cancel" aria-label="Close without exporting" title="Close without exporting">×</button></span></header>
+    <div class="ask-b">
+      <div class="png-set">
+        <div class="png-row"><span>Scale</span><div class="opts" id="png-scale" role="group" aria-label="Scale">
+          <button type="button" data-v="1">1×</button><button type="button" data-v="2">2×</button><button type="button" data-v="4">4×</button>
+        </div></div>
+        <label class="chk"><input type="checkbox" id="png-transparent"> Transparent background</label>
+        <label class="chk"><input type="checkbox" id="png-guides"> Include guidelines</label>
+      </div>
+      <p class="hint">The text block and its boxes plus a margin, as on the canvas. Selection marks, hover and zoom are left out. 1× is one pixel per point.</p>
+      <div class="btns">
+        <button class="btn solid" value="download" autofocus>Download PNG</button>
+        <button class="btn" value="copy">Copy to clipboard</button>
+      </div>
+    </div>
+  </form>
+</dialog>
+
 <dialog id="exp-help">
   <form method="dialog" class="dlg two">
     <header><span>Export</span><span>.jsx · live, editable text</span></header>
@@ -651,6 +676,7 @@ body.resizing, body.resizing * { cursor: col-resize !important; user-select: non
       <section><h4>InDesign</h4><p><b>Window › Utilities › Scripts</b>. Right-click the User folder › Reveal in Finder, drop the .jsx in, then double-click it in the panel. The frame auto-sizes to the text and the whole thing is one undo.</p></section>
       <section><h4>Photoshop</h4><p><b>File › Scripts › Browse…</b>. A new 72 ppi document opens with one editable type layer you can drag into your comp.</p></section>
       <section><h4>How-to file</h4><p id="ask-state"></p></section>
+      <section><h4>PNG</h4><p>Not a script: a picture of the canvas, cropped to the text block plus a margin. Scale 1×, 2× or 4×, optional transparent background and guidelines. Download it or copy it to the clipboard.</p></section>
     </div>
     <footer><button class="btn" type="button" id="ask-again">Ask me again</button><button class="btn solid" value="close">Close</button></footer>
   </form>
@@ -1233,6 +1259,7 @@ const DEFAULTS = {
   guides: { base: false, x: false, cap: false, asc: false },
   hoverInfo: true,
   expAsk: '', // export: '' asks each time; 'howto' or 'script' once Stop asking is ticked
+  png: { scale: 2, transparent: false, guides: false }, // the PNG dialog's last choices
   panelW: { l: 320, r: 300 }, // panel widths in px; view state, not in undo
   collapsed: new Set(), // family names whose style list is folded; view state, not in undo
   groupsClosed: new Set(), // left-panel groups folded to their title row, by title; view state, not in undo
@@ -1375,12 +1402,15 @@ function guessWeight(style) {
 const isItalicName = s => /italic|oblique|kursiv/i.test(s);
 
 let faceSeq = 0;
+// The font file behind each loaded face, by its CSS name: the PNG export embeds it (see pngSVG).
+const faceBytes = new Map();
 async function loadFace(buf) {
   const info = parseFace(buf);
   const css = 'mwf' + (++faceSeq);
   const ff = new FontFace(css, buf);
   await ff.load();
   document.fonts.add(ff);
+  faceBytes.set(css, buf);
   // A second registration with weight/stretch ranges lets the canvas measure each named instance.
   let mcss = css;
   if (info.fvar) {
@@ -1947,26 +1977,28 @@ function drawSelMarks() {
   svg.setAttribute('height', Math.ceil(out.getBoundingClientRect().height / z));
   svg.innerHTML = d ? `<path class="halo" d="${d}"/><path class="tick" d="${d}"/>` : '';
 }
-function drawDeco() {
-  const ns = 'http://www.w3.org/2000/svg', frag = document.createDocumentFragment();
+// Boxes and guides as SVG markup in block coordinates, shared by the canvas and the PNG export. On the canvas
+// guides take the .gd class (a hairline at any zoom); in the PNG they are plain 0.75 pt lines.
+function decoMarkup(png, withGuides) {
+  let s = '';
   for (const sh of decoShapes()) {
-    const el = document.createElementNS(ns, 'path'), st = sh.st;
-    el.setAttribute('d', svgPath(sh.pts, S.lb[sh.k]));
-    el.setAttribute('fill', greyHex(st.fill));
-    if (st.op < 100) el.setAttribute('opacity', st.op / 100);
-    if (st.sw > 0) { el.setAttribute('stroke', greyHex(st.stroke)); el.setAttribute('stroke-width', st.sw); }
-    frag.appendChild(el);
+    const st = sh.st;
+    s += `<path d="${svgPath(sh.pts, S.lb[sh.k])}" fill="${greyHex(st.fill)}"` + (st.op < 100 ? ` opacity="${st.op / 100}"` : '') +
+      (st.sw > 0 ? ` stroke="${greyHex(st.stroke)}" stroke-width="${st.sw}"` : '') + '/>';
   }
-  for (const gl of guideLines()) {
-    const el = document.createElementNS(ns, 'line'), y = r2(S.lb[gl.k] + gl.y);
-    el.setAttribute('class', 'gd');
-    el.setAttribute('x1', gl.x0); el.setAttribute('x2', r2(gl.x1)); el.setAttribute('y1', y); el.setAttribute('y2', y);
-    if (gl.dash) el.setAttribute('stroke-dasharray', gl.dash);
-    frag.appendChild(el);
+  if (withGuides) {
+    const gs = png ? `fill="none" stroke="${getComputedStyle(document.documentElement).getPropertyValue('--guide').trim()}" stroke-width=".75"` : 'class="gd"';
+    for (const gl of guideLines()) {
+      const y = r2(S.lb[gl.k] + gl.y);
+      s += `<line ${gs} x1="${gl.x0}" x2="${r2(gl.x1)}" y1="${y}" y2="${y}"` + (gl.dash ? ` stroke-dasharray="${gl.dash}"` : '') + '/>';
+    }
   }
+  return s;
+}
+function drawDeco() {
   deco.setAttribute('width', Math.ceil(S.W || 0));
   deco.setAttribute('height', Math.ceil(out.getBoundingClientRect().height / (S.zoom || 1)));
-  deco.replaceChildren(frag);
+  deco.innerHTML = decoMarkup(false, true);
 }
 
 function corners() {
@@ -2586,6 +2618,9 @@ function measure() {
   return { tw: Math.ceil(S.W || 0), th: Math.ceil(lead * Math.max(1, S.lines.length)) };
 }
 
+// Room around the text block in every export (.jsx and PNG).
+const exportMargin = () => Math.round(Math.max(36, S.size * 1.2));
+
 // Advance of a space in a style, in em, from the same measuring canvas as ink().
 function spaceEm(st) {
   if (st.variable && st.mcss !== st.css) mctx.font = `${Math.round(st.weight)} 200px "${st.mcss}"`;
@@ -2635,7 +2670,7 @@ function buildData(app) {
   }));
   const guides = $('#exp-guides').checked ? guideLines().map(gl => ({ k: gl.k, j: jOf.get(gl.g.i), ox: r2(gl.g.x), y: r2(gl.y), x0: gl.x0, x1: r2(gl.x1), n: gl.n })) : [];
   const { tw, th } = measure();
-  const m = Math.round(Math.max(36, S.size * 1.2));
+  const m = exportMargin();
   return {
     fonts, lines,
     size: S.size, lead: r1(S.size * S.leading / 100), track: S.track, align: S.align,
@@ -2715,7 +2750,7 @@ function howto(app) {
 }
 
 function download(name, src) {
-  const url = URL.createObjectURL(new Blob([src], { type: 'text/plain' }));
+  const url = URL.createObjectURL(src instanceof Blob ? src : new Blob([src], { type: 'text/plain' }));
   const a = document.createElement('a');
   a.href = url; a.download = name;
   document.body.appendChild(a); a.click(); a.remove();
@@ -2748,6 +2783,103 @@ function exportFiles(app, withHowto) {
   const noGuides = $('#exp-guides').checked && !Object.values(S.guides).some(Boolean);
   toast(`Saved ${name}` + (withHowto ? ' and its how-to' : ` · ${RUN_HINT[app]}`) + (demo ? '. Sample fonts (Inter, Lora) only match if they are installed.' : '') +
     (noGuides ? '. Include in export is on, but no guidelines are switched on.' : ''));
+}
+
+/* ---------------- PNG export ---------------- */
+// The image is one SVG: background, boxes and guides, then a copy of the canvas letters in a foreignObject, so the
+// browser's own text engine draws every letter as on screen (named instance, size, tracking, shift, rotation,
+// outline). A 2D canvas can't take font-variation-settings, so it would lose instances. An SVG image can't see the
+// page's fonts, so the used faces ride along as data URLs. Drawn from a data: URL, the canvas stays exportable.
+const PNG_MAX = 16384; // longest side Chrome's canvas allows
+const b64Cache = new Map();
+function faceB64(css) {
+  if (!b64Cache.has(css)) {
+    const u = new Uint8Array(faceBytes.get(css));
+    let bin = '';
+    for (let i = 0; i < u.length; i += 0x8000) bin += String.fromCharCode.apply(null, u.subarray(i, i + 0x8000));
+    b64Cache.set(css, btoa(bin));
+  }
+  return b64Cache.get(css);
+}
+// o: { scale, transparent, guides }. Crop: the text block plus the .jsx export's margin.
+function pngSVG(o) {
+  const { tw, th } = measure(), m = exportMargin(), W = tw + m * 2, H = th + m * 2;
+  const used = [...new Set(S.lines.flat().map(g => g.st.css))].filter(c => faceBytes.has(c));
+  const faces = used.map(c => `@font-face{font-family:"${c}";src:url(data:font/sfnt;base64,${faceB64(c)})}`).join('');
+  const txt = out.cloneNode(true);
+  txt.removeAttribute('id');
+  for (const sp of txt.querySelectorAll('.g')) sp.classList.remove('sel', 'hov');
+  const cs = getComputedStyle(out), ink = getComputedStyle(document.documentElement).getPropertyValue('--ink').trim();
+  Object.assign(txt.style, {
+    position: 'absolute', left: m + 'px', top: m + 'px', width: S.W + 'px', margin: '0',
+    fontFamily: cs.fontFamily, fontSize: cs.fontSize, fontWeight: '400', fontStyle: 'normal', color: ink,
+    whiteSpace: 'pre', fontKerning: 'normal', fontSynthesis: 'none',
+  });
+  // The canvas rules for the letters (see #out in the CSS), minus selection and hover.
+  const rules = `.ln{white-space:pre}.bl{display:inline-block;width:0;height:0;vertical-align:baseline}` +
+    `.g{position:relative;font-synthesis:none}.g.rot{display:inline-block}.g.stroke{color:transparent;-webkit-text-stroke-color:${ink}}`;
+  const w = Math.round(W * o.scale), h = Math.round(H * o.scale);
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${W} ${H}">` +
+    `<style>${faces}${rules}</style>` +
+    (o.transparent ? '' : `<rect width="${W}" height="${H}" fill="#fff"/>`) +
+    `<g transform="translate(${m} ${m})">${decoMarkup(true, o.guides)}</g>` +
+    `<foreignObject width="${W}" height="${H}"><div xmlns="http://www.w3.org/1999/xhtml" style="position:relative;width:${W}px;height:${H}px">` +
+    new XMLSerializer().serializeToString(txt) + `</div></foreignObject></svg>`;
+  return { svg, w, h };
+}
+async function pngBlob(o) {
+  const { svg, w, h } = pngSVG(o);
+  const img = new Image();
+  img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+  await img.decode();
+  const c = document.createElement('canvas');
+  c.width = w; c.height = h;
+  c.getContext('2d').drawImage(img, 0, 0, w, h);
+  return new Promise((res, rej) => c.toBlob(b => b ? res(b) : rej(new Error('toBlob')), 'image/png'));
+}
+
+function exportPNG() {
+  if (!S.styles.size || !S.lines.some(l => l.length)) { toast('Add fonts and some text first.'); return; }
+  const dlg = $('#png-ask'), P = S.png;
+  const sync = () => $$('#png-scale button').forEach(b => b.setAttribute('aria-pressed', +b.dataset.v === P.scale));
+  $('#png-scale').onclick = e => { const b = e.target.closest('button'); if (b) { P.scale = +b.dataset.v; sync(); } };
+  $('#png-transparent').checked = P.transparent;
+  $('#png-guides').checked = P.guides;
+  sync();
+  dlg.returnValue = '';
+  dlg.onclose = () => {
+    const v = dlg.returnValue;
+    P.transparent = $('#png-transparent').checked;
+    P.guides = $('#png-guides').checked;
+    save();
+    if (v === 'download' || v === 'copy') pngOut(v === 'copy');
+  };
+  dlg.showModal();
+}
+
+async function pngOut(copy) {
+  const o = Object.assign({}, S.png), { tw, th } = measure(), m = exportMargin();
+  const side = Math.max(tw, th) + m * 2;
+  let note = '';
+  if (side * o.scale > PNG_MAX) {
+    o.scale = [4, 2, 1].find(s => side * s <= PNG_MAX) || PNG_MAX / side;
+    note += `. Too large at ${S.png.scale}×, so it is ${r1(o.scale)}×`;
+  }
+  if (o.guides && !Object.values(S.guides).some(Boolean)) note += '. Include guidelines is on, but no guidelines are switched on';
+  toast('Drawing the PNG…', 60000); // large fonts take a few seconds: each used face is embedded whole
+  const name = 'mixweight.png', blob = pngBlob(o);
+  blob.catch(() => {});
+  if (copy) {
+    try {
+      if (!navigator.clipboard || !window.ClipboardItem) throw new Error('no clipboard');
+      await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
+      toast(`Copied the PNG (${r1(o.scale)}×) to the clipboard` + note);
+      return;
+    } catch (e) { copy = 'failed'; }
+  }
+  try { download(name, await blob); }
+  catch (e) { toast('This browser could not draw the PNG. Use Chrome or Edge.'); return; }
+  toast((copy === 'failed' ? `The browser would not copy the image, so it was saved as ${name}` : `Saved ${name} (${r1(o.scale)}×)`) + note);
 }
 
 /* ---------------- persistence ---------------- */
@@ -2784,6 +2916,7 @@ function save() {
     o.overrides = [...S.overrides.entries()];
     o.hoverInfo = S.hoverInfo;
     o.expAsk = S.expAsk;
+    o.png = S.png;
     o.panelW = S.panelW;
     o.groupsClosed = [...S.groupsClosed];
     o.collapsed = [...S.collapsed]; // all of it: installed families may not be loaded back yet when this runs
@@ -2977,6 +3110,8 @@ async function boot() {
     if (Array.isArray(saved.overrides)) S.overrides = new Map(saved.overrides.filter(e => e && e[1] && typeof e[1] === 'object'));
     if (typeof saved.hoverInfo === 'boolean') S.hoverInfo = saved.hoverInfo;
     if (saved.expAsk === 'howto' || saved.expAsk === 'script') S.expAsk = saved.expAsk;
+    if (saved.png && typeof saved.png === 'object') S.png = {
+      scale: [1, 2, 4].includes(saved.png.scale) ? saved.png.scale : 2, transparent: !!saved.png.transparent, guides: !!saved.png.guides };
     if (saved.panelW) for (const k of ['l', 'r']) if (Number.isFinite(saved.panelW[k])) S.panelW[k] = saved.panelW[k];
     if (Array.isArray(saved.collapsed)) S.collapsed = new Set(saved.collapsed.filter(n => typeof n === 'string'));
     if (Array.isArray(saved.groupsClosed)) S.groupsClosed = new Set(saved.groupsClosed.filter(n => typeof n === 'string'));
@@ -3064,6 +3199,7 @@ async function boot() {
   $('#file-in').onchange = e => { addFiles(e.target.files); e.target.value = ''; };
   $('#btn-help').onclick = () => $('#help').showModal();
   $$('[data-exp]').forEach(b => { b.onclick = () => exportFor(b.dataset.exp); });
+  $('#exp-png').onclick = exportPNG;
   const syncAsk = () => {
     $('#ask-state').textContent = S.expAsk
       ? `You asked not to be asked: every export gives ${S.expAsk === 'howto' ? 'the script and a how-to .txt' : 'just the script'}. Ask me again brings the question back.`

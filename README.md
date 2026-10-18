@@ -32,11 +32,15 @@ Mix the weights of your installed variable fonts letter by letter, then send the
 
 ## Export
 
-Each export is a `.jsx` script. Run it inside the app and it rebuilds the text there as live type, with every letter's font, style, size, baseline shift, tracking, rotation and outline already set. Nothing is outlined.
+Each AI / ID / PS export is a `.jsx` script. Run it inside the app and it rebuilds the text there as live type, with every letter's font, style, size, baseline shift, tracking, rotation and outline already set. Nothing is outlined.
 
 Boxes come along as editable vector shapes in a group under the text: InDesign rectangles keep live corner options (rounded, bevel, inverse rounded); Illustrator and Photoshop get the exact path. Tick **Include in export** under Guidelines to add the guidelines as plain lines on their own layer (Illustrator, InDesign) or group (Photoshop), named `Mixweight guidelines`. InDesign reuses that layer on later exports, and renames a `Mixweight guides` layer left by an older export instead of adding a second one.
 
 Export from **AI**, **ID** or **PS** in the top bar. The first time, Mixweight asks whether you want the how-to too: **Script + how-to (.txt)** also saves `mixweight-illustrator-howto.txt` (or `-indesign-`, `-photoshop-`) with the steps below for that app and the After running notes; **Just the script** saves the `.jsx` alone. Tick **I know what a .jsx is. Stop asking.** and that choice is used from then on. The **×** (or Esc) closes the question without exporting. The **?** next to Export has these steps and an **Ask me again** button. Chrome may ask once whether the page can download multiple files; allow it to get both.
+
+### PNG
+
+**PNG** in the top bar saves a picture instead of a script: the text, its boxes, bands, outline and rotated letters, exactly as on the canvas, cropped to the text block plus the same margin as the `.jsx` export. Selection marks, the hover tag and zoom are never in it. Choose **Scale** 1× (one pixel per point), 2× or 4×, **Transparent background** (off: white), and **Include guidelines** (the guidelines that are switched on; separate from the `.jsx` checkbox). **Download PNG** saves `mixweight.png`; **Copy to clipboard** puts the image on the clipboard, and if the browser refuses, it is downloaded instead. The choices are remembered. The PNG is a flat image, not editable text. It needs Chrome or Edge; Safari can't draw it.
 
 ### Illustrator
 
