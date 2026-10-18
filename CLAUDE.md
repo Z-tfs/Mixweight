@@ -91,7 +91,7 @@ Reference: `POGO ALL NIGHT LONG`, where every letter sits on a column as tall as
 
 ### 3. Grid behind the text
 A square grid drawn behind the type, part of the layout-aids group (see below). Basic version only.
-- Settings: on/off (off by default), **Cell size** (pt), **Line weight** (pt), **Colour** (from the colour system, default a light grey). Square cells, lines only.
+- Settings: on/off (off by default), **Cell size** (pt), **Line weight** (pt), **Colour** (from the colour system, default a light grey). Square cells, lines only. Cell size is a slider the user can pull from very fine to coarse: **2 to 120 pt in 1 pt steps, default 16 pt** (a first look at 40 pt or more is too coarse for type this size). Line weight 0.25 to 4 pt, default 0.5 pt. Keep very fine grids cheap to draw (one SVG pattern, not thousands of lines).
 - The grid fills the frame (text block plus margin, the same frame the PNG crops to), starts at that frame's top-left corner so cells line up with the text block, and never runs over the whole canvas.
 - Draw order, bottom to top: background colour, grid, boxes and bands, text.
 - It is part of the canvas and of the PNG. It is **not** exported to the `.jsx` in V4 (say so in Help).
