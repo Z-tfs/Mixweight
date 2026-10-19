@@ -377,6 +377,12 @@ body.resizing, body.resizing * { cursor: col-resize !important; user-select: non
     </section>
 
     <section class="cell">
+      <div class="cell-h"><span>Look</span><span class="r" id="sum-look"></span></div>
+      <div class="opts" id="looks" role="group" aria-label="Looks"></div>
+      <p class="hint">One click sets a whole look: palette, boxes and bands, pattern, marks, outline and jitter. Your text, seed, fonts and letter edits stay. Change anything afterwards; ⌘Z goes back.</p>
+    </section>
+
+    <section class="cell">
       <div class="cell-h"><span>Text</span><span class="r" id="sum-text"></span></div>
       <textarea id="text" spellcheck="false" aria-label="Text to set"></textarea>
       <div class="opts" id="case" role="group" aria-label="Case">
@@ -732,6 +738,7 @@ body.resizing, body.resizing * { cursor: col-resize !important; user-select: non
       <section><h4>InDesign</h4><p><b>Window › Utilities › Scripts</b>. Right-click the User folder › Reveal in Finder, drop the .jsx in, then double-click it in the panel. The frame auto-sizes to the text and the whole thing is one undo.</p></section>
       <section><h4>Photoshop</h4><p><b>File › Scripts › Browse…</b>. A new 72 ppi document opens with one editable type layer you can drag into your comp.</p></section>
       <section><h4>Base style</h4><p>The base style is the one letters keep at 0% mix. Pick it from the Base menu, or right-click any style in the pool: Set as base style, or Add to mix + set as base for a style that is off. It must be switched on in the pool: styles that are off are greyed out in the list, and switching off the base moves it to the nearest weight that is on.</p></section>
+      <section><h4>Look</h4><p>The <b>Look</b> group in the left panel sets a whole look in one click, from settings that already exist: the palette, the paragraph band, random letter boxes, the pattern, registration marks, random outline and the jitter ranges. Your text, seed, fonts and letter edits stay; random letter boxes from before are replaced, boxes you added or coloured by hand stay. It is a starting point: change anything afterwards, and ⌘Z goes back.</p></section>
       <section><h4>Specimen</h4><p><b>Specimen</b> in the top bar keeps a whole look as settings: the text, every setting, your letter edits, the pool and base style, and the names of the fonts (family, style and PostScript name), not the fonts themselves. <b>Copy specimen</b> puts it on the clipboard; <b>Download specimen</b> saves a .json; give it a title and author if you like. To load one, paste it and press Load pasted, or Choose file. Loading is one step, so ⌘Z goes back. With the same fonts it gives exactly the same result. If some fonts aren't loaded, Mixweight lists them, lets the base style or your other fonts stand in, and the layout will differ because their widths differ. Everything works offline; nothing is uploaded.</p></section>
       <section><h4>Seed</h4><p>Every random choice comes from the seed, so the same seed and settings always give the same result. Click Seed in the toolbar to type one, Enter to apply, Esc to cancel. Note a seed to get a layout back later.</p></section>
       <section><h4>Fonts</h4><p>Fonts are matched by family and style name, then by PostScript name. Variable fonts use their named instances (Light, Bold…), so the app shows what the preview shows. Fonts the app can't find are listed and swapped for its default; the text stays editable.</p></section>
@@ -2330,6 +2337,7 @@ function leftSummaries() {
     ? `${S.families.length} ${S.families.length === 1 ? 'family' : 'families'} · ${on}/${S.styles.size} styles` + (base ? ` · base ${base.family} ${base.style}` : '')
     : 'Empty');
   const cs = { orig: 'Original', upper: 'All caps', lower: 'All lower', title: 'Title case', sentence: 'Sentence', random: 'Random' }[S.caseMode];
+  summary('sum-look', S.look ? `Last: ${S.look}` : 'None');
   summary('sum-text', S.caseMode === 'random' ? `${cs} · ${S.caseAmt}% caps` : cs);
   const dist = { uniform: 'Even', poles: 'Extremes', heavy: 'Lean heavy', light: 'Lean light', wave: 'Wave', ramp: 'Ramp', rampline: 'Ramp per line', alt: 'Alternate' }[S.dist];
   const unit = { glyph: 'Letter', segment: 'Fragment', word: 'Word' }[S.gran];
@@ -2695,20 +2703,65 @@ function paletteInks() {
   const P = PALETTES.find(P => P.name === S.palette);
   return S.boxCol === 'palette' && P && P.block ? [P.block, ...(P.extras || [])] : null;
 }
+// Look presets: one click sets the style settings that already exist (palette roles, paragraph band, letter boxes,
+// pattern, marks, outline, jitter), as one undo step. Never the text, seed, fonts or manual letter edits; random
+// letter boxes (box.auto) belong to the look and are replaced. Every look sets every one of these, so looks don't
+// leave each other's leftovers behind. Not saved state: only the settings it sets are.
+const mixHex = (a, b, t) => '#' + [0, 2, 4].map(i => Math.round(parseInt(a.substr(1 + i, 2), 16) * (1 - t) + parseInt(b.substr(1 + i, 2), 16) * t).toString(16).padStart(2, '0')).join('');
+const LOOKS = [
+  { name: 'Tone on Tone', palette: 'Blue and beige',
+    jitter: { sizeVar: 12, baseJit: 2, trackJit: 20 }, outline: { outlineAmt: 35, strokeW: 1 },
+    para: { on: true, fit: 'max', dh: 6, st: { px: 4, py: 2 } },
+    boxes: { amt: 0 },
+    pattern: { patOn: 'on', patType: 'crosses', patCell: 18, patW: 0.75, patDot: 25, col: P => mixHex(P.bg, P.text, 0.35) },
+    marks: { regOn: 'off' } },
+];
+function applyLook(L) {
+  const P = PALETTES.find(P => P.name === L.palette);
+  if (!P) return;
+  record();
+  setPalette(P, false);
+  Object.assign(S, L.jitter, L.outline);
+  S.para = { on: L.para.on, fit: L.para.fit, dh: L.para.dh, st: Object.assign(normStyle(), { fill: P.block || '#dedede' }, L.para.st) };
+  // Letter boxes: the look's random boxes replace any placed at random before; boxes added or coloured by hand stay.
+  for (const [k, v] of [...S.overrides]) if (v.box && v.box.auto && !v.box.hand) { const w = Object.assign({}, v); delete w.box; if (ovEmpty(w)) S.overrides.delete(k); else S.overrides.set(k, w); }
+  const bx = L.boxes;
+  S.boxAmt = bx.amt;
+  S.boxCol = bx.col || 'single';
+  S.boxStyle = Object.assign(normStyle(), { fill: P.block || '#dedede' }, bx.st);
+  if (bx.amt) {
+    if (bx.seed != null) S.boxSeed = bx.seed;
+    for (const g of glyphList()) if (g.inkTop != null && !(S.overrides.get(g.i) || {}).box && rnd(S.boxSeed, g.i, 9) < bx.amt / 100) ovFor(g.i).box = Object.assign(structuredClone(S.boxStyle), { auto: true });
+  }
+  const pt = L.pattern;
+  Object.assign(S, { patOn: pt.patOn, patType: pt.patType || 'grid', patCell: pt.patCell || 16, patW: pt.patW || 0.5, patDot: pt.patDot || 25 });
+  if (pt.col) S.patCol = pt.col(P);
+  const mk = L.marks;
+  Object.assign(S, { regOn: mk.regOn, regSize: mk.regSize || 16, regW: mk.regW || 0.5, regInset: mk.regInset || 12 });
+  if (mk.col) S.regCol = mk.col(P);
+  S.look = L.name;
+  fixDeco(); syncControls(); render(); save();
+  if (zoomFit) requestAnimationFrame(fitZoom);
+}
+
 // Palettes: one click sets the roles the preset has, as one undo step.
 function applyPalette(P) {
   record();
+  setPalette(P);
+  render(); save();
+}
+// letters: false leaves the letter boxes in S.overrides alone (a look never changes letter edits).
+function setPalette(P, letters = true) {
   S.textCol = P.text; S.bgCol = P.bg; S.palette = P.name;
   if (P.block) {
     S.boxStyle.fill = P.block; S.para.st.fill = P.block;
     for (const b of S.bands) b.st.fill = P.block;
-    for (const [k, v] of S.overrides) if (v.box) {
+    if (letters) for (const [k, v] of S.overrides) if (v.box) {
       const box = Object.assign({}, v.box, { fill: P.block });
       delete box.hand;
       S.overrides.set(k, Object.assign({}, v, { box }));
     }
   }
-  render(); save();
 }
 function renderPalettes() {
   const host = $('#pals');
@@ -3809,6 +3862,13 @@ async function boot() {
   $('#sel-none').onclick = () => { S.sel.clear(); paintSelection(); };
 
 
+  // looks
+  for (const L of LOOKS) {
+    const b = document.createElement('button');
+    b.type = 'button'; b.dataset.v = L.name; b.textContent = L.name;
+    b.onclick = () => { applyLook(L); toast(`${L.name}: set. Text, seed, fonts and your letter edits stayed. ⌘Z goes back.`); };
+    $('#looks').appendChild(b);
+  }
   // specimen
   LIMITS.boxAmt = { min: 0, max: 100 };
   const specMsg = t => { $('#spec-msg').textContent = t; };
