@@ -13,7 +13,7 @@ The owner is a graphic designer, and Mixweight is a visual tool for designers, n
 2. **Variable fonts are used only as their named instances** (Light, Bold, Condensed Bold…), never as arbitrary axis values. This is what lets the Adobe apps find the same font by name. Do not add continuous `wght` / `wdth` / `opsz` sliders. **Never distort the letterforms**: no stretching, squashing or warping of glyphs; the font itself stays untouched (size, rotation and the named styles are the only ways a letter changes).
 3. **No build step, no frameworks, no dependencies.** Plain HTML/CSS/JS. The tool must keep working when someone downloads it and opens it from disk in Chrome (`file://`), so no `fetch()` of local files; use `<script src>` for anything split out (like `demo-fonts.js`).
 4. **UI language is English.** Keep the existing visual language: black on white, ruled grid, greys only for state, Helvetica stack, the existing `--s-*` sizes, the V3.1 title levels, option states and unit style. New controls reuse existing patterns (`.ctl` + range + `<output>`, `.opts` button groups, `bindRange` / `bindOpts`). Selection marks stay the corner-tick (crop-mark) style, in a neutral colour that never follows the user's colours.
-5. **Determinism.** Layout randomness goes through `rnd(seed, unit, channel)`. Channels 0–6, 8 (outline) and 9 (boxes) are taken; **use 10 and up** for new random decisions. `Math.random()` may only be used to draw a new seed number when the user presses a reroll button, never inside layout or rendering. The same seed and settings must always give the same result.
+5. **Determinism.** Layout randomness goes through `rnd(seed, unit, channel)`. Channels 0–6, 8 (outline), 9 (boxes), 10 (box colours from the palette) and 11 (rotation jitter) are taken; **use 12 and up** for new random decisions. `Math.random()` may only be used to draw a new seed number when the user presses a reroll button, never inside layout or rendering. The same seed and settings must always give the same result.
 6. **New settings** go into `DEFAULTS` and `SAVE_KEYS`. That makes them persist in localStorage *and* join undo/redo (`snapshot()` reads `SAVE_KEYS`). Anything with structure (objects, arrays) must also be normalised in `fixDeco()` so saved sessions from older versions, which lack the new keys or hold the old shape, still load. Call `record()` before changing state; pass a key for slider drags so a drag is one undo step. View-only state (panel widths, folds) stays out of `SAVE_KEYS`.
 7. Update the **Help dialog** (`<dialog id="help">`) and **README.md** whenever behaviour the user sees changes.
 8. **Never read or print `demo-fonts.js`.** It is ~600 KB of base64 on one line.
@@ -22,11 +22,11 @@ The owner is a graphic designer, and Mixweight is a visual tool for designers, n
 
 Everything is in `index.html` (~3300 lines) plus `demo-fonts.js`. Line numbers drift, so find sections by their banners: `/* ---------------- name ---------------- */`.
 
-- CSS at the top; app markup next (top bar, left panel, `#sheet` with `#deco` SVG under `#out` and `#selmarks` SVG over it, right panel `#side`); dialogs `picker`, `help`, `exp-ask`, `exp-help`; then the three `jsx-*` template blocks.
+- CSS at the top; app markup next (top bar, left panel, `#sheet` with `#deco` SVG under `#out` and `#selmarks` SVG over it, right panel `#side`); dialogs `picker`, `help`, `exp-ask`, `png-ask` (PNG options), `spec` (Specimen), `exp-help`; then the three `jsx-*` template blocks.
 - Script banners, in order: state (`DEFAULTS`, `S`) → sfnt parsing → glyph ink measurement (`ink()`) → pool → **engine** (`rnd`, `applyCase`, `pickFrom`, `compute`, `evenGaps`, `alignLine`) → render (`render`, `layout`) → boxes and guides geometry (`decoShapes`, `guideLines`, `drawDeco`) → selection → hover info / selection info → right panel → panel UI (`bindRange`, `bindOpts`) → font sources → **export** (`buildData`, `buildScript`, `exportFor`) → persistence (`SAVE_KEYS`, `fixDeco`, `save`) → undo / redo (`snapshot`, `record`, `restore`) → zoom → panel widths → boot.
 - `compute()` builds `S.lines`: one object per character (`st`, `size`, `jit`, `tr`, `va`, `bs`, plus rotation and stroke). Per-letter size, baseline or tracking changes belong there or in a pass right after it.
 - `render()` draws the text as one HTML `<span>` per letter (family from `g.st.css`, variable instance from `g.st.fvs`) inside `#out`, then `layout()` measures every letter into `S.gmap` (`g.x`, `g.adv`, `g.y`, `S.lb[k]` baselines). Boxes, guidelines and all exports work from those numbers, in block coordinates (x from the text block's left edge, y down from the line's baseline). Rotation turns about the centre of the em box (`ROT_PIVOT`).
-- `S.overrides` holds the user's manual per-letter edits (`style`, `va`, `fill`, `sw`, `rot`, `ra`, `ru`, `box`). Manual edits always win over automatic choices.
+- `S.overrides` holds the user's manual per-letter edits (`style`, `va`, `fill`, `sw`, `rot`, `ra`, `ru`, `box`, `col`). Manual edits always win over automatic choices. A letter box placed by Random letter boxes carries `box.auto`; one whose fill was set by hand carries `box.hand`.
 - Colours are RGB hex in state (box style `fill` / `stroke`, `textCol`, `bgCol`, `guideCol`, letter override `col`); `normStyle()` migrates v3.x grey ink percentages. The export writes them through `xcol()`: a neutral grey as ink % (0 white, 100 black), any other colour as `'rrggbb'`.
 - Terminology: "Seed" in the UI is the random-number seed (`S.seed`, typeable). Do not reuse that word for anything new without checking with the owner.
 
@@ -41,6 +41,27 @@ Everything is in `index.html` (~3300 lines) plus `demo-fonts.js`. Line numbers d
 - Existing saved sessions must keep loading: after a step, load a session saved with the previous version and confirm nothing breaks or moves.
 - When a step's approach isn't clean, stop and discuss it with the owner before implementing.
 - Keep comments short, matching the existing style.
+
+## V4 status (keep this section up to date)
+
+All V4 work is on branch `claude/lucid-ride-wf1xim`, in PR Z-tfs/Mixweight#8. Keep working there; don't open another branch or PR unless the owner asks. **Do not merge it**: it waits on the owner's Adobe test of the `.jsx` colour export (commit `3c00306`). The PR description has a table of every commit with its fixed preview link; add each new commit to it.
+
+Built, one commit per step: step 1 PNG export; step 2 colour system plus colour in all three `.jsx` templates; Box style Expand X / Y and Move X / Y; step 2b random box colours from the palette; step 2c letter-box Height (Glyph / Line) and Width (Glyph / Advance); letter boxes and bands on the same letters, styled separately (Letter boxes / Band switch); step 3 pattern (Dots sized as a % of the cell); step 4 registration marks; step 5 Specimen; global Rotation jitter; paragraph band colour per line from the palette; a 12th palette, "Dark glow"; step 6 looks (`LOOKS`: Riso Block, Stacked Bands, Tone on Tone, Dark Glow). Step 6 was built before steps 1–5 were merged, at the owner's request.
+
+Decisions already made (don't revisit unless the owner asks):
+- The PNG draws the letters through an SVG `foreignObject` with the used fonts embedded as data URLs (`faceBytes`), not on a 2D canvas, so variable named instances stay exact. The background, pattern, boxes, marks and guides come from the shared `decoMarkup()`, so canvas and PNG match.
+- The frame (text block plus the export margin `exportMargin()`, see `frame()`) holds the background, pattern and marks and is the PNG crop. It shows on the canvas when the background isn't white or the pattern or marks are on.
+- Width "Glyph" keeps the v3.2 box (advance minus tracking), so Glyph + Glyph looks exactly like v3.2. Width "Advance" reaches the next letter, so boxes touch.
+- A box coloured by hand keeps its colour and Random letter boxes never removes it. Applying a palette sets every box's fill and clears the hand mark; applying a look never touches letter edits.
+- Looks set every look-related setting (palette, paragraph band, random boxes, pattern, marks, outline, jitter including rotation), so switching looks leaves nothing behind. They never change the text, seed, fonts or manual letter edits.
+- With no colour or new feature in use, the `.jsx` export data stays byte-identical to v3.2 (colours go through `xcol()`; `bm`, `gc`, `bg` and the 8th run field are written only when needed). Pattern and marks are not exported.
+- Specimen loading checks every value (`LIMITS`, filled by `bindRange` / `bindOpts`; `specValue()`), resets keys a specimen lacks to their defaults, matches fonts by family + style then PostScript name, and never throws.
+
+Open items: the owner's Adobe test of `3c00306` (riskiest: InDesign RGB swatches and blend inside groups, the Illustrator background layer order, the Photoshop background layer position); look tuning (Riso Block draws from all 11 inks of its palette, not 3; in Dark Glow the off-white text is hard to read on the yellow and aqua boxes).
+
+Testing that has worked in the cloud container: Playwright with the preinstalled Chromium (`NODE_PATH=$(npm root -g) node script.js`), opening `file:///…/index.html` (the local http server tends to stop). After each change check: a session saved by `main` (v3.2) renders pixel-identical on the canvas; the `var D = …` export data for AI / ID / PS is unchanged when the new feature is off; PNG and canvas still match; the Specimen round trip is still exact. Variable test fonts aren't in the repo: get them from npm (`@fontsource-variable/roboto-flex`, `@fontsource-variable/archivo`) and convert woff2 to ttf with Python fontTools.
+
+The owner writes in Chinese or English; answer in her language. Code, commits and PR text stay in English.
 
 ## Roadmap: V4
 
