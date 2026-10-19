@@ -649,7 +649,13 @@ body.resizing, body.resizing * { cursor: col-resize !important; user-select: non
           <button type="button" data-v="each">Each letter</button>
         </div>
         <div class="ctl"><label for="para-dh">Adjust height</label><output id="para-dh-o"></output><input type="range" id="para-dh" min="-40" max="120" step="1"></div>
-        <p class="hint">One band under each line of text, as tall as its tallest letter or stepping with each letter.</p>
+        <div class="ctl"><label>Band colour</label><output></output></div>
+        <div class="opts" id="para-col" role="group" aria-label="Paragraph band colour">
+          <button type="button" data-v="single">Single</button>
+          <button type="button" data-v="palette">Per line from palette</button>
+        </div>
+        <p class="hint-on" id="para-col-hint" hidden>Pick a palette with block colours first.</p>
+        <p class="hint">One band under each line of text, as tall as its tallest letter or stepping with each letter. Per line from palette gives each line the next of the palette's block and extra colours; Single uses the Fill under Box style.</p>
       </section>
 
       <section class="cell">
@@ -1484,7 +1490,7 @@ const DEFAULTS = {
   boxStyle: defaultBoxStyle(),            // style for new boxes; follows the last box style edit
   bandFit: 'max',                         // height for new bands: 'max' (tallest letter) or 'each'
   bands: [],                              // {a, b, fit, dh, st}: a–b are letter indices, inclusive
-  para: { on: false, fit: 'max', dh: 0, st: defaultBoxStyle() },
+  para: { on: false, fit: 'max', dh: 0, col: 'single', st: defaultBoxStyle() }, // col: 'single' or 'palette' (per line)
 };
 // Box style. fill and stroke are RGB hex (v3.x kept grey ink %: 0 white, 100 black; normStyle migrates them).
 // blend is a BLENDS mode. px / py expand the box sideways / up and down (v3.x had one pad for both); dx / dy move
@@ -2166,7 +2172,10 @@ function decoShapes() {
   const res = [];
   if (!S.lb || !S.lb.length) return res;
   const add = sh => { if (sh) res.push(sh); };
-  if (S.para.on) S.lines.forEach((line, k) => add(bandShape(line, S.para.fit, S.para.dh, S.para.st, 'Paragraph band ' + (k + 1))));
+  // Per line from palette: line k takes the palette's block and extra colours in turn.
+  const inks = S.para.col === 'palette' ? paletteColours() : null;
+  if (S.para.on) S.lines.forEach((line, k) => add(bandShape(line, S.para.fit, S.para.dh,
+    inks ? Object.assign({}, S.para.st, { fill: inks[k % inks.length] }) : S.para.st, 'Paragraph band ' + (k + 1))));
   for (const b of S.bands) for (const line of S.lines) {
     const gs = line.filter(g => g.i >= b.a && g.i <= b.b);
     if (gs.length) add(bandShape(gs, b.fit, b.dh, b.st, 'Band'));
@@ -2584,6 +2593,10 @@ function renderParaPanel() {
   press('#hov', S.hoverInfo ? 'on' : 'off');
   press('#para-on', S.para.on ? 'on' : 'off');
   press('#para-fit', S.para.fit);
+  const pinks = !!paletteColours();
+  $('#para-col [data-v="palette"]').disabled = !pinks;
+  press('#para-col', pinks ? S.para.col : 'single');
+  $('#para-col-hint').hidden = pinks;
   setRange('para-dh', S.para.dh, dhTxt(S.para.dh));
   setRange('pscat', S.boxAmt, S.boxAmt + '%');
   syncBoxCol();
@@ -2702,9 +2715,11 @@ function colorCtl(id, get, set) {
 const colCtl = {};
 // The colours random letter boxes draw from: the active palette's block and extras, or null (Single, or no
 // palette with a block colour).
-function paletteInks() {
+function paletteInks() { return S.boxCol === 'palette' ? paletteColours() : null; }
+// The active palette's block and extra colours, or null without a palette that has a block colour.
+function paletteColours() {
   const P = PALETTES.find(P => P.name === S.palette);
-  return S.boxCol === 'palette' && P && P.block ? [P.block, ...(P.extras || [])] : null;
+  return P && P.block ? [P.block, ...(P.extras || [])] : null;
 }
 // Look presets: one click sets the style settings that already exist (palette roles, paragraph band, letter boxes,
 // pattern, marks, outline, jitter), as one undo step. Never the text, seed, fonts or manual letter edits; random
@@ -3476,7 +3491,7 @@ function fixDeco() {
   S.guides = { base: !!g.base, x: !!g.x, cap: !!g.cap, asc: !!g.asc };
   S.boxStyle = normStyle(S.boxStyle);
   const pa = S.para && typeof S.para === 'object' ? S.para : {};
-  S.para = { on: !!pa.on, fit: pa.fit === 'each' ? 'each' : 'max', dh: typeof pa.dh === 'number' ? pa.dh : 0, st: normStyle(pa.st) };
+  S.para = { on: !!pa.on, fit: pa.fit === 'each' ? 'each' : 'max', dh: typeof pa.dh === 'number' ? pa.dh : 0, col: pa.col === 'palette' ? 'palette' : 'single', st: normStyle(pa.st) };
   S.bandFit = S.bandFit === 'each' ? 'each' : 'max';
   S.bands = (Array.isArray(S.bands) ? S.bands : [])
     .filter(b => b && Number.isInteger(b.a) && Number.isInteger(b.b) && b.b >= b.a)
@@ -3961,6 +3976,7 @@ async function boot() {
   optClick('#hov', v => { S.hoverInfo = v === 'on'; if (!S.hoverInfo) hideTag(); renderInspector(); save(); });
   optClick('#para-on', v => { record(); S.para.on = v === 'on'; render(); save(); });
   optClick('#para-fit', v => { record(); S.para.fit = v; render(); save(); });
+  optClick('#para-col', v => { if (v !== S.para.col) { record(); S.para.col = v; render(); save(); } });
   $('#para-dh').addEventListener('input', e => { record('para-dh'); S.para.dh = +e.target.value; render(); save(); });
   // box style
   optClick('#bx-tgt', v => { bxTarget = v; renderInspector(); });
