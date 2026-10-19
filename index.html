@@ -622,6 +622,10 @@ body.resizing, body.resizing * { cursor: col-resize !important; user-select: non
         <button type="button" data-v="para">Paragraph band</button>
         <button type="button" data-v="letters">Letter boxes</button>
       </div>
+      <div class="opts" id="bx-tgt-sel" role="group" aria-label="Style for" hidden>
+        <button type="button" data-v="letters">Letter boxes</button>
+        <button type="button" data-v="bands">Band</button>
+      </div>
       <div class="pair">
         <div class="colc" id="col-bx-fill" data-label="Fill"></div>
         <div class="colc" id="col-bx-stroke" data-label="Stroke colour"></div>
@@ -695,7 +699,7 @@ body.resizing, body.resizing * { cursor: col-resize !important; user-select: non
       <section><h4>Letter align</h4><p>Top, middle and bottom alignment are written as baseline shift values. If you change a letter or its font afterwards, export again to re-align.</p></section>
       <section><h4>Group titles</h4><p>Click a group title in the left panel to fold the group to its title row (▸) or open it again (▾); each group remembers its own state. Folding Font pool hides every family; the family names fold just their own styles. The right side of each title row sums up what the group is set to, and follows every change; hover it for the full text if it is cut short. Groups with a short note have a <b>?</b> next to their title: click it to show the note, again to hide it.</p></section>
       <section><h4>Right panel</h4><p>Selecting letters opens it with their font, size, shift and tracking at the top, then weight, align, <b>rotation</b>, <b>fill</b> and <b>boxes</b>. With nothing selected, the handle on the right edge opens the paragraph settings: hover info, <b>fill</b> (random outline, stroke), the paragraph band, random letter boxes. Clear edits there also sets Random outline and Stroke back to their defaults. A drag that starts on empty canvas selects the letters it sweeps over. The panel keeps its place: selecting other letters, deselecting and reselecting, or switching between selection and paragraph brings back the group you were using.</p></section>
-      <section><h4>Boxes</h4><p>Letter boxes follow each letter's ink, size and shift, and turn with it. A band runs under the selection, as tall as its tallest letter or stepping with each one; the paragraph band does the same for every line. In Box style, Expand X and Y make a box wider or taller than the ink (negative values make it smaller), and Move X and Y shift it right and up; a rotated letter's box moves along the letter's own axes. Letter boxes also have <b>Height</b> (Glyph: the letter's own ink; Line: as tall as the line's tallest letter) and <b>Width</b> (Glyph: the letter as set, without tracking; Advance: up to the next letter, so neighbouring boxes touch). Line + Advance makes a grid of columns. They export under the text as vector shapes: InDesign rectangles keep live corner options, Illustrator and Photoshop get the exact path.</p></section>
+      <section><h4>Boxes</h4><p>Letter boxes follow each letter's ink, size and shift, and turn with it. A band runs under the selection, as tall as its tallest letter or stepping with each one; the paragraph band does the same for every line. In Box style, Expand X and Y make a box wider or taller than the ink (negative values make it smaller), and Move X and Y shift it right and up; a rotated letter's box moves along the letter's own axes. Letter boxes also have <b>Height</b> (Glyph: the letter's own ink; Line: as tall as the line's tallest letter) and <b>Width</b> (Glyph: the letter as set, without tracking; Advance: up to the next letter, so neighbouring boxes touch). Line + Advance makes a grid of columns. A letter can have a letter box and a band at once: when the selection has both, Box style shows <b>Letter boxes / Band</b> to pick which one its controls change (Add letter boxes and Add band switch to what they just added). They export under the text as vector shapes: InDesign rectangles keep live corner options, Illustrator and Photoshop get the exact path.</p></section>
       <section><h4>Colour</h4><p>With nothing selected, the Colour group sets the <b>text</b> and <b>background</b> colours, as RGB hex: click the swatch for the system picker, or type a hex value and press Enter. The row under each colour holds the last eight colours used. A <b>palette</b> sets text and background in one click, and the box and band fill too when it has a block colour; Black on white goes back to the start. Selected letters get their own colour under Fill (Use text colour removes it); outline letters stroke in their colour. Box style has Fill and Stroke colours and a <b>blend</b> mode (Normal, Multiply, Screen, Overlay, Difference), which mixes a box with the background and the boxes under it, never with the text. The background fills the text block plus a margin, the same area the PNG crops to. The guidelines' colour is under Guidelines. Random letter boxes have a <b>Box colour</b>: Single gives every box its own fill; From palette gives each randomly placed box a colour from the active palette's block and extra colours, picked by the seed, so Reroll boxes changes placement and colours together. A box whose fill you set by hand keeps it, and Reroll leaves it in place. From palette needs a palette with a block colour. Everything exports: text colour per letter, RGB fills and strokes (neutral greys stay greys, a Black tint in InDesign), blend modes, and the guideline colour. A background that isn't white becomes a rectangle at the very back, named Mixweight background, on its own layer (Illustrator, InDesign) or as the bottom shape layer (Photoshop). InDesign adds each RGB colour as a swatch named Mixweight #RRGGBB.</p></section>
       <section><h4>Outline and rotation</h4><p>Outline letters export as live text with no fill and a stroke in the letter's colour; rotation as character rotation, about the centre of the em box. Photoshop can do neither per letter inside one type layer, so those letters become their own type layers (outline as a layer-style stroke) and the main layer keeps a space of the same width.</p></section>
       <section><h4>Guidelines</h4><p>Baseline, x-height, cap height and ascender of the base style at the set size. Tick Include in export under Guidelines to export them as plain lines on their own layer or group, named Mixweight guidelines.</p></section>
@@ -2481,26 +2485,32 @@ function syncBoxCol() {
 }
 // Which box styles the style controls edit. Selection: the boxes and bands on the selected letters.
 // Paragraph: the paragraph band, or every letter box. With none, they set the style new boxes get.
-let bxTarget = 'para';
+// With both letter boxes and bands in the selection, bxSelTarget picks which of them the controls edit.
+let bxTarget = 'para', bxSelTarget = 'letters';
 function boxTargets(gs) {
   const uniq = list => [...new Set(list)];
   if (gs.length) {
-    const list = uniq([...gs.filter(g => g.box).map(g => ovOf(g).box), ...selBands().map(b => b.st)]);
-    return list.length ? { list, label: `${list.length} in selection` } : { list: [S.boxStyle], label: 'For new boxes' };
+    const boxes = uniq(gs.filter(g => g.box).map(g => ovOf(g).box)), bands = uniq(selBands().map(b => b.st));
+    const n = (k, w) => `${k} ${w}${k === 1 ? '' : 'es'}`;
+    if (boxes.length && (!bands.length || bxSelTarget === 'letters')) return { list: boxes, label: n(boxes.length, 'letter box'), kind: 'letters' };
+    if (bands.length) return { list: bands, label: `${bands.length} band${bands.length === 1 ? '' : 's'}`, kind: 'bands' };
+    return { list: [S.boxStyle], label: 'For new boxes', kind: 'letters' };
   }
   if (bxTarget === 'para') return { list: [S.para.st], label: S.para.on ? 'Paragraph band' : 'Paragraph band (off)' };
   const list = uniq(glyphList().filter(g => g.box).map(g => ovOf(g).box));
   return list.length ? { list, label: `All ${list.length} letter boxes` } : { list: [S.boxStyle], label: 'For new boxes' };
 }
 function renderBoxEditor(gs) {
+  const T = boxTargets(gs), st = T.list[0];
   $('#bx-tgt').hidden = gs.length > 0;
   press('#bx-tgt', bxTarget);
-  const st = boxTargets(gs).list[0];
-  $('#bx-ed-r').textContent = boxTargets(gs).label;
+  $('#bx-tgt-sel').hidden = !(gs.length && gs.some(g => g.box) && selBands().length);
+  press('#bx-tgt-sel', T.kind);
+  $('#bx-ed-r').textContent = T.label;
   colCtl.bxFill?.sync(); colCtl.bxStroke?.sync();
   press('#bx-blend', st.blend);
   press('#bx-h', st.h); press('#bx-w', st.w);
-  $('#bx-fit').hidden = !gs.length && bxTarget === 'para'; // letter boxes only
+  $('#bx-fit').hidden = gs.length ? T.kind === 'bands' : bxTarget === 'para'; // letter boxes only
   setRange('bx-op', st.op, st.op + '%');
   setRange('bx-sw', st.sw, ptTxt(st.sw));
   setRange('bx-px', st.px, ptTxt(st.px));
@@ -3599,13 +3609,13 @@ async function boot() {
   optClick('#sel-fill', v => { record(); eachSel(o => { if (v) o.fill = v; else delete o.fill; }); });
   $('#sel-sw').addEventListener('input', e => { record('sel-sw'); const v = +e.target.value; eachSel(o => { o.sw = v; }); });
   // boxes
-  $('#lb-add').onclick = () => { record(); eachSel((o, g) => { if (g.inkTop != null && !o.box) o.box = structuredClone(S.boxStyle); }); };
+  $('#lb-add').onclick = () => { record(); bxSelTarget = 'letters'; eachSel((o, g) => { if (g.inkTop != null && !o.box) o.box = structuredClone(S.boxStyle); }); };
   // Box colour for random letter boxes: Single or From palette (needs a palette with a block colour).
   for (const id of ['#scat-col', '#pscat-col']) optClick(id, v => { if (v !== S.boxCol) { record(); S.boxCol = v; render(); save(); } });
   $('#lb-rm').onclick = () => { record(); eachSel(o => { delete o.box; }); };
   $('#band-add').onclick = () => {
     const ix = selIdx(); if (!ix.length) return;
-    record();
+    record(); bxSelTarget = 'bands';
     S.bands.push({ a: Math.min(...ix), b: Math.max(...ix), fit: S.bandFit, dh: 0, st: structuredClone(S.boxStyle) });
     render(); save();
   };
@@ -3628,6 +3638,7 @@ async function boot() {
   $('#para-dh').addEventListener('input', e => { record('para-dh'); S.para.dh = +e.target.value; render(); save(); });
   // box style
   optClick('#bx-tgt', v => { bxTarget = v; renderInspector(); });
+  optClick('#bx-tgt-sel', v => { bxSelTarget = v; renderInspector(); });
   for (const [id, key] of [['bx-op', 'op'], ['bx-sw', 'sw'], ['bx-px', 'px'], ['bx-py', 'py'], ['bx-dx', 'dx'], ['bx-dy', 'dy']]) {
     $('#' + id).addEventListener('input', e => { const v = +e.target.value; editBox(key, st => { st[key] = v; }); });
   }
