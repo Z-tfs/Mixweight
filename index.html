@@ -469,7 +469,8 @@ body.resizing, body.resizing * { cursor: col-resize !important; user-select: non
       <div class="ctl"><label for="sizevar">Size range</label><output id="sizevar-o"></output><input type="range" id="sizevar" min="0" max="80" step="1"></div>
       <div class="ctl"><label for="basejit">Base jitter</label><output id="basejit-o"></output><input type="range" id="basejit" min="0" max="30" step="0.5"></div>
       <div class="ctl"><label for="trackjit">Track jitter</label><output id="trackjit-o"></output><input type="range" id="trackjit" min="0" max="200" step="5"></div>
-      <p class="hint">Size range, base jitter and track jitter add a random amount to each letter, picked from the seed. Baseline jitter only moves letters set on the baseline.</p>
+      <div class="ctl"><label for="rotjit">Rotation jitter</label><output id="rotjit-o"></output><input type="range" id="rotjit" min="0" max="45" step="1"></div>
+      <p class="hint">Size range, base jitter, track jitter and rotation jitter add a random amount to each letter, picked from the seed; a letter you rotated by hand keeps its own angle. Baseline jitter only moves letters set on the baseline.</p>
     </section>
 
     <section class="cell">
@@ -1462,7 +1463,7 @@ const DEFAULTS = {
   text: SAMPLE_TEXTS[0],
   caseMode: 'orig', caseAmt: 45,
   mix: 70, dist: 'uniform', wavePeriod: 13, gran: 'glyph', valign: 'baseline',
-  size: 44, leading: 92, sizeVar: 18, baseJit: 4, trackJit: 30, track: -10, match: 'off', gaps: 0,
+  size: 44, leading: 92, sizeVar: 18, baseJit: 4, trackJit: 30, rotJit: 0, track: -10, match: 'off', gaps: 0,
   align: 'left', seed: 1952,
   outlineAmt: 0, outlineSeed: 7, strokeW: 1,
   guides: { base: false, x: false, cap: false, asc: false },
@@ -1927,7 +1928,9 @@ function compute() {
     // Outline: the letter's own setting, else a share of letters picked by the outline seed.
     const outl = !space && (ov && ov.fill ? ov.fill === 'outline' : S.outlineAmt > 0 && rnd(S.outlineSeed, i, 8) < S.outlineAmt / 100);
     const sw = outl ? Math.max(0.25, (ov && typeof ov.sw === 'number') ? ov.sw : S.strokeW) : 0;
-    const rot = ov ? r1((ov.rot || 0) + (ov.ra || 0) * (ov.ru || 0)) : 0;
+    // Rotation: the letter's own angle and jitter win; otherwise the paragraph's Rotation jitter, from the seed.
+    const rot = ov && (ov.rot != null || ov.ra) ? r1((ov.rot || 0) + (ov.ra || 0) * (ov.ru || 0))
+      : S.rotJit && !space ? r1(S.rotJit * (2 * rnd(seed, i, 11) - 1)) : 0;
     let box = !space && ov && ov.box ? ov.box : null;
     // From palette: a randomly placed box whose fill wasn't set by hand takes a block or extra colour.
     if (box && box.auto && !box.hand && boxInks) box = Object.assign({}, box, { fill: boxInks[Math.floor(rnd(S.boxSeed, i, 10) * boxInks.length)] });
@@ -2345,7 +2348,7 @@ function leftSummaries() {
   const al = { left: 'Left', center: 'Center', right: 'Right' }[S.align];
   summary('sum-type', `${S.size} pt · ${S.leading}% lead · ${num(S.track)} track · ${al}`);
   summary('sum-valign', { baseline: 'Baseline', top: 'Top', middle: 'Middle', bottom: 'Bottom' }[S.valign]);
-  summary('sum-jitter', S.sizeVar || S.baseJit || S.trackJit ? `±${S.sizeVar}% · ±${num(S.baseJit)} pt · ±${S.trackJit}` : 'Off');
+  summary('sum-jitter', S.sizeVar || S.baseJit || S.trackJit || S.rotJit ? `±${S.sizeVar}% · ±${num(S.baseJit)} pt · ±${S.trackJit}` + (S.rotJit ? ` · ±${S.rotJit}°` : '') : 'Off');
   const gl = GUIDES.filter(G => S.guides[G.key]).map(G => G.name);
   const aids = [];
   if (gl.length) aids.push(gl.join(' · ') + ($('#exp-guides').checked ? ' · in export' : ''));
@@ -3460,11 +3463,11 @@ function loadSpecimen(src) {
 /* ---------------- persistence ---------------- */
 // Settings that live in the left panel and change how the text looks (Clear there resets these).
 const LEFT_KEYS = ['caseMode', 'caseAmt', 'mix', 'dist', 'wavePeriod', 'gran', 'valign', 'size', 'leading', 'sizeVar', 'baseJit',
-  'trackJit', 'track', 'gaps', 'match', 'align', 'guides', 'guideCol', 'patOn', 'patType', 'patCell', 'patW', 'patCol', 'patDot',
+  'trackJit', 'rotJit', 'track', 'gaps', 'match', 'align', 'guides', 'guideCol', 'patOn', 'patType', 'patCell', 'patW', 'patCol', 'patDot',
   'regOn', 'regSize', 'regW', 'regInset', 'regCol'];
 // Paragraph settings in the right panel that its Clear edits resets.
 const RIGHT_KEYS = ['outlineAmt', 'strokeW'];
-const SAVE_KEYS = ['text', 'caseMode', 'caseAmt', 'mix', 'dist', 'gran', 'valign', 'size', 'leading', 'sizeVar', 'baseJit', 'trackJit', 'track', 'align', 'seed', 'match', 'wavePeriod', 'gaps',
+const SAVE_KEYS = ['text', 'caseMode', 'caseAmt', 'mix', 'dist', 'gran', 'valign', 'size', 'leading', 'sizeVar', 'baseJit', 'trackJit', 'rotJit', 'track', 'align', 'seed', 'match', 'wavePeriod', 'gaps',
   'outlineAmt', 'outlineSeed', 'strokeW', 'guides', 'boxAmt', 'boxSeed', 'boxStyle', 'bandFit', 'bands', 'para', 'textCol', 'bgCol', 'guideCol', 'palette', 'boxCol',
   'patOn', 'patType', 'patCell', 'patW', 'patCol', 'patDot', 'regOn', 'regSize', 'regW', 'regInset', 'regCol'];
 // Saved state from older versions, or edited by hand: keep only well-formed decoration settings.
@@ -3485,6 +3488,7 @@ function fixDeco() {
   for (const k of ['textCol', 'bgCol', 'guideCol']) S[k] = hexOf(S[k]) || DEFAULTS[k];
   if (!PALETTES.some(P => P.name === S.palette)) S.palette = '';
   S.boxCol = S.boxCol === 'palette' ? 'palette' : 'single';
+  S.rotJit = Number.isFinite(S.rotJit) ? clamp(S.rotJit, 0, 45) : 0;
   S.patOn = S.patOn === 'on' ? 'on' : 'off';
   if (!PATTERNS.includes(S.patType)) S.patType = 'grid';
   S.patCell = Number.isFinite(S.patCell) ? clamp(Math.round(S.patCell), 2, 120) : 16;
@@ -3733,6 +3737,7 @@ async function boot() {
   bindRange('basejit', 'baseJit', v => '±' + v + ' pt');
   bindRange('trackjit', 'trackJit', v => '±' + v + TRACK_UNIT_SHORT);
   bindRange('track', 'track', v => sgn(v) + TRACK_UNIT_SHORT);
+  bindRange('rotjit', 'rotJit', v => '±' + v + '°');
   const syncCaseAmt = () => { $('#case-amt-wrap').hidden = S.caseMode !== 'random'; };
   bindOpts('case', 'caseMode', syncCaseAmt); syncCaseAmt();
   bindOpts('gran', 'gran');

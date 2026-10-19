@@ -12,7 +12,7 @@ Mix the weights of your installed variable fonts letter by letter, then send the
 - The base style is marked in the pool and must be one of the styles switched on. Pick it from the Base menu, or right-click any style: Set as base style, or Add to mix + set as base for a style that is off. Either is one undo step.
 - Click a family's name in the pool to fold its style list away (the Collapse all / Expand all button under the Font pool title does every family). Share of mix stays visible, and a folded family that holds the base style says so. Folding is remembered and isn't an undo step.
 - Case: original, all caps, all lower, title case, sentence, random.
-- Size range, baseline and tracking jitter, leading, line alignment.
+- Size range, baseline, tracking and rotation jitter (each letter turns a random amount from the seed; letters you rotated by hand keep their angle), leading, line alignment.
 - Even gaps: where neighbouring letters come from different fonts, nudge the tracking so the gap sits halfway between the two fonts' own spacing. Exported as tracking.
 - Match size: scale each font so its x-height or cap height matches the base style, so mixed families look the same size. Exported as per-letter point size.
 - Letter align: baseline, or geometric top / middle / bottom measured from each glyph's actual outline.
