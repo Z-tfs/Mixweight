@@ -792,7 +792,7 @@ body.resizing, body.resizing * { cursor: col-resize !important; user-select: non
       <section><h4>Group titles</h4><p>Click a group title in the left panel to fold the group to its title row (▸) or open it again (▾); each group remembers its own state. Folding Font pool hides every family; the family names fold just their own styles. The right side of each title row sums up what the group is set to, and follows every change; hover it for the full text if it is cut short. Groups with a short note have a <b>?</b> next to their title: click it to show the note, again to hide it.</p></section>
       <section><h4>Right panel</h4><p>Selecting letters opens it with their font, size, shift and tracking at the top, then weight, align, <b>rotation</b>, <b>fill</b> and <b>boxes</b>. With nothing selected, the handle on the right edge opens the paragraph settings: hover info, <b>fill</b> (random outline, stroke), the paragraph band, random letter boxes. Clear edits there also sets Random outline and Stroke back to their defaults. A drag that starts on empty canvas selects the letters it sweeps over. The panel keeps its place: selecting other letters, deselecting and reselecting, or switching between selection and paragraph brings back the group you were using.</p></section>
       <section><h4>Boxes</h4><p>Letter boxes follow each letter's ink, size and shift, and turn with it. A band runs under the selection, as tall as its tallest letter or stepping with each one; the paragraph band does the same for every line. In Box style, Expand X and Y make a box wider or taller than the ink (negative values make it smaller), and Move X and Y shift it right and up (all four snap to 0 when you drag close to the tick at 0); a rotated letter's box moves along the letter's own axes. Letter boxes also have <b>Height</b> (Glyph: the letter's own ink; Line: as tall as the line's tallest letter) and <b>Width</b> (Glyph: the letter as set, without tracking; Advance: up to the next letter, so neighbouring boxes touch). Line + Advance makes a grid of columns. A letter can have a letter box and a band at once: when the selection has both, Box style shows <b>Letter boxes / Band</b> to pick which one its controls change (Add letter boxes and Add band switch to what they just added). With <b>Each corner</b>, the four corners sit in a grid laid out like the box: type a radius, or drag the small corner icon sideways, and pick Round, Bevel or Inverse under it. They export under the text as vector shapes: InDesign rectangles keep live corner options, Illustrator and Photoshop get the exact path.</p></section>
-      <section><h4>Color</h4><p>Box fill, box stroke and the background also take <b>No color</b>: the crossed-out swatch after the hex field (or type none). A box with no fill shows only its stroke; a background with no color leaves the PNG transparent. In the .jsx export a box with neither fill nor stroke is left out, and for now so is one with no fill but a stroke. The <b>Color</b> group in the left panel sets the <b>text</b> and <b>background</b> colors for the whole design, as RGB hex: click the big swatch for the system picker, type a hex value and press Enter, or click a small swatch (the current color's swatch is outlined). The row under each color holds the last eight colors used; with a palette active, a row of the palette's colors sits above it, under every color control. A <b>palette</b> sets text and background in one click, and the box and band fill too when it has a block color. Click the active palette again to roll a new color match from its colors (text that stays readable on the background, and a block color that shows on it); ⌘Z goes back. Fold the palette list with the arrow next to Palettes to keep just a row of its chips. Black on white goes back to the start. Selected letters get their own color under Fill (Use text color removes it); outline letters stroke in their color. Box style has Fill and Stroke colors and a <b>blend</b> mode (Normal, Multiply, Screen, Overlay, Difference), which mixes a box with the background and the boxes under it, never with the text. The background fills the text block plus a margin, the same area the PNG crops to. The guidelines' color is under Guidelines. Random letter boxes have a <b>Box color</b>: Single gives every box its own fill; From palette gives each randomly placed box a color from the active palette's block and extra colors, picked by the seed, so Reroll boxes changes placement and colors together. A box whose fill you set by hand keeps it, and Reroll leaves it in place. From palette needs a palette with a block color. Everything exports: text color per letter, RGB fills and strokes (neutral greys stay greys, a Black tint in InDesign), blend modes, and the guideline color. A background that isn't white becomes a rectangle at the very back, named Mixweight background, on its own layer (Illustrator, InDesign) or as the bottom shape layer (Photoshop). InDesign adds each RGB color as a swatch named Mixweight #RRGGBB.</p></section>
+      <section><h4>Color</h4><p>Box fill, box stroke and the background also take <b>No color</b>: the crossed-out swatch after the hex field (or type none). A box with no fill shows only its stroke; a background with no color leaves the PNG transparent. In the .jsx export a box with no fill keeps just its stroke (no fill in Illustrator and InDesign, a shape layer with its fill switched off in Photoshop); a box with neither fill nor stroke is left out. The <b>Color</b> group in the left panel sets the <b>text</b> and <b>background</b> colors for the whole design, as RGB hex: click the big swatch for the system picker, type a hex value and press Enter, or click a small swatch (the current color's swatch is outlined). The row under each color holds the last eight colors used; with a palette active, a row of the palette's colors sits above it, under every color control. A <b>palette</b> sets text and background in one click, and the box and band fill too when it has a block color. Click the active palette again to roll a new color match from its colors (text that stays readable on the background, and a block color that shows on it); ⌘Z goes back. Fold the palette list with the arrow next to Palettes to keep just a row of its chips. Black on white goes back to the start. Selected letters get their own color under Fill (Use text color removes it); outline letters stroke in their color. Box style has Fill and Stroke colors and a <b>blend</b> mode (Normal, Multiply, Screen, Overlay, Difference), which mixes a box with the background and the boxes under it, never with the text. The background fills the text block plus a margin, the same area the PNG crops to. The guidelines' color is under Guidelines. Random letter boxes have a <b>Box color</b>: Single gives every box its own fill; From palette gives each randomly placed box a color from the active palette's block and extra colors, picked by the seed, so Reroll boxes changes placement and colors together. A box whose fill you set by hand keeps it, and Reroll leaves it in place. From palette needs a palette with a block color. Everything exports: text color per letter, RGB fills and strokes (neutral greys stay greys, a Black tint in InDesign), blend modes, and the guideline color. A background that isn't white becomes a rectangle at the very back, named Mixweight background, on its own layer (Illustrator, InDesign) or as the bottom shape layer (Photoshop). InDesign adds each RGB color as a swatch named Mixweight #RRGGBB.</p></section>
       <section><h4>Outline and rotation</h4><p>Outline letters export as live text with no fill and a stroke in the letter's color; rotation as character rotation, about the centre of the em box. Photoshop can do neither per letter inside one type layer, so those letters become their own type layers (outline as a layer-style stroke) and the main layer keeps a space of the same width.</p></section>
       <section><h4>Guidelines</h4><p>Baseline, x-height, cap height and ascender of the base style at the set size. Tick Include in export under Guidelines to export them as plain lines on their own layer or group, named Mixweight guidelines.</p></section>
       <section><h4>Layout aids and Decoration</h4><p>Guidelines are in the <b>Layout aids</b> group in the left panel, folded until you open it. The pattern and the registration marks are in the <b>Decoration</b> group under it, each with its own switch. The <b>pattern</b> (Grid, Dots, Crosses, Lines, Diagonal) is drawn behind the boxes and the text, in the text block plus a margin, the area the PNG crops to; cells start at that area's top-left corner. Cell size runs from 2 to 120 pt. Dots have a Dot size as a share of the cell (100% and neighbouring dots touch), so they stay visible at any cell size; the other types have a Line weight. Box blend modes mix with it. <b>Registration marks</b> are crosshairs at the four corners of that same area: Size, Line weight, Inset (how far in from each corner) and Color; on a small area they stop at the middle. Pattern and marks show on the canvas and in the PNG (always inside it), but are not part of the .jsx export.</p></section>
@@ -976,7 +976,8 @@ body.resizing, body.resizing * { cursor: col-resize !important; user-select: non
       pp.pointType = PointType.CORNER;
     }
     pa.closed = true;
-    pa.filled = true; pa.fillColor = col(sh.f);
+    pa.filled = !sh.nf; // nf: no fill, stroke only
+    if (!sh.nf) pa.fillColor = col(sh.f);
     pa.name = sh.n;
     return pa;
   }
@@ -1158,7 +1159,7 @@ body.resizing, body.resizing * { cursor: col-resize !important; user-select: non
       var sh = D.shapes[bi], o = at(sh), it = null;
       if (sh.r) { try { it = nativeRect(sh, o); } catch (e) { it = null; } }
       if (!it) it = pathShape(sh, o);
-      paint(it, 'fill', sh.f);
+      if (sh.nf) it.fillColor = sw.itemByName('None'); else paint(it, 'fill', sh.f); // nf: no fill, stroke only
       if (sh.sw > 0) {
         paint(it, 'stroke', sh.s);
         it.strokeWeight = sh.sw;
@@ -1373,7 +1374,8 @@ body.resizing, body.resizing * { cursor: col-resize !important; user-select: non
       L.name = name;
       return L;
     }
-    function shapeStroke(w, v) {
+    // nf: no fill, the stroke only (the vector fill switched off, or the fill opacity at 0 under a layer-style stroke).
+    function shapeStroke(w, v, nf) {
       try {
         var d = new ActionDescriptor(), r = new ActionReference();
         r.putEnumerated(s2t('contentLayer'), c2t('Ordn'), c2t('Trgt'));
@@ -1381,7 +1383,7 @@ body.resizing, body.resizing * { cursor: col-resize !important; user-select: non
         var ss = new ActionDescriptor(), sc = new ActionDescriptor(), t = new ActionDescriptor();
         ss.putInteger(s2t('strokeStyleVersion'), 2);
         ss.putBoolean(s2t('strokeEnabled'), true);
-        ss.putBoolean(s2t('fillEnabled'), true);
+        ss.putBoolean(s2t('fillEnabled'), !nf);
         ss.putUnitDouble(s2t('strokeStyleLineWidth'), c2t('#Pnt'), w);
         ss.putEnumerated(s2t('strokeStyleLineAlignment'), s2t('strokeStyleLineAlignment'), s2t('strokeStyleAlignCenter'));
         sc.putObject(c2t('Clr '), c2t('RGBC'), rgb(v));
@@ -1389,7 +1391,7 @@ body.resizing, body.resizing * { cursor: col-resize !important; user-select: non
         t.putObject(s2t('strokeStyle'), s2t('strokeStyle'), ss);
         d.putObject(c2t('T   '), s2t('shapeStyle'), t);
         executeAction(c2t('setd'), d, DialogModes.NO);
-      } catch (e) { fxStroke(w, v); }
+      } catch (e) { fxStroke(w, v); if (nf) doc.activeLayer.fillOpacity = 0; }
     }
     function place(v, k) {
       var y0 = ay + k * D.lead;
@@ -1404,7 +1406,7 @@ body.resizing, body.resizing * { cursor: col-resize !important; user-select: non
         var sh = D.shapes[b], pts = [];
         for (var q = 0; q < sh.p.length; q++) pts.push(place(sh.p[q], sh.k));
         var L = shape([pts], sh.f, sh.n);
-        if (sh.sw > 0) shapeStroke(sh.sw, sh.s);
+        if (sh.sw > 0) shapeStroke(sh.sw, sh.s, sh.nf);
         if (sh.op < 100) L.opacity = sh.op;
         if (sh.bm) L.blendMode = BM[sh.bm];
         L.move(boxSet, ElementPlacement.PLACEATEND);
@@ -3308,16 +3310,14 @@ function buildData(app) {
   });
   const P = p => [r2(p[0]), r2(p[1])];
   // No color: a box without fill or a visible stroke is left out; a stroke with no color exports as no stroke.
-  // A box with no fill but a stroke can't be written yet (the templates always fill), so it is left out too.
+  // A box with no fill but a stroke gets nf: 1 (f then holds the stroke color, for Photoshop's shape layer).
   const strokeOf = st => st.sw > 0 && st.stroke !== 'none';
-  const all = decoShapes().filter(sh => sh.st.fill !== 'none' || strokeOf(sh.st));
-  exportSkipped = all.filter(sh => sh.st.fill === 'none').length;
-  const shapes = all.filter(sh => sh.st.fill !== 'none').map(sh => Object.assign({
+  const shapes = decoShapes().filter(sh => sh.st.fill !== 'none' || strokeOf(sh.st)).map(sh => Object.assign({
     k: sh.k, j: jOf.get(sh.g.i), ox: r2(sh.g.x), n: sh.n,
     p: sh.pts.map(nd => [...P(nd.a), ...P(nd.l), ...P(nd.r)]),
     r: sh.rect && Object.assign({}, sh.rect, { x0: r2(sh.rect.x0), y0: r2(sh.rect.y0), x1: r2(sh.rect.x1), y1: r2(sh.rect.y1), dx: r2(sh.rect.dx), dy: r2(sh.rect.dy) }),
-    f: xcol(sh.st.fill), s: xcol(sh.st.stroke === 'none' ? '#ffffff' : sh.st.stroke), sw: sh.st.stroke === 'none' ? 0 : sh.st.sw, op: sh.st.op,
-  }, sh.st.blend !== 'normal' ? { bm: sh.st.blend } : {}));
+    f: xcol(sh.st.fill === 'none' ? sh.st.stroke : sh.st.fill), s: xcol(sh.st.stroke === 'none' ? '#ffffff' : sh.st.stroke), sw: sh.st.stroke === 'none' ? 0 : sh.st.sw, op: sh.st.op,
+  }, sh.st.blend !== 'normal' ? { bm: sh.st.blend } : {}, sh.st.fill === 'none' ? { nf: 1 } : {}));
   const guides = $('#exp-guides').checked ? guideLines().map(gl => ({ k: gl.k, j: jOf.get(gl.g.i), ox: r2(gl.g.x), y: r2(gl.y), x0: gl.x0, x1: r2(gl.x1), n: gl.n })) : [];
   const { tw, th } = measure();
   const m = exportMargin();
@@ -3435,7 +3435,6 @@ function exportFor(app) {
   dlg.showModal();
 }
 
-let exportSkipped = 0; // boxes with no fill but a stroke, left out of the last .jsx (see buildData)
 function exportFiles(app, withHowto) {
   const name = `mixweight-${TARGET[app]}.jsx`;
   download(name, buildScript(app));
@@ -3444,8 +3443,7 @@ function exportFiles(app, withHowto) {
   const demo = S.families.some(f => f.source === 'demo' && used.has(f.name));
   const noGuides = $('#exp-guides').checked && !Object.values(S.guides).some(Boolean);
   toast(`Saved ${name}` + (withHowto ? ' and its how-to' : ` · ${RUN_HINT[app]}`) + (demo ? '. Sample fonts (Inter, Lora) only match if they are installed.' : '') +
-    (noGuides ? '. Include in export is on, but no guidelines are switched on.' : '') +
-    (exportSkipped ? `. ${exportSkipped} box${exportSkipped === 1 ? '' : 'es'} with no fill but a stroke ${exportSkipped === 1 ? 'is' : 'are'} not in the .jsx yet.` : ''));
+    (noGuides ? '. Include in export is on, but no guidelines are switched on.' : ''));
 }
 
 /* ---------------- PNG export ---------------- */
