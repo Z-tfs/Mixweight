@@ -277,6 +277,14 @@ dialog::backdrop { background: rgba(255, 255, 255, .7); }
 .dlg footer { padding: 9px 14px; border-top: var(--rule); display: flex; justify-content: space-between; align-items: center; gap: 12px; }
 .dlg.two { grid-template-rows: auto minmax(0, 1fr) auto; }
 #exp-ask, #png-ask { width: min(400px, calc(100% - 32px)); }
+#spec { width: min(460px, calc(100% - 32px)); }
+.spec-b .sub-h { text-transform: uppercase; color: var(--g4); }
+.spec-b .sub-h.aid { border-top: 1px solid var(--g2); padding-top: 12px; }
+.spec-b input[type=text] { width: 100%; min-width: 0; border: 0; border-bottom: var(--rule); background: transparent; padding: 3px 1px; border-radius: 0; }
+.spec-b input[type=text]:focus { outline: 0; background: var(--g1); }
+.spec-b textarea { min-height: 90px; font: var(--s-sm)/1.4 ui-monospace, Menlo, monospace; }
+#spec-msg:empty { display: none; }
+#spec-msg { color: var(--ink); }
 .png-set { display: grid; gap: 10px; }
 .png-row { display: flex; justify-content: space-between; align-items: baseline; gap: 14px; text-transform: uppercase; }
 .ask-b .png-set .chk { font-size: inherit; color: var(--ink); text-transform: uppercase; }
@@ -327,6 +335,7 @@ body.resizing, body.resizing * { cursor: col-resize !important; user-select: non
       <button type="button" id="btn-system" class="dot">Installed fonts</button>
       <button type="button" id="btn-files">Font files</button>
       <input type="file" id="file-in" accept=".ttf,.otf,.ttc,.otc" multiple hidden>
+      <button type="button" id="btn-spec">Specimen</button>
       <button type="button" id="btn-help">Help</button>
       <span class="exp"><span>Export</span><button type="button" class="q" id="exp-q" aria-label="About exporting" aria-haspopup="dialog">?</button>
         <button type="button" data-exp="ai">AI</button>
@@ -723,6 +732,7 @@ body.resizing, body.resizing * { cursor: col-resize !important; user-select: non
       <section><h4>InDesign</h4><p><b>Window › Utilities › Scripts</b>. Right-click the User folder › Reveal in Finder, drop the .jsx in, then double-click it in the panel. The frame auto-sizes to the text and the whole thing is one undo.</p></section>
       <section><h4>Photoshop</h4><p><b>File › Scripts › Browse…</b>. A new 72 ppi document opens with one editable type layer you can drag into your comp.</p></section>
       <section><h4>Base style</h4><p>The base style is the one letters keep at 0% mix. Pick it from the Base menu, or right-click any style in the pool: Set as base style, or Add to mix + set as base for a style that is off. It must be switched on in the pool: styles that are off are greyed out in the list, and switching off the base moves it to the nearest weight that is on.</p></section>
+      <section><h4>Specimen</h4><p><b>Specimen</b> in the top bar keeps a whole look as settings: the text, every setting, your letter edits, the pool and base style, and the names of the fonts (family, style and PostScript name), not the fonts themselves. <b>Copy specimen</b> puts it on the clipboard; <b>Download specimen</b> saves a .json; give it a title and author if you like. To load one, paste it and press Load pasted, or Choose file. Loading is one step, so ⌘Z goes back. With the same fonts it gives exactly the same result. If some fonts aren't loaded, Mixweight lists them, lets the base style or your other fonts stand in, and the layout will differ because their widths differ. Everything works offline; nothing is uploaded.</p></section>
       <section><h4>Seed</h4><p>Every random choice comes from the seed, so the same seed and settings always give the same result. Click Seed in the toolbar to type one, Enter to apply, Esc to cancel. Note a seed to get a layout back later.</p></section>
       <section><h4>Fonts</h4><p>Fonts are matched by family and style name, then by PostScript name. Variable fonts use their named instances (Light, Bold…), so the app shows what the preview shows. Fonts the app can't find are listed and swapped for its default; the text stays editable.</p></section>
       <section><h4>Family share</h4><p>Share of mix is each family's part of the letters that leave the base style. At first it follows the number of styles switched on. Drag one family and the others make room, keeping their proportions, so the total stays 100%. Styles keep their place in the light → heavy range.</p></section>
@@ -772,6 +782,32 @@ body.resizing, body.resizing * { cursor: col-resize !important; user-select: non
         <button class="btn solid" value="download" autofocus>Download PNG</button>
         <button class="btn" value="copy">Copy to clipboard</button>
       </div>
+    </div>
+  </form>
+</dialog>
+
+<dialog id="spec">
+  <form method="dialog" class="dlg ask">
+    <header><span>Specimen</span><span class="hd-r"><span>Settings only, no font files</span><button class="x-close" value="cancel" aria-label="Close" title="Close">×</button></span></header>
+    <div class="ask-b spec-b">
+      <div class="sub-h">Keep this look</div>
+      <div class="pair">
+        <input type="text" id="spec-title" placeholder="Title (optional)" autocomplete="off" aria-label="Title">
+        <input type="text" id="spec-author" placeholder="Author (optional)" autocomplete="off" aria-label="Author">
+      </div>
+      <div class="btns">
+        <button class="btn solid" type="button" id="spec-copy">Copy specimen</button>
+        <button class="btn" type="button" id="spec-dl">Download specimen</button>
+      </div>
+      <div class="sub-h aid">Load a specimen</div>
+      <textarea id="spec-in" placeholder="Paste a specimen here" spellcheck="false" aria-label="Specimen to load"></textarea>
+      <div class="btns">
+        <button class="btn solid" type="button" id="spec-load">Load pasted</button>
+        <button class="btn" type="button" id="spec-file-b">Choose file…</button>
+        <input type="file" id="spec-file" accept=".json,application/json,text/plain" hidden>
+      </div>
+      <p class="hint-on" id="spec-msg" role="status"></p>
+      <p class="hint-on">A specimen holds the text, every setting, your letter edits and the names of the fonts, not the fonts. Loading it is one step: ⌘Z goes back. With the same fonts it gives exactly the same result.</p>
     </div>
   </form>
 </dialog>
@@ -2839,6 +2875,7 @@ function syncShares() {
 
 function bindRange(id, key, fmt) {
   const el = $('#' + id), o = $('#' + id + '-o');
+  LIMITS[key] = { min: +el.min, max: +el.max };
   const show = () => { el.value = S[key]; if (o) unitText(o, fmt(S[key])); };
   show();
   syncers.push(show);
@@ -2846,6 +2883,7 @@ function bindRange(id, key, fmt) {
 }
 function bindOpts(id, key, after) {
   const host = $('#' + id);
+  LIMITS[key] = { opts: [...host.querySelectorAll('button')].map(b => b.dataset.v) };
   const sync = () => host.querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', b.dataset.v === S[key]));
   sync();
   syncers.push(() => { sync(); if (after) after(); });
@@ -3267,6 +3305,105 @@ async function pngOut(copy) {
   toast((copy === 'failed' ? `The browser would not copy the image, so it was saved as ${name}` : `Saved ${name} (${r1(o.scale)}×)`) + note);
 }
 
+/* ---------------- specimen ---------------- */
+// A specimen is a whole look as parameters: every saved setting, the per-letter edits, the pool and the base style,
+// with fonts named (family, style, PostScript name) rather than embedded. Loading it with the same fonts gives the
+// same result; loading checks every value, so a hand-edited or newer specimen never breaks anything.
+const SPEC_VERSION = 1, TOOL_VERSION = '4.0';
+const LIMITS = {}; // allowed range or options per setting, filled by bindRange / bindOpts
+const fontRef = id => { const s = S.styles.get(id); return s ? { family: s.family, style: s.style, ps: s.ps } : null; };
+// A named font → the id of a loaded style: family and style first, then PostScript name; null when not loaded.
+function resolveFont(f) {
+  if (!f || typeof f !== 'object' || typeof f.family !== 'string' || typeof f.style !== 'string') return null;
+  const id = f.family + '\u0000' + f.style;
+  if (S.styles.has(id)) return id;
+  if (typeof f.ps === 'string' && f.ps) for (const [k, st] of S.styles) if (st.ps === f.ps) return k;
+  return null;
+}
+function buildSpecimen(meta) {
+  const settings = {};
+  for (const k of SAVE_KEYS) settings[k] = structuredClone(S[k]);
+  const used = new Set([S.baseId]);
+  const pool = S.families.filter(f => f.on.size).map(f => {
+    for (const id of f.on) used.add(id);
+    return { family: f.name, share: f.share, on: f.ids.filter(id => f.on.has(id)).map(id => S.styles.get(id).style) };
+  });
+  const overrides = [...S.overrides].filter(([, v]) => !ovEmpty(v)).map(([i, v]) => {
+    const o = structuredClone(v);
+    if (o.style) { used.add(o.style); o.style = fontRef(o.style); }
+    return [i, o];
+  });
+  return {
+    mixweight: 'specimen', specimenVersion: SPEC_VERSION, tool: TOOL_VERSION,
+    title: meta.title || '', author: meta.author || '', created: new Date().toISOString(),
+    fonts: [...used].filter(id => S.styles.has(id)).map(fontRef), base: fontRef(S.baseId), pool, settings, overrides,
+  };
+}
+// One setting from a specimen, checked against its default's type and the control's range or options;
+// undefined when it doesn't fit.
+function specValue(k, v) {
+  const d = DEFAULTS[k], L = LIMITS[k];
+  if (typeof d === 'number') return Number.isFinite(v) ? (L && L.max >= L.min ? clamp(v, L.min, L.max) : v) : undefined;
+  if (typeof d === 'string') return typeof v === 'string' && (!L || !L.opts || L.opts.includes(v)) ? v : undefined;
+  if (typeof d === 'boolean') return typeof v === 'boolean' ? v : undefined;
+  return v && typeof v === 'object' ? structuredClone(v) : undefined; // structured settings go through fixDeco()
+}
+const OV_ENUMS = { va: ['baseline', 'top', 'middle', 'bottom'], fill: ['solid', 'outline'] };
+// Applies a specimen (text or parsed object) as one undo step. → { missing: [names], newer, title } or { error }.
+function loadSpecimen(src) {
+  let o;
+  try { o = typeof src === 'string' ? JSON.parse(src) : src; } catch (e) { return { error: 'This is not a specimen: it is not valid JSON.' }; }
+  if (!o || typeof o !== 'object' || o.mixweight !== 'specimen' || !o.settings || typeof o.settings !== 'object') return { error: 'This is not a Mixweight specimen.' };
+  try {
+    const fonts = Array.isArray(o.fonts) ? o.fonts : [];
+    // Missing fonts, grouped by family: "Roboto Flex: Light, Bold".
+    const miss = new Map();
+    for (const f of fonts) if (f && typeof f === 'object' && typeof f.family === 'string' && !resolveFont(f)) {
+      if (!miss.has(f.family)) miss.set(f.family, new Set());
+      miss.get(f.family).add(String(f.style));
+    }
+    const missing = [...miss].map(([fam, sts]) => `${fam}: ${[...sts].join(', ')}`);
+    record();
+    // Settings: a key the specimen doesn't have (an older version's) goes back to its default.
+    for (const k of SAVE_KEYS) {
+      const v = k in o.settings ? specValue(k, o.settings[k]) : undefined;
+      S[k] = v !== undefined ? v : structuredClone(DEFAULTS[k]);
+    }
+    if (DEFAULTS.dist !== undefined && !$$('#dist option').some(op => op.value === S.dist)) S.dist = DEFAULTS.dist;
+    // Pool: the specimen's styles on, other families' styles off, so the mix draws from the same styles. If none of
+    // its families are here, the pool stays as it is.
+    const pool = (Array.isArray(o.pool) ? o.pool : []).filter(e => e && typeof e.family === 'string' && Array.isArray(e.on));
+    const here = pool.filter(e => e.on.some(st => resolveFont({ family: e.family, style: st })));
+    if (here.length) for (const fam of S.families) {
+      const e = here.find(x => x.family === fam.name);
+      fam.on = new Set(e ? e.on.map(st => resolveFont({ family: fam.name, style: st })).filter(id => id && fam.ids.includes(id)) : []);
+      if (e && Number.isFinite(e.share) && e.share >= 0) fam.share = e.share;
+    }
+    const b = resolveFont(o.base);
+    if (b) S.baseId = b;
+    ensureBaseOn();
+    // Per-letter edits: known keys with valid values; a letter whose font is missing gets the base style.
+    S.overrides = new Map();
+    for (const e of Array.isArray(o.overrides) ? o.overrides : []) {
+      if (!Array.isArray(e) || !Number.isInteger(e[0]) || e[0] < 0 || !e[1] || typeof e[1] !== 'object') continue;
+      const v = e[1], w = {};
+      if (v.style) w.style = resolveFont(v.style) || S.baseId;
+      for (const k of ['va', 'fill']) if (OV_ENUMS[k].includes(v[k])) w[k] = v[k];
+      for (const k of ['sw', 'rot', 'ra']) if (Number.isFinite(v[k])) w[k] = v[k];
+      if (Number.isFinite(v.ru)) w.ru = clamp(v.ru, -1, 1);
+      if (v.box && typeof v.box === 'object') w.box = v.box;
+      if (typeof v.col === 'string') w.col = v.col;
+      if (!ovEmpty(w)) S.overrides.set(e[0], w);
+    }
+    fixDeco();
+    S.sel = new Set();
+    syncControls(); renderPool(); render(); save();
+    return { missing, newer: Number(o.specimenVersion) > SPEC_VERSION, title: typeof o.title === 'string' ? o.title : '' };
+  } catch (e) {
+    return { error: 'This specimen could not be read: ' + e.message };
+  }
+}
+
 /* ---------------- persistence ---------------- */
 // Settings that live in the left panel and change how the text looks (Clear there resets these).
 const LEFT_KEYS = ['caseMode', 'caseAmt', 'mix', 'dist', 'wavePeriod', 'gran', 'valign', 'size', 'leading', 'sizeVar', 'baseJit',
@@ -3670,6 +3807,47 @@ async function boot() {
     render(); save();
   };
   $('#sel-none').onclick = () => { S.sel.clear(); paintSelection(); };
+
+
+  // specimen
+  LIMITS.boxAmt = { min: 0, max: 100 };
+  const specMsg = t => { $('#spec-msg').textContent = t; };
+  const specJSON = () => JSON.stringify(buildSpecimen({ title: $('#spec-title').value.trim(), author: $('#spec-author').value.trim() }), null, 1);
+  $('#btn-spec').onclick = () => { specMsg(''); $('#spec').showModal(); };
+  $('#spec-copy').onclick = async () => {
+    const t = specJSON();
+    try { await navigator.clipboard.writeText(t); toast('Copied the specimen. Paste it anywhere to keep or share it.'); }
+    catch (e) { const ta = $('#spec-in'); ta.value = t; ta.select(); specMsg('The browser would not copy it, so it is in the box below, selected: copy it with ⌘C.'); }
+  };
+  $('#spec-dl').onclick = () => {
+    const slug = $('#spec-title').value.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+    const name = `mixweight-specimen${slug ? '-' + slug : ''}.json`;
+    download(name, specJSON());
+    toast('Saved ' + name);
+  };
+  const specLoad = src => {
+    const r = loadSpecimen(src);
+    if (r.error) { specMsg(r.error); return; }
+    const what = r.title ? `“${r.title}”` : 'the specimen';
+    const newer = r.newer ? ' It was made by a newer Mixweight, so settings this version doesn’t know were left out.' : '';
+    if (r.missing.length) {
+      specMsg(`Loaded ${what}, with stand-ins. These fonts aren’t loaded here, so the base style or the fonts you have stand in for them: ${r.missing.join('; ')}. The layout will differ, because their widths differ. Add those fonts (Installed fonts or Font files) and load the specimen again for the exact result.${newer}`);
+      toast(`Loaded ${what}. Some fonts are missing; see the Specimen window.`);
+    } else {
+      specMsg('');
+      $('#spec').close();
+      toast(`Loaded ${what}. ⌘Z goes back.${newer}`, 6000);
+    }
+  };
+  $('#spec-load').onclick = () => { const t = $('#spec-in').value.trim(); if (t) specLoad(t); else specMsg('Paste a specimen into the box first.'); };
+  $('#spec-file-b').onclick = () => $('#spec-file').click();
+  $('#spec-file').onchange = async e => {
+    const f = e.target.files[0]; e.target.value = '';
+    if (!f) return;
+    let t = '';
+    try { t = await f.text(); } catch (err) { specMsg('That file could not be read.'); return; }
+    specLoad(t);
+  };
 
   // right panel
   const sideRender = () => { syncSide(); renderInspector(); };
