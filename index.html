@@ -488,6 +488,18 @@ body.resizing, body.resizing * { cursor: col-resize !important; user-select: non
       </div>
       <div class="colc" id="col-pat" data-label="Colour"></div>
       <p class="hint">The pattern sits behind boxes and text and fills the text block plus a margin, the area the PNG crops to. Canvas and PNG only, not the .jsx export.</p>
+      <div class="sub-h aid">Registration marks</div>
+      <div class="opts" id="reg-on" role="group" aria-label="Registration marks">
+        <button type="button" data-v="off">Off</button>
+        <button type="button" data-v="on">On</button>
+      </div>
+      <div class="pair">
+        <div class="ctl"><label for="reg-size">Size</label><output id="reg-size-o"></output><input type="range" id="reg-size" min="4" max="60" step="1"></div>
+        <div class="ctl"><label for="reg-w">Line weight</label><output id="reg-w-o"></output><input type="range" id="reg-w" min="0.25" max="4" step="0.25"></div>
+        <div class="ctl"><label for="reg-inset">Inset</label><output id="reg-inset-o"></output><input type="range" id="reg-inset" min="0" max="60" step="1"></div>
+      </div>
+      <div class="colc" id="col-reg" data-label="Colour"></div>
+      <p class="hint">Crosshairs at the four corners of the same area, Inset in from each corner, so they are always inside the PNG. Canvas and PNG only, not the .jsx export.</p>
     </section>
   </aside>
 
@@ -724,7 +736,7 @@ body.resizing, body.resizing * { cursor: col-resize !important; user-select: non
       <section><h4>Colour</h4><p>With nothing selected, the Colour group sets the <b>text</b> and <b>background</b> colours, as RGB hex: click the swatch for the system picker, or type a hex value and press Enter. The row under each colour holds the last eight colours used. A <b>palette</b> sets text and background in one click, and the box and band fill too when it has a block colour; Black on white goes back to the start. Selected letters get their own colour under Fill (Use text colour removes it); outline letters stroke in their colour. Box style has Fill and Stroke colours and a <b>blend</b> mode (Normal, Multiply, Screen, Overlay, Difference), which mixes a box with the background and the boxes under it, never with the text. The background fills the text block plus a margin, the same area the PNG crops to. The guidelines' colour is under Guidelines. Random letter boxes have a <b>Box colour</b>: Single gives every box its own fill; From palette gives each randomly placed box a colour from the active palette's block and extra colours, picked by the seed, so Reroll boxes changes placement and colours together. A box whose fill you set by hand keeps it, and Reroll leaves it in place. From palette needs a palette with a block colour. Everything exports: text colour per letter, RGB fills and strokes (neutral greys stay greys, a Black tint in InDesign), blend modes, and the guideline colour. A background that isn't white becomes a rectangle at the very back, named Mixweight background, on its own layer (Illustrator, InDesign) or as the bottom shape layer (Photoshop). InDesign adds each RGB colour as a swatch named Mixweight #RRGGBB.</p></section>
       <section><h4>Outline and rotation</h4><p>Outline letters export as live text with no fill and a stroke in the letter's colour; rotation as character rotation, about the centre of the em box. Photoshop can do neither per letter inside one type layer, so those letters become their own type layers (outline as a layer-style stroke) and the main layer keeps a space of the same width.</p></section>
       <section><h4>Guidelines</h4><p>Baseline, x-height, cap height and ascender of the base style at the set size. Tick Include in export under Guidelines to export them as plain lines on their own layer or group, named Mixweight guidelines.</p></section>
-      <section><h4>Layout aids</h4><p>Guidelines and the pattern share the <b>Layout aids</b> group in the left panel, folded until you open it; each has its own switch. The <b>pattern</b> (Grid, Dots, Crosses, Lines, Diagonal) is drawn behind the boxes and the text, in the text block plus a margin, the area the PNG crops to; cells start at that area's top-left corner. Cell size runs from 2 to 120 pt. Dots have a Dot size as a share of the cell (100% and neighbouring dots touch), so they stay visible at any cell size; the other types have a Line weight. Box blend modes mix with it. It shows on the canvas and in the PNG, but is not part of the .jsx export.</p></section>
+      <section><h4>Layout aids</h4><p>Guidelines, the pattern and the registration marks share the <b>Layout aids</b> group in the left panel, folded until you open it; each has its own switch. The <b>pattern</b> (Grid, Dots, Crosses, Lines, Diagonal) is drawn behind the boxes and the text, in the text block plus a margin, the area the PNG crops to; cells start at that area's top-left corner. Cell size runs from 2 to 120 pt. Dots have a Dot size as a share of the cell (100% and neighbouring dots touch), so they stay visible at any cell size; the other types have a Line weight. Box blend modes mix with it. <b>Registration marks</b> are crosshairs at the four corners of that same area: Size, Line weight, Inset (how far in from each corner) and Colour; on a small area they stop at the middle. Pattern and marks show on the canvas and in the PNG (always inside it), but are not part of the .jsx export.</p></section>
       <section><h4>PNG</h4><p><b>PNG</b> in the top bar saves a picture of the text and its boxes exactly as on the canvas, cropped to the text block plus a margin, without selection marks, hover or zoom. Pick the scale (1× is one pixel per point), a transparent background, and whether the guidelines that are switched on come along (separate from Include in export). Download it, or copy it to the clipboard; if the browser won't copy, it downloads instead. It is a flat image, not editable text. Chrome or Edge.</p></section>
     </div>
     <footer><span></span><button class="btn solid" value="close">Close</button></footer>
@@ -1421,6 +1433,7 @@ const DEFAULTS = {
   palette: '',                            // name of the preset applied last, '' for none
   patOn: 'off', patType: 'grid', patCell: 16, patW: 0.5, patCol: '#d9d9d9', // pattern behind the text (pt)
   patDot: 25,                             // Dots: diameter as % of the cell, so dots stay visible at any cell size
+  regOn: 'off', regSize: 16, regW: 0.5, regInset: 12, regCol: '#000000', // registration marks at the frame corners (pt)
   recent: [],                             // last colours used, newest first; not in undo
   boxAmt: 30, boxSeed: 11,
   boxCol: 'single',                       // random letter boxes: 'single' (their own fill) or 'palette'
@@ -2188,7 +2201,19 @@ function frame() {
   const { tw, th } = measure(), m = exportMargin();
   return { x: -m, y: -m, w: tw + m * 2, h: th + m * 2, m };
 }
-const frameShown = () => S.bgCol !== '#ffffff' || S.patOn === 'on';
+const frameShown = () => S.bgCol !== '#ffffff' || S.patOn === 'on' || S.regOn === 'on';
+// Registration marks: a cross with a circle, centred Inset + half its Size in from each corner of the frame, so the
+// whole mark is always inside it.
+function regMarks(f) {
+  const z = S.regSize, h = z / 2, r = r2(z * 0.3);
+  // On a small frame a big inset stops at the middle, so the four marks never cross into each other's corner.
+  const ox = Math.max(h, Math.min(S.regInset + h, f.w / 2 - h)), oy = Math.max(h, Math.min(S.regInset + h, f.h / 2 - h));
+  let d = '';
+  for (const [x, y] of [[f.x + ox, f.y + oy], [f.x + f.w - ox, f.y + oy], [f.x + f.w - ox, f.y + f.h - oy], [f.x + ox, f.y + f.h - oy]]) {
+    d += `M${r2(x - h)} ${r2(y)}H${r2(x + h)}M${r2(x)} ${r2(y - h)}V${r2(y + h)}M${r2(x + r)} ${r2(y)}A${r} ${r} 0 1 0 ${r2(x - r)} ${r2(y)}A${r} ${r} 0 1 0 ${r2(x + r)} ${r2(y)}`;
+  }
+  return `<path d="${d}" fill="none" stroke="${S.regCol}" stroke-width="${S.regW}"/>`;
+}
 const PATTERNS = ['grid', 'dots', 'crosses', 'lines', 'diagonal'];
 // One pattern tile, cell × cell, starting at the frame's top-left corner. Marks on a tile's edge are drawn on both
 // edges, so the halves that each tile clips meet up into whole lines, dots and crosses.
@@ -2216,6 +2241,7 @@ function decoMarkup(png, withGuides, withBg) {
     s += `<path d="${svgPath(sh.pts, S.lb[sh.k])}" fill="${st.fill}"` + (st.op < 100 ? ` opacity="${st.op / 100}"` : '') +
       (st.sw > 0 ? ` stroke="${st.stroke}" stroke-width="${st.sw}"` : '') + (st.blend !== 'normal' ? ` style="mix-blend-mode:${st.blend}"` : '') + '/>';
   }
+  if (S.regOn === 'on') s += regMarks(f);
   if (withGuides) {
     const gs = png ? `fill="none" stroke="${S.guideCol}" stroke-width=".75"` : `class="gd" style="stroke:${S.guideCol}"`;
     for (const gl of guideLines()) {
@@ -2280,6 +2306,7 @@ function leftSummaries() {
   const aids = [];
   if (gl.length) aids.push(gl.join(' · ') + ($('#exp-guides').checked ? ' · in export' : ''));
   if (S.patOn === 'on') aids.push(`${S.patType[0].toUpperCase() + S.patType.slice(1)} ${S.patCell} pt`);
+  if (S.regOn === 'on') aids.push('Marks');
   summary('sum-guides', aids.join(' · ') || 'Off');
 }
 
@@ -3243,12 +3270,13 @@ async function pngOut(copy) {
 /* ---------------- persistence ---------------- */
 // Settings that live in the left panel and change how the text looks (Clear there resets these).
 const LEFT_KEYS = ['caseMode', 'caseAmt', 'mix', 'dist', 'wavePeriod', 'gran', 'valign', 'size', 'leading', 'sizeVar', 'baseJit',
-  'trackJit', 'track', 'gaps', 'match', 'align', 'guides', 'guideCol', 'patOn', 'patType', 'patCell', 'patW', 'patCol', 'patDot'];
+  'trackJit', 'track', 'gaps', 'match', 'align', 'guides', 'guideCol', 'patOn', 'patType', 'patCell', 'patW', 'patCol', 'patDot',
+  'regOn', 'regSize', 'regW', 'regInset', 'regCol'];
 // Paragraph settings in the right panel that its Clear edits resets.
 const RIGHT_KEYS = ['outlineAmt', 'strokeW'];
 const SAVE_KEYS = ['text', 'caseMode', 'caseAmt', 'mix', 'dist', 'gran', 'valign', 'size', 'leading', 'sizeVar', 'baseJit', 'trackJit', 'track', 'align', 'seed', 'match', 'wavePeriod', 'gaps',
   'outlineAmt', 'outlineSeed', 'strokeW', 'guides', 'boxAmt', 'boxSeed', 'boxStyle', 'bandFit', 'bands', 'para', 'textCol', 'bgCol', 'guideCol', 'palette', 'boxCol',
-  'patOn', 'patType', 'patCell', 'patW', 'patCol', 'patDot'];
+  'patOn', 'patType', 'patCell', 'patW', 'patCol', 'patDot', 'regOn', 'regSize', 'regW', 'regInset', 'regCol'];
 // Saved state from older versions, or edited by hand: keep only well-formed decoration settings.
 function fixDeco() {
   const g = S.guides && typeof S.guides === 'object' ? S.guides : {};
@@ -3273,6 +3301,9 @@ function fixDeco() {
   S.patW = Number.isFinite(S.patW) ? clamp(S.patW, 0.25, 4) : 0.5;
   S.patDot = Number.isFinite(S.patDot) ? clamp(Math.round(S.patDot), 5, 100) : 25;
   S.patCol = hexOf(S.patCol) || DEFAULTS.patCol;
+  S.regOn = S.regOn === 'on' ? 'on' : 'off';
+  for (const [k, a, b] of [['regSize', 4, 60], ['regW', 0.25, 4], ['regInset', 0, 60]]) S[k] = Number.isFinite(S[k]) ? clamp(S[k], a, b) : DEFAULTS[k];
+  S.regCol = hexOf(S.regCol) || DEFAULTS.regCol;
 }
 function save() {
   try {
@@ -3761,6 +3792,12 @@ async function boot() {
   bindOpts('pat-type', 'patType', patCtl);
   patCtl();
   bindRange('pat-dot', 'patDot', v => v + '%');
+  bindOpts('reg-on', 'regOn', patFit);
+  bindRange('reg-size', 'regSize', ptTxt);
+  bindRange('reg-w', 'regW', ptTxt);
+  bindRange('reg-inset', 'regInset', ptTxt);
+  colCtl.reg = colorCtl('col-reg', () => S.regCol, (v, key) => { record(key); S.regCol = v; render(); save(); });
+  syncers.push(() => colCtl.reg.sync());
   bindRange('pat-cell', 'patCell', ptTxt);
   bindRange('pat-w', 'patW', ptTxt);
   colCtl.pat = colorCtl('col-pat', () => S.patCol, (v, key) => { record(key); S.patCol = v; render(); save(); });
