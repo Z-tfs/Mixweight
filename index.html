@@ -628,6 +628,12 @@ body.resizing, body.resizing * { cursor: col-resize !important; user-select: non
         <div class="ctl"><label for="bx-op">Opacity</label><output id="bx-op-o"></output><input type="range" id="bx-op" min="0" max="100" step="1"></div>
         <div class="ctl"><label for="bx-sw">Stroke</label><output id="bx-sw-o"></output><input type="range" id="bx-sw" min="0" max="8" step="0.25"></div>
       </div>
+      <div class="pair" id="bx-fit">
+        <div class="ctl"><label>Height</label><output></output><div class="opts" id="bx-h" role="group" aria-label="Letter box height" style="grid-column:1/-1">
+          <button type="button" data-v="glyph">Glyph</button><button type="button" data-v="line">Line</button></div></div>
+        <div class="ctl"><label>Width</label><output></output><div class="opts" id="bx-w" role="group" aria-label="Letter box width" style="grid-column:1/-1">
+          <button type="button" data-v="glyph">Glyph</button><button type="button" data-v="advance">Advance</button></div></div>
+      </div>
       <div class="ctl"><label>Blend</label><output></output></div>
       <div class="opts" id="bx-blend" role="group" aria-label="Blend mode">
         <button type="button" data-v="normal">Normal</button>
@@ -689,7 +695,7 @@ body.resizing, body.resizing * { cursor: col-resize !important; user-select: non
       <section><h4>Letter align</h4><p>Top, middle and bottom alignment are written as baseline shift values. If you change a letter or its font afterwards, export again to re-align.</p></section>
       <section><h4>Group titles</h4><p>Click a group title in the left panel to fold the group to its title row (▸) or open it again (▾); each group remembers its own state. Folding Font pool hides every family; the family names fold just their own styles. The right side of each title row sums up what the group is set to, and follows every change; hover it for the full text if it is cut short. Groups with a short note have a <b>?</b> next to their title: click it to show the note, again to hide it.</p></section>
       <section><h4>Right panel</h4><p>Selecting letters opens it with their font, size, shift and tracking at the top, then weight, align, <b>rotation</b>, <b>fill</b> and <b>boxes</b>. With nothing selected, the handle on the right edge opens the paragraph settings: hover info, <b>fill</b> (random outline, stroke), the paragraph band, random letter boxes. Clear edits there also sets Random outline and Stroke back to their defaults. A drag that starts on empty canvas selects the letters it sweeps over. The panel keeps its place: selecting other letters, deselecting and reselecting, or switching between selection and paragraph brings back the group you were using.</p></section>
-      <section><h4>Boxes</h4><p>Letter boxes follow each letter's ink, size and shift, and turn with it. A band runs under the selection, as tall as its tallest letter or stepping with each one; the paragraph band does the same for every line. In Box style, Expand X and Y make a box wider or taller than the ink (negative values make it smaller), and Move X and Y shift it right and up; a rotated letter's box moves along the letter's own axes. They export under the text as vector shapes: InDesign rectangles keep live corner options, Illustrator and Photoshop get the exact path.</p></section>
+      <section><h4>Boxes</h4><p>Letter boxes follow each letter's ink, size and shift, and turn with it. A band runs under the selection, as tall as its tallest letter or stepping with each one; the paragraph band does the same for every line. In Box style, Expand X and Y make a box wider or taller than the ink (negative values make it smaller), and Move X and Y shift it right and up; a rotated letter's box moves along the letter's own axes. Letter boxes also have <b>Height</b> (Glyph: the letter's own ink; Line: as tall as the line's tallest letter) and <b>Width</b> (Glyph: the letter as set, without tracking; Advance: up to the next letter, so neighbouring boxes touch). Line + Advance makes a grid of columns. They export under the text as vector shapes: InDesign rectangles keep live corner options, Illustrator and Photoshop get the exact path.</p></section>
       <section><h4>Colour</h4><p>With nothing selected, the Colour group sets the <b>text</b> and <b>background</b> colours, as RGB hex: click the swatch for the system picker, or type a hex value and press Enter. The row under each colour holds the last eight colours used. A <b>palette</b> sets text and background in one click, and the box and band fill too when it has a block colour; Black on white goes back to the start. Selected letters get their own colour under Fill (Use text colour removes it); outline letters stroke in their colour. Box style has Fill and Stroke colours and a <b>blend</b> mode (Normal, Multiply, Screen, Overlay, Difference), which mixes a box with the background and the boxes under it, never with the text. The background fills the text block plus a margin, the same area the PNG crops to. The guidelines' colour is under Guidelines. Random letter boxes have a <b>Box colour</b>: Single gives every box its own fill; From palette gives each randomly placed box a colour from the active palette's block and extra colours, picked by the seed, so Reroll boxes changes placement and colours together. A box whose fill you set by hand keeps it, and Reroll leaves it in place. From palette needs a palette with a block colour. Everything exports: text colour per letter, RGB fills and strokes (neutral greys stay greys, a Black tint in InDesign), blend modes, and the guideline colour. A background that isn't white becomes a rectangle at the very back, named Mixweight background, on its own layer (Illustrator, InDesign) or as the bottom shape layer (Photoshop). InDesign adds each RGB colour as a swatch named Mixweight #RRGGBB.</p></section>
       <section><h4>Outline and rotation</h4><p>Outline letters export as live text with no fill and a stroke in the letter's colour; rotation as character rotation, about the centre of the em box. Photoshop can do neither per letter inside one type layer, so those letters become their own type layers (outline as a layer-style stroke) and the main layer keeps a space of the same width.</p></section>
       <section><h4>Guidelines</h4><p>Baseline, x-height, cap height and ascender of the base style at the set size. Tick Include in export under Guidelines to export them as plain lines on their own layer or group, named Mixweight guidelines.</p></section>
@@ -1397,9 +1403,11 @@ const DEFAULTS = {
 };
 // Box style. fill and stroke are RGB hex (v3.x kept grey ink %: 0 white, 100 black; normStyle migrates them).
 // blend is a BLENDS mode. px / py expand the box sideways / up and down (v3.x had one pad for both); dx / dy move
-// it right / up, all in pt. Corners run TL, TR, BR, BL; s is round, bevel or inverse.
+// it right / up, all in pt. Letter boxes only: h 'glyph' (the letter's ink) or 'line' (the line's tallest letter),
+// w 'glyph' (the letter's advance less tracking, as v3.x) or 'advance' (up to the next letter, so boxes touch).
+// Corners run TL, TR, BR, BL; s is round, bevel or inverse.
 function defaultBoxStyle() {
-  return { fill: '#dedede', stroke: '#ffffff', sw: 0, op: 100, blend: 'normal', px: 2, py: 2, dx: 0, dy: 0, lock: true, c: [0, 1, 2, 3].map(() => ({ s: 'round', r: 0 })) };
+  return { fill: '#dedede', stroke: '#ffffff', sw: 0, op: 100, blend: 'normal', px: 2, py: 2, dx: 0, dy: 0, h: 'glyph', w: 'glyph', lock: true, c: [0, 1, 2, 3].map(() => ({ s: 'round', r: 0 })) };
 }
 const BLENDS = ['normal', 'multiply', 'screen', 'overlay', 'difference'];
 // '#abc', 'ABCDEF', '#AbCdEf' → '#aabbcc'; anything else → null.
@@ -1420,6 +1428,8 @@ function normStyle(o) {
   for (const k of ['sw', 'op', 'px', 'py', 'dx', 'dy']) if (n(o[k])) d[k] = o[k];
   for (const k of ['fill', 'stroke']) d[k] = colOf(o[k]) || d[k];
   if (BLENDS.includes(o.blend)) d.blend = o.blend;
+  if (o.h === 'line') d.h = 'line';
+  if (o.w === 'advance') d.w = 'advance';
   if (o.auto === true) d.auto = true; // placed by Random letter boxes
   if (o.hand === true) d.hand = true; // fill set by hand: From palette leaves it alone
   d.lock = o.lock !== false;
@@ -2011,7 +2021,10 @@ function letterShape(g, st) {
   const e = inkExt(g);
   if (!e) return null;
   const { px, py, dx, dy } = st;
-  return rectShape(g.k, g, st, g.x - px + dx, e.t - py - dy, g.x + g.adv + px + dx, e.b + py - dy, 'Box ' + g.ch, g.rot, pivotOf(g));
+  let t = e.t, b = e.b;
+  if (st.h === 'line') for (const q of S.lines[g.k]) { const f = inkExt(q); if (f) { t = Math.min(t, f.t); b = Math.max(b, f.b); } }
+  const w = st.w === 'advance' ? g.w : g.adv;
+  return rectShape(g.k, g, st, g.x - px + dx, t - py - dy, g.x + w + px + dx, b + py - dy, 'Box ' + g.ch, g.rot, pivotOf(g));
 }
 // A straight band under a run of letters on one line. fit 'max': one rectangle as tall as the tallest letter;
 // 'each': steps up and down with each letter's own height. dh adds height, half above and half below.
@@ -2486,6 +2499,8 @@ function renderBoxEditor(gs) {
   $('#bx-ed-r').textContent = boxTargets(gs).label;
   colCtl.bxFill?.sync(); colCtl.bxStroke?.sync();
   press('#bx-blend', st.blend);
+  press('#bx-h', st.h); press('#bx-w', st.w);
+  $('#bx-fit').hidden = !gs.length && bxTarget === 'para'; // letter boxes only
   setRange('bx-op', st.op, st.op + '%');
   setRange('bx-sw', st.sw, ptTxt(st.sw));
   setRange('bx-px', st.px, ptTxt(st.px));
@@ -3617,6 +3632,8 @@ async function boot() {
     $('#' + id).addEventListener('input', e => { const v = +e.target.value; editBox(key, st => { st[key] = v; }); });
   }
   optClick('#bx-blend', v => editBox('blend', st => { st.blend = v; }));
+  optClick('#bx-h', v => editBox('h', st => { st.h = v; }));
+  optClick('#bx-w', v => editBox('w', st => { st.w = v; }));
   for (const [c, key] of [['bxFill', 'fill'], ['bxStroke', 'stroke']]) {
     colCtl[c] = colorCtl(c === 'bxFill' ? 'col-bx-fill' : 'col-bx-stroke', () => {
       // A box coloured from the palette shows the colour it is drawn in.
