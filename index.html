@@ -483,7 +483,8 @@ body.resizing, body.resizing * { cursor: col-resize !important; user-select: non
       </div>
       <div class="pair">
         <div class="ctl"><label for="pat-cell">Cell size</label><output id="pat-cell-o"></output><input type="range" id="pat-cell" min="2" max="120" step="1"></div>
-        <div class="ctl"><label for="pat-w" id="pat-w-l">Line weight</label><output id="pat-w-o"></output><input type="range" id="pat-w" min="0.25" max="4" step="0.25"></div>
+        <div class="ctl" id="pat-w-c"><label for="pat-w">Line weight</label><output id="pat-w-o"></output><input type="range" id="pat-w" min="0.25" max="4" step="0.25"></div>
+        <div class="ctl" id="pat-dot-c" hidden><label for="pat-dot">Dot size</label><output id="pat-dot-o"></output><input type="range" id="pat-dot" min="5" max="100" step="1"></div>
       </div>
       <div class="colc" id="col-pat" data-label="Colour"></div>
       <p class="hint">The pattern sits behind boxes and text and fills the text block plus a margin, the area the PNG crops to. Canvas and PNG only, not the .jsx export.</p>
@@ -723,7 +724,7 @@ body.resizing, body.resizing * { cursor: col-resize !important; user-select: non
       <section><h4>Colour</h4><p>With nothing selected, the Colour group sets the <b>text</b> and <b>background</b> colours, as RGB hex: click the swatch for the system picker, or type a hex value and press Enter. The row under each colour holds the last eight colours used. A <b>palette</b> sets text and background in one click, and the box and band fill too when it has a block colour; Black on white goes back to the start. Selected letters get their own colour under Fill (Use text colour removes it); outline letters stroke in their colour. Box style has Fill and Stroke colours and a <b>blend</b> mode (Normal, Multiply, Screen, Overlay, Difference), which mixes a box with the background and the boxes under it, never with the text. The background fills the text block plus a margin, the same area the PNG crops to. The guidelines' colour is under Guidelines. Random letter boxes have a <b>Box colour</b>: Single gives every box its own fill; From palette gives each randomly placed box a colour from the active palette's block and extra colours, picked by the seed, so Reroll boxes changes placement and colours together. A box whose fill you set by hand keeps it, and Reroll leaves it in place. From palette needs a palette with a block colour. Everything exports: text colour per letter, RGB fills and strokes (neutral greys stay greys, a Black tint in InDesign), blend modes, and the guideline colour. A background that isn't white becomes a rectangle at the very back, named Mixweight background, on its own layer (Illustrator, InDesign) or as the bottom shape layer (Photoshop). InDesign adds each RGB colour as a swatch named Mixweight #RRGGBB.</p></section>
       <section><h4>Outline and rotation</h4><p>Outline letters export as live text with no fill and a stroke in the letter's colour; rotation as character rotation, about the centre of the em box. Photoshop can do neither per letter inside one type layer, so those letters become their own type layers (outline as a layer-style stroke) and the main layer keeps a space of the same width.</p></section>
       <section><h4>Guidelines</h4><p>Baseline, x-height, cap height and ascender of the base style at the set size. Tick Include in export under Guidelines to export them as plain lines on their own layer or group, named Mixweight guidelines.</p></section>
-      <section><h4>Layout aids</h4><p>Guidelines and the pattern share the <b>Layout aids</b> group in the left panel, folded until you open it; each has its own switch. The <b>pattern</b> (Grid, Dots, Crosses, Lines, Diagonal) is drawn behind the boxes and the text, in the text block plus a margin, the area the PNG crops to; cells start at that area's top-left corner. Cell size runs from 2 to 120 pt; Line weight is the dot size for Dots. Box blend modes mix with it. It shows on the canvas and in the PNG, but is not part of the .jsx export.</p></section>
+      <section><h4>Layout aids</h4><p>Guidelines and the pattern share the <b>Layout aids</b> group in the left panel, folded until you open it; each has its own switch. The <b>pattern</b> (Grid, Dots, Crosses, Lines, Diagonal) is drawn behind the boxes and the text, in the text block plus a margin, the area the PNG crops to; cells start at that area's top-left corner. Cell size runs from 2 to 120 pt. Dots have a Dot size as a share of the cell (100% and neighbouring dots touch), so they stay visible at any cell size; the other types have a Line weight. Box blend modes mix with it. It shows on the canvas and in the PNG, but is not part of the .jsx export.</p></section>
       <section><h4>PNG</h4><p><b>PNG</b> in the top bar saves a picture of the text and its boxes exactly as on the canvas, cropped to the text block plus a margin, without selection marks, hover or zoom. Pick the scale (1× is one pixel per point), a transparent background, and whether the guidelines that are switched on come along (separate from Include in export). Download it, or copy it to the clipboard; if the browser won't copy, it downloads instead. It is a flat image, not editable text. Chrome or Edge.</p></section>
     </div>
     <footer><span></span><button class="btn solid" value="close">Close</button></footer>
@@ -1419,6 +1420,7 @@ const DEFAULTS = {
   textCol: '#000000', bgCol: '#ffffff', guideCol: '#b4b4b4', // RGB hex
   palette: '',                            // name of the preset applied last, '' for none
   patOn: 'off', patType: 'grid', patCell: 16, patW: 0.5, patCol: '#d9d9d9', // pattern behind the text (pt)
+  patDot: 25,                             // Dots: diameter as % of the cell, so dots stay visible at any cell size
   recent: [],                             // last colours used, newest first; not in undo
   boxAmt: 30, boxSeed: 11,
   boxCol: 'single',                       // random letter boxes: 'single' (their own fill) or 'palette'
@@ -2197,7 +2199,7 @@ function patternDef(f) {
   if (S.patType === 'grid') m = ln(`M0 0H${c}M0 ${c}H${c}M0 0V${c}M${c} 0V${c}`);
   else if (S.patType === 'lines') m = ln(`M0 0H${c}M0 ${c}H${c}`);
   else if (S.patType === 'diagonal') m = ln(`M0 ${c}L${c} 0M${-c / 2} ${c / 2}L${c / 2} ${-c / 2}M${c / 2} ${c * 1.5}L${c * 1.5} ${c / 2}`);
-  else if (S.patType === 'dots') m = [[0, 0], [c, 0], [0, c], [c, c]].map(([x, y]) => `<circle cx="${x}" cy="${y}" r="${w / 2}" fill="${col}"/>`).join('');
+  else if (S.patType === 'dots') m = [[0, 0], [c, 0], [0, c], [c, c]].map(([x, y]) => `<circle cx="${x}" cy="${y}" r="${r2(c * S.patDot / 200)}" fill="${col}"/>`).join('');
   else m = ln(`M0 0H${a}M0 0V${a}M${c} 0H${c - a}M${c} 0V${a}M0 ${c}H${a}M0 ${c}V${c - a}M${c} ${c}H${c - a}M${c} ${c}V${c - a}`);
   return `<defs><pattern id="mw-pat" patternUnits="userSpaceOnUse" x="${f.x}" y="${f.y}" width="${c}" height="${c}">${m}</pattern></defs>`;
 }
@@ -3241,12 +3243,12 @@ async function pngOut(copy) {
 /* ---------------- persistence ---------------- */
 // Settings that live in the left panel and change how the text looks (Clear there resets these).
 const LEFT_KEYS = ['caseMode', 'caseAmt', 'mix', 'dist', 'wavePeriod', 'gran', 'valign', 'size', 'leading', 'sizeVar', 'baseJit',
-  'trackJit', 'track', 'gaps', 'match', 'align', 'guides', 'guideCol', 'patOn', 'patType', 'patCell', 'patW', 'patCol'];
+  'trackJit', 'track', 'gaps', 'match', 'align', 'guides', 'guideCol', 'patOn', 'patType', 'patCell', 'patW', 'patCol', 'patDot'];
 // Paragraph settings in the right panel that its Clear edits resets.
 const RIGHT_KEYS = ['outlineAmt', 'strokeW'];
 const SAVE_KEYS = ['text', 'caseMode', 'caseAmt', 'mix', 'dist', 'gran', 'valign', 'size', 'leading', 'sizeVar', 'baseJit', 'trackJit', 'track', 'align', 'seed', 'match', 'wavePeriod', 'gaps',
   'outlineAmt', 'outlineSeed', 'strokeW', 'guides', 'boxAmt', 'boxSeed', 'boxStyle', 'bandFit', 'bands', 'para', 'textCol', 'bgCol', 'guideCol', 'palette', 'boxCol',
-  'patOn', 'patType', 'patCell', 'patW', 'patCol'];
+  'patOn', 'patType', 'patCell', 'patW', 'patCol', 'patDot'];
 // Saved state from older versions, or edited by hand: keep only well-formed decoration settings.
 function fixDeco() {
   const g = S.guides && typeof S.guides === 'object' ? S.guides : {};
@@ -3269,6 +3271,7 @@ function fixDeco() {
   if (!PATTERNS.includes(S.patType)) S.patType = 'grid';
   S.patCell = Number.isFinite(S.patCell) ? clamp(Math.round(S.patCell), 2, 120) : 16;
   S.patW = Number.isFinite(S.patW) ? clamp(S.patW, 0.25, 4) : 0.5;
+  S.patDot = Number.isFinite(S.patDot) ? clamp(Math.round(S.patDot), 5, 100) : 25;
   S.patCol = hexOf(S.patCol) || DEFAULTS.patCol;
 }
 function save() {
@@ -3754,7 +3757,10 @@ async function boot() {
   optClick('#guides', v => { record(); S.guides[v] = !S.guides[v]; syncGuides(); render(); save(); });
   const patFit = () => { if (zoomFit) requestAnimationFrame(fitZoom); };
   bindOpts('pat-on', 'patOn', patFit);
-  bindOpts('pat-type', 'patType', () => { $('#pat-w-l').textContent = S.patType === 'dots' ? 'Dot size' : 'Line weight'; });
+  const patCtl = () => { $('#pat-w-c').hidden = S.patType === 'dots'; $('#pat-dot-c').hidden = S.patType !== 'dots'; };
+  bindOpts('pat-type', 'patType', patCtl);
+  patCtl();
+  bindRange('pat-dot', 'patDot', v => v + '%');
   bindRange('pat-cell', 'patCell', ptTxt);
   bindRange('pat-w', 'patW', ptTxt);
   colCtl.pat = colorCtl('col-pat', () => S.patCol, (v, key) => { record(key); S.patCol = v; render(); save(); });
