@@ -117,7 +117,8 @@ button { background: none; border: 0; padding: 0; cursor: pointer; }
 .col-row .hex::placeholder { color: var(--g4); }
 .col-recent { display: flex; flex-wrap: wrap; gap: 3px; min-height: 11px; }
 .col-recent button, .pal .sw { width: 11px; height: 11px; border: 1px solid var(--g3); padding: 0; flex: none; }
-.col-recent button:hover { border-color: var(--ink); }
+.col-recent button:hover, .col-recent button[aria-current="true"] { border-color: var(--ink); }
+.col-recent button[aria-current="true"] { box-shadow: inset 0 0 0 1px var(--paper); }
 .pals { display: grid; gap: 2px; }
 .pal { display: flex; align-items: center; gap: 8px; padding: 3px 0; text-transform: uppercase; color: var(--g4); text-align: left; }
 .pal:hover, .pal[aria-pressed="true"] { color: var(--ink); }
@@ -126,6 +127,9 @@ button { background: none; border: 0; padding: 0; cursor: pointer; }
 .pal .sws { display: inline-flex; gap: 2px; width: 72px; flex: none; overflow: hidden; }
 .pal .sw { border-color: transparent; }
 .pal .nm { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pals.compact { display: flex; flex-wrap: wrap; gap: 4px; }
+.pals.compact .pal { padding: 0; }
+.pals.compact .sws, .pals.compact .nm { display: none; }
 .pal[aria-pressed="true"] .nm::before { content: ""; display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--ink); margin-right: 5px; vertical-align: 1px; }
 
 input[type=range] { -webkit-appearance: none; appearance: none; width: 100%; height: 14px; background: transparent; margin: 0; cursor: pointer; }
@@ -351,7 +355,7 @@ body.resizing, body.resizing * { cursor: col-resize !important; user-select: non
   </header>
 
   <div class="sub">
-    <div><span>Controls</span><span class="grp"><span class="muted" id="pool-count"></span><button class="tbtn" type="button" id="clear-left" title="Reset the left panel's settings (case, mix, type, letter align, jitter, layout aids, decoration) to their defaults. Text, fonts and edits in the right panel stay. ⌘Z brings them back.">Clear</button></span></div>
+    <div><span>Controls</span><span class="grp"><span class="muted" id="pool-count"></span><button class="tbtn" type="button" id="clear-left" title="Reset the left panel's settings (case, mix, type, letter align, jitter, layout aids, decoration) to their defaults. Text, colors, fonts and edits in the right panel stay. ⌘Z brings them back.">Clear</button></span></div>
     <div>
       <span class="grp">
         <button class="tbtn" type="button" id="undo" title="⌘Z" disabled>Undo</button>
@@ -386,6 +390,17 @@ body.resizing, body.resizing * { cursor: col-resize !important; user-select: non
       <p class="hint">One click sets a whole look: palette, boxes and bands, pattern, marks, outline and jitter. Your text, seed, fonts and letter edits stay. Change anything afterwards; ⌘Z goes back.</p>
     </section>
 
+    <section class="cell">
+      <div class="cell-h"><span>Color</span><span class="r" id="sum-col"></span></div>
+      <div class="pair">
+        <div class="colc" id="col-text" data-label="Text"></div>
+        <div class="colc" id="col-bg" data-label="Background"></div>
+      </div>
+      <div class="ctl"><button type="button" class="gfold pfold" id="pals-fold" aria-controls="pals">Palettes</button><output id="pal-o"></output></div>
+      <div class="pals" id="pals" role="group" aria-label="Palettes"></div>
+      <div class="btns"><button class="btn sm" type="button" id="col-reset">Black on white</button></div>
+      <p class="hint">A palette sets the text and background colors, and the box and band fill when it has a block color. Letters you colored by hand keep their color. The background fills the text block plus a margin, the same area the PNG export crops to. Palettes apply to the whole design: text, background, boxes, bands, and the swatch row under every color control. Click the active palette again for a new color match; fold the list to just its chips.</p>
+    </section>
     <section class="cell">
       <div class="cell-h"><span>Text</span><span class="r" id="sum-text"></span></div>
       <textarea id="text" spellcheck="false" aria-label="Text to set"></textarea>
@@ -626,18 +641,6 @@ body.resizing, body.resizing * { cursor: col-resize !important; user-select: non
       </section>
 
       <section class="cell">
-        <div class="cell-h"><span>Color</span><span class="r" id="sum-col"></span></div>
-        <div class="pair">
-          <div class="colc" id="col-text" data-label="Text"></div>
-          <div class="colc" id="col-bg" data-label="Background"></div>
-        </div>
-        <div class="ctl"><button type="button" class="gfold pfold" id="pals-fold" aria-controls="pals">Palettes</button><output id="pal-o"></output></div>
-        <div class="pals" id="pals" role="group" aria-label="Palettes"></div>
-        <div class="btns"><button class="btn sm" type="button" id="col-reset">Black on white</button></div>
-        <p class="hint">A palette sets the text and background colors, and the box and band fill when it has a block color. Letters you colored by hand keep their color. The background fills the text block plus a margin, the same area the PNG export crops to.</p>
-      </section>
-
-      <section class="cell">
         <div class="cell-h"><span>Fill</span><span class="r" id="sum-fill"></span></div>
         <div class="ctl"><label for="outline">Random outline</label><output id="outline-o"></output><input type="range" id="outline" min="0" max="100" step="1"></div>
         <div class="ctl"><label for="strokew">Stroke</label><output id="strokew-o"></output><input type="range" id="strokew" min="0.25" max="8" step="0.25"></div>
@@ -764,7 +767,7 @@ body.resizing, body.resizing * { cursor: col-resize !important; user-select: non
       <section><h4>Group titles</h4><p>Click a group title in the left panel to fold the group to its title row (▸) or open it again (▾); each group remembers its own state. Folding Font pool hides every family; the family names fold just their own styles. The right side of each title row sums up what the group is set to, and follows every change; hover it for the full text if it is cut short. Groups with a short note have a <b>?</b> next to their title: click it to show the note, again to hide it.</p></section>
       <section><h4>Right panel</h4><p>Selecting letters opens it with their font, size, shift and tracking at the top, then weight, align, <b>rotation</b>, <b>fill</b> and <b>boxes</b>. With nothing selected, the handle on the right edge opens the paragraph settings: hover info, <b>fill</b> (random outline, stroke), the paragraph band, random letter boxes. Clear edits there also sets Random outline and Stroke back to their defaults. A drag that starts on empty canvas selects the letters it sweeps over. The panel keeps its place: selecting other letters, deselecting and reselecting, or switching between selection and paragraph brings back the group you were using.</p></section>
       <section><h4>Boxes</h4><p>Letter boxes follow each letter's ink, size and shift, and turn with it. A band runs under the selection, as tall as its tallest letter or stepping with each one; the paragraph band does the same for every line. In Box style, Expand X and Y make a box wider or taller than the ink (negative values make it smaller), and Move X and Y shift it right and up (all four snap to 0 when you drag close to the tick at 0); a rotated letter's box moves along the letter's own axes. Letter boxes also have <b>Height</b> (Glyph: the letter's own ink; Line: as tall as the line's tallest letter) and <b>Width</b> (Glyph: the letter as set, without tracking; Advance: up to the next letter, so neighbouring boxes touch). Line + Advance makes a grid of columns. A letter can have a letter box and a band at once: when the selection has both, Box style shows <b>Letter boxes / Band</b> to pick which one its controls change (Add letter boxes and Add band switch to what they just added). They export under the text as vector shapes: InDesign rectangles keep live corner options, Illustrator and Photoshop get the exact path.</p></section>
-      <section><h4>Color</h4><p>With nothing selected, the Color group sets the <b>text</b> and <b>background</b> colors, as RGB hex: click the swatch for the system picker, or type a hex value and press Enter. The row under each color holds the last eight colors used; with a palette active, a row of the palette's colors sits above it, under every color control. A <b>palette</b> sets text and background in one click, and the box and band fill too when it has a block color. Click the active palette again to roll a new color match from its colors (text that stays readable on the background, and a block color that shows on it); ⌘Z goes back. Fold the palette list with the arrow next to Palettes. Black on white goes back to the start. Selected letters get their own color under Fill (Use text color removes it); outline letters stroke in their color. Box style has Fill and Stroke colors and a <b>blend</b> mode (Normal, Multiply, Screen, Overlay, Difference), which mixes a box with the background and the boxes under it, never with the text. The background fills the text block plus a margin, the same area the PNG crops to. The guidelines' color is under Guidelines. Random letter boxes have a <b>Box color</b>: Single gives every box its own fill; From palette gives each randomly placed box a color from the active palette's block and extra colors, picked by the seed, so Reroll boxes changes placement and colors together. A box whose fill you set by hand keeps it, and Reroll leaves it in place. From palette needs a palette with a block color. Everything exports: text color per letter, RGB fills and strokes (neutral greys stay greys, a Black tint in InDesign), blend modes, and the guideline color. A background that isn't white becomes a rectangle at the very back, named Mixweight background, on its own layer (Illustrator, InDesign) or as the bottom shape layer (Photoshop). InDesign adds each RGB color as a swatch named Mixweight #RRGGBB.</p></section>
+      <section><h4>Color</h4><p>The <b>Color</b> group in the left panel sets the <b>text</b> and <b>background</b> colors for the whole design, as RGB hex: click the big swatch for the system picker, type a hex value and press Enter, or click a small swatch (the current color's swatch is outlined). The row under each color holds the last eight colors used; with a palette active, a row of the palette's colors sits above it, under every color control. A <b>palette</b> sets text and background in one click, and the box and band fill too when it has a block color. Click the active palette again to roll a new color match from its colors (text that stays readable on the background, and a block color that shows on it); ⌘Z goes back. Fold the palette list with the arrow next to Palettes to keep just a row of its chips. Black on white goes back to the start. Selected letters get their own color under Fill (Use text color removes it); outline letters stroke in their color. Box style has Fill and Stroke colors and a <b>blend</b> mode (Normal, Multiply, Screen, Overlay, Difference), which mixes a box with the background and the boxes under it, never with the text. The background fills the text block plus a margin, the same area the PNG crops to. The guidelines' color is under Guidelines. Random letter boxes have a <b>Box color</b>: Single gives every box its own fill; From palette gives each randomly placed box a color from the active palette's block and extra colors, picked by the seed, so Reroll boxes changes placement and colors together. A box whose fill you set by hand keeps it, and Reroll leaves it in place. From palette needs a palette with a block color. Everything exports: text color per letter, RGB fills and strokes (neutral greys stay greys, a Black tint in InDesign), blend modes, and the guideline color. A background that isn't white becomes a rectangle at the very back, named Mixweight background, on its own layer (Illustrator, InDesign) or as the bottom shape layer (Photoshop). InDesign adds each RGB color as a swatch named Mixweight #RRGGBB.</p></section>
       <section><h4>Outline and rotation</h4><p>Outline letters export as live text with no fill and a stroke in the letter's color; rotation as character rotation, about the centre of the em box. Photoshop can do neither per letter inside one type layer, so those letters become their own type layers (outline as a layer-style stroke) and the main layer keeps a space of the same width.</p></section>
       <section><h4>Guidelines</h4><p>Baseline, x-height, cap height and ascender of the base style at the set size. Tick Include in export under Guidelines to export them as plain lines on their own layer or group, named Mixweight guidelines.</p></section>
       <section><h4>Layout aids and Decoration</h4><p>Guidelines are in the <b>Layout aids</b> group in the left panel, folded until you open it. The pattern and the registration marks are in the <b>Decoration</b> group under it, each with its own switch. The <b>pattern</b> (Grid, Dots, Crosses, Lines, Diagonal) is drawn behind the boxes and the text, in the text block plus a margin, the area the PNG crops to; cells start at that area's top-left corner. Cell size runs from 2 to 120 pt. Dots have a Dot size as a share of the cell (100% and neighbouring dots touch), so they stay visible at any cell size; the other types have a Line weight. Box blend modes mix with it. <b>Registration marks</b> are crosshairs at the four corners of that same area: Size, Line weight, Inset (how far in from each corner) and Color; on a small area they stop at the middle. Pattern and marks show on the canvas and in the PNG (always inside it), but are not part of the .jsx export.</p></section>
@@ -2424,6 +2427,7 @@ function renderInspector() {
   $('#sel-count').textContent = on ? `${gs.length} letter${gs.length > 1 ? 's' : ''} selected` : 'No selection';
   $('#sel-hint').textContent = on ? 'Edit them in the right panel. Esc deselects.' : 'Click a letter, or drag across letters, to edit them. Shift extends, ⌘ adds.';
   syncSide();
+  renderColor();
   for (const c of colorCtls) c.syncPal();
   if (!side.open) return;
   if (on) renderSelPanel(gs); else renderParaPanel();
@@ -2594,12 +2598,15 @@ function renderSelPanel(gs) {
   syncBoxCol();
 }
 
-function renderParaPanel() {
-  summary('sum-hov', S.hoverInfo ? 'On' : 'Off');
+// The Color group (left panel): text, background and palettes, used by the whole design.
+function renderColor() {
   colCtl.text?.sync(); colCtl.bg?.sync(); renderPalettes();
   summary('sum-col', S.palette || `${S.textCol.toUpperCase()} on ${S.bgCol.toUpperCase()}`);
   $('#pal-o').textContent = S.palette ? (S.palsOpen ? '' : S.palette) : 'None';
   $('#col-reset').disabled = S.textCol === DEFAULTS.textCol && S.bgCol === DEFAULTS.bgCol && !S.palette;
+}
+function renderParaPanel() {
+  summary('sum-hov', S.hoverInfo ? 'On' : 'Off');
   summary('sum-fill', S.outlineAmt ? `${S.outlineAmt}% · ${ptTxt(S.strokeW)}` : 'Off');
   summary('sum-para', S.para.on ? `On · ${S.para.fit === 'each' ? 'Each letter' : 'Tallest letter'}` + (S.para.dh ? ` · ${dhTxt(S.para.dh)}` : '') : 'Off');
   press('#hov', S.hoverInfo ? 'on' : 'off');
@@ -2711,21 +2718,25 @@ function colorCtl(id, get, set) {
   const commit = () => { const v = hexOf(hex.value); if (v) { apply(v); addRecent(v); } ctl.sync(); };
   hex.addEventListener('keydown', e => { if (e.key === 'Enter') { commit(); hex.blur(); } else if (e.key === 'Escape') { ctl.sync(); hex.blur(); } });
   hex.addEventListener('blur', commit);
-  for (const r of [rec, pal]) r.addEventListener('click', e => { const b = e.target.closest('button'); if (b) { apply(b.dataset.v); addRecent(b.dataset.v); } });
+  for (const r of [rec, pal]) r.addEventListener('click', e => { const b = e.target.closest('button'); if (b) { apply(b.dataset.v); addRecent(b.dataset.v); ctl.sync(); } });
   const ctl = {
     sync() {
       const v = get();
       pick.value = v || '#000000';
       if (document.activeElement !== hex) { hex.value = v ? v.toUpperCase() : ''; hex.placeholder = v ? '' : 'Mixed'; }
+      mark();
     },
-    syncRecent() { rec.innerHTML = swatches(S.recent); },
+    syncRecent() { rec.innerHTML = swatches(S.recent); mark(); },
     // The active palette's colors, in its current match, as a row above the recent ones.
     syncPal() {
       const R = activeRoles(), cs = R ? [...new Set([R.text, R.bg, R.block, ...R.extras].filter(Boolean))] : [];
       if (pal.dataset.k === cs.join()) return;
       pal.dataset.k = cs.join(); pal.innerHTML = swatches(cs); pal.hidden = !cs.length;
+      mark();
     },
   };
+  // The swatch of the current color is marked.
+  const mark = () => { const v = get(); for (const b of host.querySelectorAll('.col-recent button')) b.setAttribute('aria-current', b.dataset.v === v); };
   const swatches = cs => cs.map(c => `<button type="button" data-v="${c}" style="background:${c}" title="${c.toUpperCase()}" aria-label="${name}: ${c}"></button>`).join('');
   ctl.sync(); ctl.syncRecent(); ctl.syncPal();
   colorCtls.push(ctl);
@@ -2887,7 +2898,7 @@ function renderPalettes() {
     b.title = P.name + (P.block ? '' : ' · text and background only') + (on ? ' · click again for a new color match' : '');
   }
   press('#pals', S.palette);
-  host.hidden = !S.palsOpen;
+  host.classList.toggle('compact', !S.palsOpen);
   const f = $('#pals-fold');
   f.setAttribute('aria-expanded', S.palsOpen);
   f.parentElement.classList.toggle('p-closed', !S.palsOpen);
@@ -4114,7 +4125,7 @@ async function boot() {
     (v, key) => { record(key); eachSel(o => { o.col = v; }); });
   $('#col-sel-auto').onclick = () => { record(); eachSel(o => { delete o.col; }); };
   $('#col-reset').onclick = () => { record(); S.textCol = DEFAULTS.textCol; S.bgCol = DEFAULTS.bgCol; S.palette = ''; S.palSeed = 0; render(); save(); };
-  $('#pals-fold').onclick = () => { S.palsOpen = !S.palsOpen; renderParaPanel(); save(); };
+  $('#pals-fold').onclick = e => { e.stopPropagation(); S.palsOpen = !S.palsOpen; renderColor(); save(); };
   optClick('#bx-lock', v => {
     const lock = v === 'all';
     if (lock === boxTargets(selectedGlyphs()).list[0].lock) return;
