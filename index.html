@@ -554,7 +554,7 @@ body.resizing, body.resizing * { cursor: col-resize !important; user-select: non
         <div class="ctl"><label for="reg-inset">Inset</label><output id="reg-inset-o"></output><input type="range" id="reg-inset" min="0" max="60" step="1"></div>
       </div>
       <div class="colc" id="col-reg" data-label="Color"></div>
-      <p class="hint">The pattern sits behind boxes and text and fills the text block plus a margin, the area the PNG crops to. Registration marks are crosshairs at the four corners of the same area, Inset in from each corner, so they are always inside the PNG. Canvas and PNG only, not the .jsx export.</p>
+      <p class="hint">The pattern sits behind boxes and text and fills the text block plus a margin, the area the PNG crops to. Registration marks are crosshairs at the four corners of the same area, Inset in from each corner, so they are always inside the PNG. Both export to the .jsx as editable vectors on their own layers; a pattern too fine (more than 4000 pieces) is left out of the .jsx.</p>
     </section>
   </aside>
 
@@ -795,7 +795,8 @@ body.resizing, body.resizing * { cursor: col-resize !important; user-select: non
       <section><h4>Color</h4><p>Box fill, box stroke and the background also take <b>No color</b>: the crossed-out swatch after the hex field (or type none). A box with no fill shows only its stroke; a background with no color leaves the PNG transparent. In the .jsx export a box with no fill keeps just its stroke (no fill in Illustrator and InDesign, a shape layer with its fill switched off in Photoshop); a box with neither fill nor stroke is left out. The <b>Color</b> group in the left panel sets the <b>text</b> and <b>background</b> colors for the whole design, as RGB hex: click the big swatch for the system picker, type a hex value and press Enter, or click a small swatch (the current color's swatch is outlined). The row under each color holds the last eight colors used; with a palette active, a row of the palette's colors sits above it, under every color control. A <b>palette</b> sets text and background in one click, and the box and band fill too when it has a block color. Click the active palette again to roll a new color match from its colors (text that stays readable on the background, and a block color that shows on it); ⌘Z goes back. Fold the palette list with the arrow next to Palettes to keep just a row of its chips. Black on white goes back to the start. Selected letters get their own color under Fill (Use text color removes it); outline letters stroke in their color. Box style has Fill and Stroke colors and a <b>blend</b> mode (Normal, Multiply, Screen, Overlay, Difference), which mixes a box with the background and the boxes under it, never with the text. The background fills the text block plus a margin, the same area the PNG crops to. The guidelines' color is under Guidelines. Random letter boxes have a <b>Box color</b>: Single gives every box its own fill; From palette gives each randomly placed box a color from the active palette's block and extra colors, picked by the seed, so Reroll boxes changes placement and colors together. A box whose fill you set by hand keeps it, and Reroll leaves it in place. From palette needs a palette with a block color. Everything exports: text color per letter, RGB fills and strokes (neutral greys stay greys, a Black tint in InDesign), blend modes, and the guideline color. A background that isn't white becomes a rectangle at the very back, named Mixweight background, on its own layer (Illustrator, InDesign) or as the bottom shape layer (Photoshop). InDesign adds each RGB color as a swatch named Mixweight #RRGGBB.</p></section>
       <section><h4>Outline and rotation</h4><p>Outline letters export as live text with no fill and a stroke in the letter's color; rotation as character rotation, about the centre of the em box. Photoshop can do neither per letter inside one type layer, so those letters become their own type layers (outline as a layer-style stroke) and the main layer keeps a space of the same width.</p></section>
       <section><h4>Guidelines</h4><p>Baseline, x-height, cap height and ascender of the base style at the set size. Tick Include in export under Guidelines to export them as plain lines on their own layer or group, named Mixweight guidelines.</p></section>
-      <section><h4>Layout aids and Decoration</h4><p>Guidelines are in the <b>Layout aids</b> group in the left panel, folded until you open it. The pattern and the registration marks are in the <b>Decoration</b> group under it, each with its own switch. The <b>pattern</b> (Grid, Dots, Crosses, Lines, Diagonal) is drawn behind the boxes and the text, in the text block plus a margin, the area the PNG crops to; cells start at that area's top-left corner. Cell size runs from 2 to 120 pt. Dots have a Dot size as a share of the cell (100% and neighbouring dots touch), so they stay visible at any cell size; the other types have a Line weight. Box blend modes mix with it. <b>Registration marks</b> are crosshairs at the four corners of that same area: Size, Line weight, Inset (how far in from each corner) and Color; on a small area they stop at the middle. Pattern and marks show on the canvas and in the PNG (always inside it), but are not part of the .jsx export.</p></section>
+      <section><h4>Layout aids and Decoration</h4><p>Guidelines are in the <b>Layout aids</b> group in the left panel, folded until you open it. The pattern and the registration marks are in the <b>Decoration</b> group under it, each with its own switch. The <b>pattern</b> (Grid, Dots, Crosses, Lines, Diagonal) is drawn behind the boxes and the text, in the text block plus a margin, the area the PNG crops to; cells start at that area's top-left corner. Cell size runs from 2 to 120 pt. Dots have a Dot size as a share of the cell (100% and neighbouring dots touch), so they stay visible at any cell size; the other types have a Line weight. Box blend modes mix with it. <b>Registration marks</b> are crosshairs at the four corners of that same area: Size, Line weight, Inset (how far in from each corner) and Color; on a small area they stop at the middle. Pattern and marks show on the canvas and in the PNG (always inside it). They export to the .jsx as editable vectors on their own layers (Mixweight pattern, Mixweight marks); a pattern with more than 4000 pieces is too fine and is left out of the .jsx (make the Cell size larger, or use PNG).</p></section>
+      <section><h4>Layers</h4><p>The .jsx puts each part on its own layer, bottom to top: Mixweight background, Mixweight pattern, Mixweight boxes, Mixweight marks, Mixweight text, Mixweight guidelines (Illustrator and InDesign layers; Photoshop shape layers, with the text layers in a Mixweight text group). Exporting again into the same document reuses those layers. Only the parts you use are made.</p></section>
       <section><h4>PNG</h4><p><b>PNG</b> in the top bar saves a picture of the text and its boxes exactly as on the canvas, cropped to the text block plus a margin, without selection marks, hover or zoom. Pick the scale (1× is one pixel per point), a transparent background, and whether the guidelines that are switched on come along (separate from Include in export). Download it, or copy it to the clipboard; if the browser won't copy, it downloads instead. It is a flat image, not editable text. Chrome or Edge.</p></section>
     </div>
     <footer><span></span><button class="btn solid" value="close">Close</button></footer>
@@ -905,7 +906,17 @@ body.resizing, body.resizing * { cursor: col-resize !important; user-select: non
     resolved.push(font);
   }
 
-  var doc = app.documents.length ? app.activeDocument : app.documents.add(DocumentColorSpace.RGB, D.w, D.h);
+  var fresh = !app.documents.length;
+  var doc = fresh ? app.documents.add(DocumentColorSpace.RGB, D.w, D.h) : app.activeDocument;
+  var first = doc.activeLayer;
+  // Each part on its own layer, reused by later exports. Order, bottom to top: background, pattern, boxes, marks,
+  // text, guidelines (as on the canvas).
+  function layer(nm) {
+    var L;
+    try { L = doc.layers.getByName(nm); } catch (e) { L = doc.layers.add(); L.name = nm; }
+    L.locked = false; L.visible = true;
+    return L;
+  }
 
   var lines = [], flat = [];
   for (var l = 0; l < LINES.length; l++) {
@@ -961,6 +972,8 @@ body.resizing, body.resizing * { cursor: col-resize !important; user-select: non
     tf.translate((ab[0] + ab[2]) / 2 - (gb[0] + gb[2]) / 2, (ab[1] + ab[3]) / 2 - (gb[1] + gb[3]) / 2);
   } catch (e) {}
   tf.name = 'Mixweight';
+  var textL = layer('Mixweight text');
+  tf.move(textL, ElementPlacement.PLACEATBEGINNING);
 
   // Boxes and guides. Their numbers are x from the text block's left edge and y down from line k's baseline;
   // the anchor is the start of the first baseline, and the block's left edge sits align × width to its left.
@@ -981,8 +994,10 @@ body.resizing, body.resizing * { cursor: col-resize !important; user-select: non
     pa.name = sh.n;
     return pa;
   }
+  var boxL = null;
   if (D.shapes.length) {
-    var grp = doc.groupItems.add();
+    boxL = layer('Mixweight boxes');
+    var grp = boxL.groupItems.add();
     grp.name = 'Mixweight boxes';
     for (var b = 0; b < D.shapes.length; b++) {
       var sh = D.shapes[b], pa = path(grp, sh);
@@ -990,18 +1005,30 @@ body.resizing, body.resizing * { cursor: col-resize !important; user-select: non
       if (sh.op < 100) pa.opacity = sh.op;
       if (sh.bm) pa.blendingMode = BM[sh.bm];
     }
-    grp.move(tf, ElementPlacement.PLACEAFTER);
   }
   // Background: its own layer at the bottom.
   if (D.bg) {
-    var bl = doc.layers.add();
-    bl.name = 'Mixweight background';
+    var bl = layer('Mixweight background');
     path(bl, D.bg).stroked = false;
     bl.zOrder(ZOrderMethod.SENDTOBACK);
   }
+  // Pattern and registration marks: one compound path each, segments s stroked, dots d filled, circles o stroked.
+  function pieces(L, P) {
+    var cp = L.compoundPathItems.add(), q, v, it;
+    cp.name = P.n;
+    if (P.s) for (q = 0; q < P.s.length; q++) { v = P.s[q]; cp.pathItems.add().setEntirePath([pt(v[0], v[1], P.k), pt(v[2], v[3], P.k)]); }
+    var round = P.d || P.o || [];
+    for (q = 0; q < round.length; q++) { v = round[q]; var c0 = pt(v[0] - v[2], v[1] - v[2], P.k); cp.pathItems.ellipse(c0[1], c0[0], v[2] * 2, v[2] * 2); }
+    it = cp.pathItems[0];
+    if (P.d) { it.filled = true; it.fillColor = col(P.c); it.stroked = false; }
+    else { it.filled = false; it.stroked = true; it.strokeColor = col(P.c); it.strokeWidth = P.w; }
+    return cp;
+  }
+  var patL = null, markL = null;
+  if (D.pat) pieces(patL = layer('Mixweight pattern'), D.pat);
+  if (D.marks) pieces(markL = layer('Mixweight marks'), D.marks);
   if (D.guides.length) {
-    var gl = doc.layers.add();
-    gl.name = 'Mixweight guidelines';
+    var gl = layer('Mixweight guidelines');
     for (var u = 0; u < D.guides.length; u++) {
       var G = D.guides[u], li = gl.pathItems.add();
       li.setEntirePath([pt(G.x0, G.y, G.k), pt(G.x1, G.y, G.k)]);
@@ -1009,6 +1036,10 @@ body.resizing, body.resizing * { cursor: col-resize !important; user-select: non
       li.name = G.n;
     }
   }
+  var stack = [patL, boxL, markL, textL, D.guides.length ? gl : null];
+  for (var z = 0; z < stack.length; z++) if (stack[z]) stack[z].zOrder(ZOrderMethod.BRINGTOFRONT);
+  // A new document's empty Layer 1 goes.
+  try { if (fresh && first.pageItems.length === 0 && first.name !== 'Mixweight text') first.remove(); } catch (e) {}
   try { doc.selection = null; tf.selected = true; } catch (e) {}
   if (missing.length) alert(MSG.missing + '\n\n' + missing.join('\n'));
 })();
@@ -1019,8 +1050,8 @@ body.resizing, body.resizing * { cursor: col-resize !important; user-select: non
   function norm(s) { return String(s).toLowerCase().replace(/[\s\-_]/g, ''); }
 
   function main() {
-    var doc;
-    if (app.documents.length) {
+    var doc, fresh = !app.documents.length;
+    if (!fresh) {
       doc = app.activeDocument;
     } else {
       doc = app.documents.add();
@@ -1049,6 +1080,16 @@ body.resizing, body.resizing * { cursor: col-resize !important; user-select: non
       resolved.push(f);
     }
 
+    var first = doc.activeLayer;
+    // Each part on its own layer, reused by later exports. Order, bottom to top: background, pattern, boxes, marks,
+    // text, guidelines (as on the canvas).
+    function layer(nm) {
+      var L = doc.layers.itemByName(nm);
+      if (!L.isValid) L = doc.layers.add({ name: nm });
+      L.locked = false; L.visible = true;
+      return L;
+    }
+    var textL = layer('Mixweight text');
     var page = null;
     try { page = app.activeWindow.activePage; } catch (e) { page = null; }
     if (!page || !page.isValid) page = doc.pages[0];
@@ -1067,7 +1108,7 @@ body.resizing, body.resizing * { cursor: col-resize !important; user-select: non
     var b = page.bounds; // [y1, x1, y2, x2]
     var fw = D.tw * 1.4 + 72, fh = D.th + D.lead * 2;
     var x = b[1] + ((b[3] - b[1]) - D.tw) / 2, y = b[0] + ((b[2] - b[0]) - D.th) / 2;
-    var tf = page.textFrames.add({ geometricBounds: [y, x, y + fh, x + fw] });
+    var tf = page.textFrames.add({ itemLayer: textL, geometricBounds: [y, x, y + fh, x + fw] });
     tf.contents = lines.join('\r');
 
     var st = tf.parentStory;
@@ -1154,7 +1195,7 @@ body.resizing, body.resizing * { cursor: col-resize !important; user-select: non
       pg.paths[0].pathType = PathType.CLOSED_PATH;
       return pg;
     }
-    var boxes = [];
+    var boxes = [], boxL = D.shapes.length ? layer('Mixweight boxes') : null;
     for (var bi = 0; bi < D.shapes.length; bi++) {
       var sh = D.shapes[bi], o = at(sh), it = null;
       if (sh.r) { try { it = nativeRect(sh, o); } catch (e) { it = null; } }
@@ -1168,17 +1209,13 @@ body.resizing, body.resizing * { cursor: col-resize !important; user-select: non
       if (sh.op < 100) it.transparencySettings.blendingSettings.opacity = sh.op;
       if (sh.bm) it.transparencySettings.blendingSettings.blendMode = BM[sh.bm];
       it.name = sh.n;
+      it.itemLayer = boxL;
       boxes.push(it);
     }
-    if (boxes.length) {
-      var bg = boxes.length > 1 ? page.groups.add(boxes) : boxes[0];
-      if (boxes.length > 1) bg.name = 'Mixweight boxes';
-      try { bg.sendToBack(tf); } catch (e) { try { bg.sendToBack(); } catch (e2) {} }
-    }
+    if (boxes.length > 1) page.groups.add(boxes, boxL).name = 'Mixweight boxes';
     // Background: a rectangle on its own layer, at the bottom of the layer list. Reused on later exports.
     if (D.bg) {
-      var bl = doc.layers.itemByName('Mixweight background');
-      if (!bl.isValid) bl = doc.layers.add({ name: 'Mixweight background' });
+      var bl = layer('Mixweight background');
       try { bl.move(LocationOptions.AT_END); } catch (e) {}
       var bo = at(D.bg), br = page.rectangles.add({ itemLayer: bl,
         geometricBounds: [bo[1] + D.bg.r.y0, bo[0] + D.bg.r.x0, bo[1] + D.bg.r.y1, bo[0] + D.bg.r.x1] });
@@ -1186,6 +1223,31 @@ body.resizing, body.resizing * { cursor: col-resize !important; user-select: non
       br.strokeColor = sw.itemByName('None'); br.strokeWeight = 0;
       br.name = D.bg.n;
     }
+    // Pattern and registration marks: one item each, holding every piece as its own path: segments s stroked,
+    // dots d filled, circles o stroked (circles as four Bezier quarters).
+    function pieces(L, P) {
+      var o = at(P), pg = page.polygons.add({ itemLayer: L }), n = 0, q, v, K = 0.5523;
+      function next(pts, open) {
+        var pa = n++ ? pg.paths.add() : pg.paths[0];
+        pa.entirePath = pts;
+        pa.pathType = open ? PathType.OPEN_PATH : PathType.CLOSED_PATH;
+      }
+      if (P.s) for (q = 0; q < P.s.length; q++) { v = P.s[q]; next([[o[0] + v[0], o[1] + v[1]], [o[0] + v[2], o[1] + v[3]]], true); }
+      var round = P.d || P.o || [];
+      for (q = 0; q < round.length; q++) {
+        v = round[q];
+        var cx = o[0] + v[0], cy = o[1] + v[1], r = v[2], k = r * K;
+        next([[[cx - k, cy - r], [cx, cy - r], [cx + k, cy - r]], [[cx + r, cy - k], [cx + r, cy], [cx + r, cy + k]],
+          [[cx + k, cy + r], [cx, cy + r], [cx - k, cy + r]], [[cx - r, cy + k], [cx - r, cy], [cx - r, cy - k]]], false);
+      }
+      if (P.d) { paint(pg, 'fill', P.c); pg.strokeColor = sw.itemByName('None'); pg.strokeWeight = 0; }
+      else { pg.fillColor = sw.itemByName('None'); paint(pg, 'stroke', P.c); pg.strokeWeight = P.w; }
+      pg.name = P.n;
+      return pg;
+    }
+    var patL = null, markL = null;
+    if (D.pat) pieces(patL = layer('Mixweight pattern'), D.pat);
+    if (D.marks) pieces(markL = layer('Mixweight marks'), D.marks);
     if (D.guides.length) {
       // Reuse the layer from an earlier export; one made before V3.2 is still called Mixweight guides.
       var gl = doc.layers.itemByName('Mixweight guidelines');
@@ -1205,6 +1267,10 @@ body.resizing, body.resizing * { cursor: col-resize !important; user-select: non
       }
       if (gls.length > 1) page.groups.add(gls, gl).name = 'Mixweight guidelines';
     }
+    var stack = [patL, boxL, markL, textL, D.guides.length ? gl : null];
+    for (var z = 0; z < stack.length; z++) if (stack[z]) try { stack[z].move(LocationOptions.AT_BEGINNING); } catch (e) {}
+    // A new document's empty Layer 1 goes.
+    try { if (fresh && first.isValid && first.name !== 'Mixweight text' && first.allPageItems.length === 0) first.remove(); } catch (e) {}
     try { tf.select(); } catch (e) {}
     if (missing.length) alert(MSG.missing + '\n\n' + missing.join('\n'));
   }
@@ -1345,7 +1411,8 @@ body.resizing, body.resizing * { cursor: col-resize !important; user-select: non
       executeAction(c2t('setd'), d, DialogModes.NO);
     }
     // A shape layer (solid fill + vector mask) from subpaths of [ax, ay, inX, inY, outX, outY] points.
-    function shape(subs, fill, name) {
+    // opens[i]: subpath i is an open line (pattern and marks).
+    function shape(subs, fill, name, opens) {
       var infos = [];
       for (var i = 0; i < subs.length; i++) {
         var pts = [];
@@ -1356,7 +1423,7 @@ body.resizing, body.resizing * { cursor: col-resize !important; user-select: non
           pts.push(pp);
         }
         var sp = new SubPathInfo();
-        sp.closed = true; sp.operation = ShapeOperation.SHAPEADD; sp.entireSubPath = pts;
+        sp.closed = !(opens && opens[i]); sp.operation = ShapeOperation.SHAPEADD; sp.entireSubPath = pts;
         infos.push(sp);
       }
       var pi = doc.pathItems.add('Mixweight path', infos);
@@ -1422,7 +1489,36 @@ body.resizing, body.resizing * { cursor: col-resize !important; user-select: non
       try { BL.move(doc.layers[doc.layers.length - 1], ElementPlacement.PLACEBEFORE); } catch (e) {}
     }
 
+    // Pattern and registration marks: one shape layer each. Segments s are open subpaths and circles o closed ones,
+    // both stroked with no fill; dots d are filled. Pattern just above the background, marks just under the text.
+    function pieces(P) {
+      var subs = [], opens = [], q, v, by = ay + P.k * D.lead, K = 0.5523;
+      function p3(x, y) { return [x, y, x, y, x, y]; }
+      if (P.s) for (q = 0; q < P.s.length; q++) { v = P.s[q]; subs.push([p3(ax + v[0], by + v[1]), p3(ax + v[2], by + v[3])]); opens.push(true); }
+      var round = P.d || P.o || [];
+      for (q = 0; q < round.length; q++) {
+        v = round[q];
+        var cx = ax + v[0], cy = by + v[1], r = v[2], k = r * K;
+        subs.push([[cx, cy - r, cx - k, cy - r, cx + k, cy - r], [cx + r, cy, cx + r, cy - k, cx + r, cy + k],
+          [cx, cy + r, cx + k, cy + r, cx - k, cy + r], [cx - r, cy, cx - r, cy + k, cx - r, cy - k]]);
+        opens.push(false);
+      }
+      doc.activeLayer = main;
+      var L = shape(subs, P.c, P.n, opens);
+      if (!P.d) shapeStroke(P.w, P.c, true);
+      return L;
+    }
+    if (D.pat) {
+      var PL = pieces(D.pat);
+      try { PL.move(D.bg ? BL : doc.layers[doc.layers.length - 1], ElementPlacement.PLACEBEFORE); } catch (e) {}
+    }
+    if (D.marks) {
+      var ML = pieces(D.marks);
+      try { ML.move(main, ElementPlacement.PLACEAFTER); } catch (e) {}
+    }
+
     // Rotated and outline letters: their own type layers, above the main one.
+    var spL = [];
     if (D.sp.length) {
       for (var u = 0; u < D.sp.length; u++) {
         var G = D.sp[u], gc = G.c != null ? G.c : 100, ca = rgb3(gc), tcol = new SolidColor();
@@ -1440,6 +1536,7 @@ body.resizing, body.resizing * { cursor: col-resize !important; user-select: non
         var by = ay + G.k * D.lead;
         ti.position = [ax + G.x, by];
         T.name = G.ch;
+        spL.push(T);
         if (G.rot) {
           // Rotate about the letter's em-box centre: rotate about the layer's centre, then move by the difference.
           var bb = T.bounds, cx = (bb[0].as('px') + bb[2].as('px')) / 2, cy = (bb[1].as('px') + bb[3].as('px')) / 2;
@@ -1451,6 +1548,15 @@ body.resizing, body.resizing * { cursor: col-resize !important; user-select: non
         if (G.sw) { T.fillOpacity = 0; fxStroke(G.sw, gc); }
       }
     }
+
+    // The main text layer and the separate letter layers share one group.
+    try {
+      doc.activeLayer = main;
+      var textSet = doc.layerSets.add();
+      textSet.name = 'Mixweight text';
+      for (var si = 0; si < spL.length; si++) spL[si].move(textSet, ElementPlacement.PLACEATEND);
+      main.move(textSet, ElementPlacement.PLACEATEND);
+    } catch (e) {}
 
     // Guides: one shape layer per kind (1 px lines), in a group on top.
     if (D.guides.length) {
@@ -2307,17 +2413,49 @@ const hasBg = () => S.bgCol !== '#ffffff' && S.bgCol !== 'none'; // 'none': no b
 const frameShown = () => hasBg() || S.patOn === 'on' || S.regOn === 'on';
 // Registration marks: a cross with a circle, centred Inset + half its Size in from each corner of the frame, so the
 // whole mark is always inside it.
-function regMarks(f) {
-  const z = S.regSize, h = z / 2, r = r2(z * 0.3);
+function regCentres(f) {
+  const h = S.regSize / 2;
   // On a small frame a big inset stops at the middle, so the four marks never cross into each other's corner.
   const ox = Math.max(h, Math.min(S.regInset + h, f.w / 2 - h)), oy = Math.max(h, Math.min(S.regInset + h, f.h / 2 - h));
+  return [[f.x + ox, f.y + oy], [f.x + f.w - ox, f.y + oy], [f.x + f.w - ox, f.y + f.h - oy], [f.x + ox, f.y + f.h - oy]];
+}
+function regMarks(f) {
+  const z = S.regSize, h = z / 2, r = r2(z * 0.3);
   let d = '';
-  for (const [x, y] of [[f.x + ox, f.y + oy], [f.x + f.w - ox, f.y + oy], [f.x + f.w - ox, f.y + f.h - oy], [f.x + ox, f.y + f.h - oy]]) {
+  for (const [x, y] of regCentres(f)) {
     d += `M${r2(x - h)} ${r2(y)}H${r2(x + h)}M${r2(x)} ${r2(y - h)}V${r2(y + h)}M${r2(x + r)} ${r2(y)}A${r} ${r} 0 1 0 ${r2(x - r)} ${r2(y)}A${r} ${r} 0 1 0 ${r2(x + r)} ${r2(y)}`;
   }
   return `<path d="${d}" fill="none" stroke="${S.regCol}" stroke-width="${S.regW}"/>`;
 }
 const PATTERNS = ['grid', 'dots', 'crosses', 'lines', 'diagonal'];
+// The pattern as plain pieces for the .jsx, in the frame: segments [x0, y0, x1, y1] (stroked, Line weight) and dots
+// [cx, cy, r] (filled). The same geometry as the tile in patternDef(): lines run across the whole frame, dots and
+// crosses sit on every cell corner. n counts the pieces.
+const PAT_MAX = 4000;
+function patternGeom(f) {
+  const c = S.patCell, x1 = f.x + f.w, y1 = f.y + f.h, segs = [], dots = [];
+  const xs = [], ys = [];
+  for (let x = f.x; x <= x1 + 1e-6; x += c) xs.push(x);
+  for (let y = f.y; y <= y1 + 1e-6; y += c) ys.push(y);
+  if (S.patType === 'grid' || S.patType === 'lines') {
+    for (const y of ys) segs.push([f.x, y, x1, y]);
+    if (S.patType === 'grid') for (const x of xs) segs.push([x, f.y, x, y1]);
+  } else if (S.patType === 'diagonal') {
+    // Lines x + y = n × cell from the frame's top-left corner, cut to the frame.
+    for (let u = c; u < f.w + f.h - 1e-6; u += c) {
+      const a = Math.max(0, u - f.h), b = Math.min(f.w, u);
+      if (b > a) segs.push([f.x + a, f.y + u - a, f.x + b, f.y + u - b]);
+    }
+  } else if (xs.length * ys.length <= PAT_MAX) {
+    const r = c * S.patDot / 200, a = Math.min(c / 2, Math.max(1.5, c * 0.18));
+    for (const y of ys) for (const x of xs) {
+      if (S.patType === 'dots') dots.push([x, y, r]);
+      else { segs.push([Math.max(f.x, x - a), y, Math.min(x1, x + a), y]); segs.push([x, Math.max(f.y, y - a), x, Math.min(y1, y + a)]); }
+    }
+  }
+  const n = S.patType === 'dots' || S.patType === 'crosses' ? xs.length * ys.length : segs.length;
+  return { segs, dots, n };
+}
 // One pattern tile, cell × cell, starting at the frame's top-left corner. Marks on a tile's edge are drawn on both
 // edges, so the halves that each tile clips meet up into whole lines, dots and crosses.
 function patternDef(f) {
@@ -3336,6 +3474,24 @@ function buildData(app) {
       p: [c([fr.x, y0]), c([x1, y0]), c([x1, y1]), c([fr.x, y1])],
       r: { x0: fr.x, y0, x1, y1, c: [0, 1, 2, 3].map(() => ['round', 0]), rot: 0, dx: 0, dy: 0 } };
   }
+  // Pattern and registration marks, hung on the first letter like the background: s segments [x0, y0, x1, y1],
+  // stroked w pt; d dots [cx, cy, r], filled (pattern) or o circles, stroked (marks). Only when they are on.
+  exportPatSkipped = false;
+  if (g0 && (S.patOn === 'on' || S.regOn === 'on')) {
+    const fr = frame(), by = S.lb[g0.k], hang = { k: g0.k, j: 0, ox: r2(g0.x) };
+    const seg = q => [r2(q[0]), r2(q[1] - by), r2(q[2]), r2(q[3] - by)], dot = q => [r2(q[0]), r2(q[1] - by), r2(q[2])];
+    if (S.patOn === 'on') {
+      const P = patternGeom(fr);
+      if (P.n > PAT_MAX) exportPatSkipped = true;
+      else if (P.n) D.pat = Object.assign({}, hang, { n: 'Mixweight pattern', c: xcol(S.patCol), w: S.patW },
+        P.segs.length ? { s: P.segs.map(seg) } : {}, P.dots.length ? { d: P.dots.map(dot) } : {});
+    }
+    if (S.regOn === 'on') {
+      const h = S.regSize / 2, r = S.regSize * 0.3, cs = regCentres(fr);
+      D.marks = Object.assign({}, hang, { n: 'Mixweight marks', c: xcol(S.regCol), w: S.regW,
+        s: cs.flatMap(([x, y]) => [seg([x - h, y, x + h, y]), seg([x, y - h, x, y + h])]), o: cs.map(([x, y]) => dot([x, y, r])) });
+    }
+  }
   return D;
 }
 
@@ -3435,6 +3591,7 @@ function exportFor(app) {
   dlg.showModal();
 }
 
+let exportPatSkipped = false; // the pattern was too fine for the last .jsx (see buildData)
 function exportFiles(app, withHowto) {
   const name = `mixweight-${TARGET[app]}.jsx`;
   download(name, buildScript(app));
@@ -3443,7 +3600,8 @@ function exportFiles(app, withHowto) {
   const demo = S.families.some(f => f.source === 'demo' && used.has(f.name));
   const noGuides = $('#exp-guides').checked && !Object.values(S.guides).some(Boolean);
   toast(`Saved ${name}` + (withHowto ? ' and its how-to' : ` · ${RUN_HINT[app]}`) + (demo ? '. Sample fonts (Inter, Lora) only match if they are installed.' : '') +
-    (noGuides ? '. Include in export is on, but no guidelines are switched on.' : ''));
+    (noGuides ? '. Include in export is on, but no guidelines are switched on.' : '') +
+    (exportPatSkipped ? `. The pattern is too fine to export (more than ${PAT_MAX} pieces): make the Cell size larger, or use PNG.` : ''));
 }
 
 /* ---------------- PNG export ---------------- */

@@ -63,7 +63,7 @@ Decisions already made (don't revisit unless the owner asks):
 - Width "Glyph" keeps the v3.2 box (advance minus tracking), so Glyph + Glyph looks exactly like v3.2. Width "Advance" reaches the next letter, so boxes touch.
 - A box coloured by hand keeps its colour and Random letter boxes never removes it. Applying a palette sets every box's fill and clears the hand mark; applying a look never touches letter edits.
 - Looks set every look-related setting (palette, paragraph band, random boxes, pattern, marks, outline, jitter including rotation), so switching looks leaves nothing behind. They never change the text, seed, fonts or manual letter edits.
-- With no colour or new feature in use, the `.jsx` export data stays byte-identical to v3.2 (colours go through `xcol()`; `bm`, `gc`, `bg` and the 8th run field are written only when needed). Pattern and marks are not exported.
+- With no colour or new feature in use, the `.jsx` export data stays byte-identical to v3.2 (colours go through `xcol()`; `bm`, `gc`, `bg` and the 8th run field are written only when needed). Pattern and marks export (owner's request) as `D.pat` / `D.marks` only when on: segments `s`, dots `d` (filled), circles `o` (stroked), hung on the first letter like `bg`; one compound path / polygon / shape layer each; a pattern over `PAT_MAX` (4000) pieces is left out with a toast. The `.jsx` puts every part on its own layer: background, pattern, boxes, marks, text, guidelines (PS: shape layers, text in a group).
 - Specimen loading checks every value (`LIMITS`, filled by `bindRange` / `bindOpts`; `specValue()`), resets keys a specimen lacks to their defaults, matches fonts by family + style then PostScript name, and never throws.
 
 Open items: the owner's Adobe test of `3c00306` (riskiest: InDesign RGB swatches and blend inside groups, the Illustrator background layer order, the Photoshop background layer position); look tuning (Riso Block draws from all 11 inks of its palette, not 3; in Dark Glow the off-white text is hard to read on the yellow and aqua boxes).
@@ -166,7 +166,6 @@ One click sets a whole look from the settings that already exist, so it needs no
 - Static labels and the personal gallery (specs parked below); labels in the `.jsx` export (first as plain text lines without the grey highlight boxes, whose widths would not match in the Adobe apps).
 - Grain / noise texture over the canvas (V4.x); auto-contrast text colour for selected letters (V4.x, black or white chosen from the box or band behind).
 - SVG export; CMYK; palette extraction from images; random text colour from the palette (random box colours are step 2b); palette editing.
-- Pattern and registration marks in the `.jsx` export.
 - Type animation templates (its own release); a floating panel, only if the sidebars stop being enough (to be discussed with the owner first).
 - A public gallery with user uploads (needs a backend; start with a hand-curated static gallery that opens specimens). A share link that packs a specimen into the URL.
 
