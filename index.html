@@ -495,7 +495,7 @@ body.resizing, body.resizing * { cursor: col-resize !important; user-select: non
     <section class="cell">
       <div class="cell-h"><span>Look</span><span class="r" id="sum-look"></span></div>
       <div class="opts" id="looks" role="group" aria-label="Looks"></div>
-      <p class="hint">One click sets a whole look: palette, boxes and bands, pattern, marks, outline and jitter. Your text, seed, fonts and letter edits stay. Change anything afterwards; ⌘Z goes back.</p>
+      <p class="hint">One click sets colors and decoration: palette, boxes and bands, pattern and marks. Your type stays as it is: text, fonts, mix, size, jitter, outline and letter edits. Change anything afterwards; ⌘Z goes back.</p>
     </section>
 
     <section class="cell">
@@ -780,7 +780,7 @@ body.resizing, body.resizing * { cursor: col-resize !important; user-select: non
       <section><h4>InDesign</h4><p><b>Window › Utilities › Scripts</b>. Right-click the User folder › Reveal in Finder, drop the .jsx in, then double-click it in the panel. The frame auto-sizes to the text and the whole thing is one undo.</p></section>
       <section><h4>Photoshop</h4><p><b>File › Scripts › Browse…</b>. A new 72 ppi document opens with one editable type layer you can drag into your comp.</p></section>
       <section><h4>Base style</h4><p>The base style is the one letters keep at 0% mix. Pick it from the Base menu, or right-click any style in the pool: Set as base style, or Add to mix + set as base for a style that is off. It must be switched on in the pool: styles that are off are greyed out in the list, and switching off the base moves it to the nearest weight that is on.</p></section>
-      <section><h4>Look</h4><p>The <b>Look</b> group in the left panel sets a whole look in one click, from settings that already exist: the palette, the paragraph band, random letter boxes, the pattern, registration marks, random outline and the jitter ranges. Riso Block, Stacked Bands, Tone on Tone and Dark Glow. Your text, seed, fonts and letter edits stay; random letter boxes from before are replaced, boxes you added or colored by hand stay. It is a starting point: change anything afterwards, and ⌘Z goes back.</p></section>
+      <section><h4>Look</h4><p>The <b>Look</b> group in the left panel sets a whole look in one click, from settings that already exist: the palette, the paragraph band, random letter boxes, the pattern and registration marks. Riso Block, Stacked Bands, Tone on Tone and Dark Glow. A look only sets colors and decoration: your text, seed, fonts, mix, type settings, jitter, outline and letter edits stay as they are; random letter boxes from before are replaced, boxes you added or colored by hand stay. It is a starting point: change anything afterwards, and ⌘Z goes back.</p></section>
       <section><h4>Specimen</h4><p><b>Specimen</b> in the top bar keeps a whole look as settings: the text, every setting, your letter edits, the pool and base style, and the names of the fonts (family, style and PostScript name), not the fonts themselves. <b>Copy specimen</b> puts it on the clipboard; <b>Download specimen</b> saves a .json; give it a title and author if you like. To load one, paste it and press Load pasted, or Choose file. Loading is one step, so ⌘Z goes back. With the same fonts it gives exactly the same result. If some fonts aren't loaded, Mixweight lists them, lets the base style or your other fonts stand in, and the layout will differ because their widths differ. Everything works offline; nothing is uploaded.</p></section>
       <section><h4>Seed</h4><p>Every random choice comes from the seed, so the same seed and settings always give the same result. Click Seed in the toolbar to type one, Enter to apply, Esc to cancel. Note a seed to get a layout back later.</p></section>
       <section><h4>Fonts</h4><p>Fonts are matched by family and style name, then by PostScript name. Variable fonts use their named instances (Light, Bold…), so the app shows what the preview shows. Fonts the app can't find are listed and swapped for its default; the text stays editable.</p></section>
@@ -2966,35 +2966,32 @@ function palRoles(P, seed) {
   return { text: pick.text, bg: pick.bg, block, extras: rest.filter(c => c !== block) };
 }
 const sameRoles = (a, b) => a.text === b.text && a.bg === b.bg && a.block === b.block;
-// Look presets: one click sets the style settings that already exist (palette roles, paragraph band, letter boxes,
-// pattern, marks, outline, jitter), as one undo step. Never the text, seed, fonts or manual letter edits; random
+// Look presets: one click sets the color and decoration settings that already exist (palette roles, paragraph band,
+// letter boxes, pattern, marks), as one undo step. Never the type: text, seed, fonts, mix, size, jitter, outline or
+// manual letter edits stay as they are (owner's decision); random
 // letter boxes (box.auto) belong to the look and are replaced. Every look sets every one of these, so looks don't
 // leave each other's leftovers behind. Not saved state: only the settings it sets are.
 const mixHex = (a, b, t) => '#' + [0, 2, 4].map(i => Math.round(parseInt(a.substr(1 + i, 2), 16) * (1 - t) + parseInt(b.substr(1 + i, 2), 16) * t).toString(16).padStart(2, '0')).join('');
 const LOOKS = [
-  // Paper ground, letter boxes in the palette's inks on Multiply touching side by side, dots, lively jitter.
+  // Paper ground, letter boxes in the palette's inks on Multiply touching side by side, dots.
   { name: 'Riso Block', palette: 'Paper and pink blocks',
-    jitter: { sizeVar: 35, baseJit: 8, trackJit: 30, rotJit: 8 }, outline: { outlineAmt: 0, strokeW: 1 },
     para: { on: false, fit: 'max', dh: 0, col: 'single', st: {} },
     boxes: { amt: 55, col: 'palette', st: { blend: 'multiply', h: 'glyph', w: 'advance', px: 0, py: 2 } },
     pattern: { patOn: 'on', patType: 'dots', patCell: 10, patDot: 22, col: P => mixHex(P.bg, P.text, 0.3) },
     marks: { regOn: 'off' } },
   // A band per line, each the palette's next color, stepping with the line lengths; grid and marks.
   { name: 'Stacked Bands', palette: 'Grey and pastel blocks',
-    jitter: { sizeVar: 10, baseJit: 2, trackJit: 15, rotJit: 0 }, outline: { outlineAmt: 0, strokeW: 1 },
     para: { on: true, fit: 'max', dh: 10, col: 'palette', st: { px: 8, py: 2 } },
     boxes: { amt: 0 },
     pattern: { patOn: 'on', patType: 'grid', patCell: 24, patW: 0.5, col: P => mixHex(P.bg, P.text, 0.15) },
     marks: { regOn: 'on', regSize: 16, regW: 0.5, regInset: 12, col: P => P.text } },
   { name: 'Tone on Tone', palette: 'Blue and beige',
-    jitter: { sizeVar: 12, baseJit: 2, trackJit: 20, rotJit: 0 }, outline: { outlineAmt: 35, strokeW: 1 },
     para: { on: true, fit: 'max', dh: 6, col: 'single', st: { px: 4, py: 2 } },
     boxes: { amt: 0 },
     pattern: { patOn: 'on', patType: 'crosses', patCell: 18, patW: 0.75, patDot: 25, col: P => mixHex(P.bg, P.text, 0.35) },
     marks: { regOn: 'off' } },
   // Dark ground, line-tall columns that touch, on Screen so they glow; a faint grid and marks.
   { name: 'Dark Glow', palette: 'Dark glow',
-    jitter: { sizeVar: 20, baseJit: 3, trackJit: 20, rotJit: 0 }, outline: { outlineAmt: 0, strokeW: 1 },
     para: { on: false, fit: 'max', dh: 0, col: 'single', st: {} },
     boxes: { amt: 60, col: 'palette', st: { blend: 'screen', h: 'line', w: 'advance', px: 0, py: 0 } },
     pattern: { patOn: 'on', patType: 'grid', patCell: 20, patW: 0.5, col: P => mixHex(P.bg, P.text, 0.12) },
@@ -3005,7 +3002,6 @@ function applyLook(L) {
   if (!P) return;
   record();
   setPalette(P, false);
-  Object.assign(S, L.jitter, L.outline);
   S.para = { on: L.para.on, fit: L.para.fit, dh: L.para.dh, col: L.para.col, st: Object.assign(normStyle(), { fill: P.block || '#dedede' }, L.para.st) };
   // Letter boxes: the look's random boxes replace any placed at random before; boxes added or colored by hand stay.
   for (const [k, v] of [...S.overrides]) if (v.box && v.box.auto && !v.box.hand) { const w = Object.assign({}, v); delete w.box; if (ovEmpty(w)) S.overrides.delete(k); else S.overrides.set(k, w); }
