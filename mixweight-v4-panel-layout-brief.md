@@ -70,7 +70,7 @@ Changing panel widths, a Look strip under the canvas, new Looks, a tabbed single
 
 ## Progress (update after each step)
 
-- [ ] 1 Left panel tabs
+- [x] 1 Left panel tabs
 - [ ] 2 Global groups leave the right panel
 - [ ] 3 Box style for two scopes
 - [ ] 4 Selection panel behaviour

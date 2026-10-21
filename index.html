@@ -68,6 +68,14 @@ button { background: none; border: 0; padding: 0; cursor: pointer; }
 .sub > div { padding: 5px 14px; display: flex; align-items: center; justify-content: space-between; gap: 16px; min-width: 0; flex-wrap: wrap; }
 .sub > div:first-child { border-right: var(--rule); } /* same x as the rail's border */
 .sub .grp { display: flex; align-items: center; gap: 14px; }
+/* Left panel tabs: Type | Style, the active one inverted. View state, not in undo. */
+.sub > .ltabs { padding: 0 14px 0 0; align-items: stretch; flex-wrap: nowrap; }
+.tabs { display: grid; grid-template-columns: 1fr 1fr; flex: 1 1 auto; border-right: var(--rule); }
+.tabs button { text-transform: uppercase; padding: 5px 0; }
+.tabs button + button { border-left: var(--rule); }
+.tabs button:hover { background: var(--g1); }
+.tabs button[aria-selected="true"] { background: var(--ink); color: var(--paper); }
+.rail[data-tab="type"] > .cell[data-tab="style"], .rail[data-tab="style"] > .cell[data-tab="type"] { display: none; }
 .sub .muted { color: var(--g4); }
 #seed-lbl:hover { color: var(--ink); }
 #seed-in { font: inherit; width: 9ch; padding: 0 3px; border: 0; border-bottom: var(--rule); background: var(--g1); color: var(--ink); outline: 0; }
@@ -84,7 +92,8 @@ button { background: none; border: 0; padding: 0; cursor: pointer; }
 .cell-h > :first-child { font-size: var(--h-size); font-weight: var(--h-weight); letter-spacing: .03em; }
 .cell-h .r { color: var(--g4); text-align: right; font-weight: 400; min-width: 0; flex: 1 1 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .cell-h > :first-child { flex: none; }
-.pool-tools { display: flex; justify-content: flex-start; margin-top: -2px; }
+.pool-tools { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-top: -2px; }
+.pool-tools .muted { color: var(--g4); text-transform: uppercase; }
 /* First cell: header text centred on the selection bar's text, pool rule on the bar's bottom rule. */
 .cell-pool { padding-top: 10px; }
 .cell-pool > .cell-h { height: calc(var(--bar) - 21px); align-items: center; }
@@ -372,7 +381,7 @@ body.resizing, body.resizing * { cursor: col-resize !important; user-select: non
   </header>
 
   <div class="sub">
-    <div><span>Controls</span><span class="grp"><span class="muted" id="pool-count"></span><button class="tbtn" type="button" id="clear-left" title="Reset the left panel's settings (case, mix, type, letter align, jitter, layout aids, decoration) to their defaults. Text, colors, fonts and edits in the right panel stay. ⌘Z brings them back.">Clear</button></span></div>
+    <div class="ltabs"><span class="tabs" role="tablist" aria-label="Left panel"><button type="button" role="tab" id="tab-type" data-tab="type" aria-controls="rail">Type</button><button type="button" role="tab" id="tab-style" data-tab="style" aria-controls="rail">Style</button></span><span class="grp"><button class="tbtn" type="button" id="clear-left" title="Reset the left panel's settings (case, mix, type, letter align, jitter, layout aids, decoration) to their defaults. Text, colors, fonts and edits in the right panel stay. ⌘Z brings them back.">Clear</button></span></div>
     <div>
       <span class="grp">
         <button class="tbtn" type="button" id="undo" title="⌘Z" disabled>Undo</button>
@@ -391,17 +400,17 @@ body.resizing, body.resizing * { cursor: col-resize !important; user-select: non
     </div>
   </div>
 
-  <aside class="rail" aria-label="Controls">
-    <section class="cell cell-pool">
+  <aside class="rail" id="rail" aria-label="Controls" data-tab="type">
+    <section class="cell cell-pool" data-tab="type">
       <div class="cell-h"><span>Font pool</span><span class="r" id="sum-pool"></span></div>
-      <div class="pool-tools"><button class="btn sm" type="button" id="fold-all" title="Fold or open every family's style list. Share of mix stays visible.">Collapse all</button></div>
+      <div class="pool-tools"><button class="btn sm" type="button" id="fold-all" title="Fold or open every family's style list. Share of mix stays visible.">Collapse all</button><span class="muted" id="pool-count"></span></div>
       <div class="pool" id="pool"></div>
       <div class="base-row"><label for="base">Base</label><select id="base"></select></div>
       <p class="base-hint">Right-click any style above to make it the base.</p>
       <p class="hint">Click a style to mix it in; click a family's name to fold its styles away. The base style is the one letters keep at 0% mix. Variable fonts are split into their named instances. Drop .ttf, .otf or .ttc files anywhere on the page to add them.</p>
     </section>
 
-    <section class="cell">
+    <section class="cell" data-tab="type">
       <div class="cell-h"><span>Text</span><span class="r" id="sum-text"></span></div>
       <textarea id="text" spellcheck="false" aria-label="Text to set"></textarea>
       <div class="opts" id="case" role="group" aria-label="Case">
@@ -418,7 +427,7 @@ body.resizing, body.resizing * { cursor: col-resize !important; user-select: non
       </div>
     </section>
 
-    <section class="cell">
+    <section class="cell" data-tab="type">
       <div class="cell-h"><span>Mix</span><span class="r" id="sum-mix"></span></div>
       <div class="ctl">
         <label for="mix">Weight mix</label><output id="mix-o"></output>
@@ -449,7 +458,7 @@ body.resizing, body.resizing * { cursor: col-resize !important; user-select: non
       </div>
     </section>
 
-    <section class="cell">
+    <section class="cell" data-tab="type">
       <div class="cell-h"><span>Type</span><span class="r" id="sum-type"></span></div>
       <div class="pair">
         <div class="ctl"><label for="size">Size</label><output id="size-o"></output><input type="range" id="size" min="8" max="200" step="1"></div>
@@ -472,7 +481,7 @@ body.resizing, body.resizing * { cursor: col-resize !important; user-select: non
       <p class="hint">Tracking is in ‰: thousandths of an em, as in Adobe apps. Match size scales each font so its x-height or cap height meets the base style's; it exports as per-letter size.</p>
     </section>
 
-    <section class="cell">
+    <section class="cell" data-tab="type">
       <div class="cell-h"><span>Letter align</span><span class="r" id="sum-valign"></span></div>
       <div class="opts" id="valign" role="group" aria-label="Letter alignment">
         <button type="button" data-v="baseline">Baseline</button>
@@ -483,7 +492,7 @@ body.resizing, body.resizing * { cursor: col-resize !important; user-select: non
       <p class="hint">Measured by each glyph's outline: top, middle and bottom line up the actual ink of each letter within its line. They export as baseline shift, so the text stays editable.</p>
     </section>
 
-    <section class="cell">
+    <section class="cell" data-tab="type">
       <div class="cell-h"><span>Jitter</span><span class="r" id="sum-jitter"></span></div>
       <div class="ctl"><label for="sizevar">Size range</label><output id="sizevar-o"></output><input type="range" id="sizevar" min="0" max="80" step="1"></div>
       <div class="ctl"><label for="basejit">Base jitter</label><output id="basejit-o"></output><input type="range" id="basejit" min="0" max="30" step="0.5"></div>
@@ -492,13 +501,13 @@ body.resizing, body.resizing * { cursor: col-resize !important; user-select: non
       <p class="hint">Size range, base jitter, track jitter and rotation jitter add a random amount to each letter, picked from the seed; a letter you rotated by hand keeps its own angle. Baseline jitter only moves letters set on the baseline.</p>
     </section>
 
-    <section class="cell">
+    <section class="cell" data-tab="style">
       <div class="cell-h"><span>Look</span><span class="r" id="sum-look"></span></div>
       <div class="opts" id="looks" role="group" aria-label="Looks"></div>
       <p class="hint">One click sets colors and decoration: palette, boxes and bands, pattern and marks. Your type stays as it is: text, fonts, mix, size, jitter, outline and letter edits. Change anything afterwards; ⌘Z goes back.</p>
     </section>
 
-    <section class="cell">
+    <section class="cell" data-tab="style">
       <div class="cell-h"><span>Color</span><span class="r" id="sum-col"></span></div>
       <div class="pair">
         <div class="colc" id="col-text" data-label="Text"></div>
@@ -509,21 +518,8 @@ body.resizing, body.resizing * { cursor: col-resize !important; user-select: non
       <div class="btns"><button class="btn sm" type="button" id="col-reset">Black on white</button></div>
       <p class="hint">A palette sets the text and background colors, and the box and band fill when it has a block color. Letters you colored by hand keep their color. The background fills the text block plus a margin, the same area the PNG export crops to. Palettes apply to the whole design: text, background, boxes, bands, and the swatch row under every color control. Click the active palette again for a new color match; fold the list to just its chips.</p>
     </section>
-    <section class="cell">
-      <div class="cell-h"><span>Layout aids</span><span class="r" id="sum-guides"></span></div>
-      <div class="sub-h">Guidelines</div>
-      <div class="opts" id="guides" role="group" aria-label="Guidelines">
-        <button type="button" data-v="base">Baseline</button>
-        <button type="button" data-v="x">x-height</button>
-        <button type="button" data-v="cap">Cap height</button>
-        <button type="button" data-v="asc">Ascender</button>
-      </div>
-      <div class="colc" id="col-guide" data-label="Color"></div>
-      <label class="chk"><input type="checkbox" id="exp-guides"> Include in export</label>
-      <p class="hint">Lines at the base style's metrics: baseline, x-height, cap height and ascender, at the set size.</p>
-    </section>
 
-    <section class="cell">
+    <section class="cell" data-tab="style">
       <div class="cell-h"><span>Decoration</span><span class="r" id="sum-deco"></span></div>
       <div class="sub-h">Pattern</div>
       <div class="opts" id="pat-on" role="group" aria-label="Pattern">
@@ -555,6 +551,20 @@ body.resizing, body.resizing * { cursor: col-resize !important; user-select: non
       </div>
       <div class="colc" id="col-reg" data-label="Color"></div>
       <p class="hint">The pattern sits behind boxes and text and fills the text block plus a margin, the area the PNG crops to. Registration marks are crosshairs at the four corners of the same area, Inset in from each corner, so they are always inside the PNG. Both export to the .jsx as editable vectors on their own layers; a pattern too fine (more than 4000 pieces) is left out of the .jsx.</p>
+    </section>
+
+    <section class="cell" data-tab="style">
+      <div class="cell-h"><span>Layout aids</span><span class="r" id="sum-guides"></span></div>
+      <div class="sub-h">Guidelines</div>
+      <div class="opts" id="guides" role="group" aria-label="Guidelines">
+        <button type="button" data-v="base">Baseline</button>
+        <button type="button" data-v="x">x-height</button>
+        <button type="button" data-v="cap">Cap height</button>
+        <button type="button" data-v="asc">Ascender</button>
+      </div>
+      <div class="colc" id="col-guide" data-label="Color"></div>
+      <label class="chk"><input type="checkbox" id="exp-guides"> Include in export</label>
+      <p class="hint">Lines at the base style's metrics: baseline, x-height, cap height and ascender, at the set size.</p>
     </section>
   </aside>
 
@@ -1623,6 +1633,7 @@ const DEFAULTS = {
   collapsed: new Set(), // family names whose style list is folded; view state, not in undo
   groupsClosed: new Set(['Layout aids']), // left-panel groups folded to their title row, by title; view state, not in undo
   palsOpen: true,       // the palette list is open; view state, not in undo
+  leftTab: 'type',      // left panel tab, 'type' or 'style'; view state, not in undo
   textCol: '#000000', bgCol: '#ffffff', guideCol: '#b4b4b4', // RGB hex
   palette: '',                            // name of the preset applied last, '' for none
   palSeed: 0,                             // the palette's color match: 0 as the preset sets it, else rolled (palRoles)
@@ -3853,6 +3864,7 @@ function save() {
     o.panelW = S.panelW;
     o.groupsClosed = [...S.groupsClosed];
     o.palsOpen = S.palsOpen;
+    o.leftTab = S.leftTab;
     o.aidsSeen = true; // Layout aids starts folded, once
     o.collapsed = [...S.collapsed]; // all of it: installed families may not be loaded back yet when this runs
     localStorage.setItem('mixweight', JSON.stringify(o));
@@ -4036,6 +4048,31 @@ function setupGroupFolds() {
   });
 }
 
+// Left panel tabs: Type (fonts and setting the type) and Style (color and decoration). Each tab keeps its own
+// scroll position. View state: saved, not an undo step.
+function setTab(t) {
+  const rail = $('#rail'), was = rail.dataset.tab;
+  if (was && was !== t) S.railScroll[was] = rail.scrollTop;
+  S.leftTab = t;
+  rail.dataset.tab = t;
+  for (const b of $$('.tabs [role="tab"]')) {
+    const on = b.dataset.tab === t;
+    b.setAttribute('aria-selected', on);
+    b.tabIndex = on ? 0 : -1;
+  }
+  rail.scrollTop = S.railScroll[t] || 0;
+}
+function setupTabs() {
+  S.railScroll = {};
+  for (const b of $$('.tabs [role="tab"]')) b.onclick = () => { setTab(b.dataset.tab); save(); };
+  $('.tabs').addEventListener('keydown', e => {
+    if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+    const t = S.leftTab === 'type' ? 'style' : 'type';
+    setTab(t); save(); $('#tab-' + t).focus(); e.preventDefault();
+  });
+  setTab(S.leftTab);
+}
+
 async function boot() {
   const saved = loadSaved();
   if (saved) {
@@ -4053,6 +4090,7 @@ async function boot() {
     if (Array.isArray(saved.groupsClosed)) S.groupsClosed = new Set(saved.groupsClosed.filter(n => typeof n === 'string'));
     if (!saved.aidsSeen) S.groupsClosed.add('Layout aids');
     if (saved.palsOpen === false) S.palsOpen = false;
+    if (saved.leftTab === 'style') S.leftTab = 'style';
   }
   // Your own text stays; a built-in sample is swapped for a different one on each open.
   if (!saved || !S.text || SAMPLE_TEXTS.includes(S.text) || OLD_SAMPLES.includes(S.text)) {
@@ -4066,6 +4104,7 @@ async function boot() {
 
   setupHints();
   setupGroupFolds();
+  setupTabs();
   setupSnap();
   $('#exp-guides').addEventListener('change', leftSummaries);
   bindRange('case-amt', 'caseAmt', v => v + '%');
