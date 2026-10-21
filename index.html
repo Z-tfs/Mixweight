@@ -70,6 +70,7 @@ button { background: none; border: 0; padding: 0; cursor: pointer; }
 .sub > div { padding: 5px 14px; display: flex; align-items: center; justify-content: space-between; gap: 16px; min-width: 0; flex-wrap: wrap; }
 .sub > div:first-child { border-right: var(--rule); } /* same x as the rail's border */
 .sub .grp { display: flex; align-items: center; gap: 14px; }
+.sub .grp.tools { gap: 34px; } /* separate functions (Hover info, Zoom) sit further apart than the parts of one */
 /* Left panel tabs: Type | Style, the active one inverted. View state, not in undo. */
 .sub > .ltabs { padding: 0 14px 0 0; align-items: stretch; flex-wrap: nowrap; }
 .tabs { display: grid; grid-template-columns: 1fr 1fr; flex: 1 1 auto; border-right: var(--rule); }
@@ -405,13 +406,15 @@ body.resizing, body.resizing * { cursor: col-resize !important; user-select: non
         <button class="tbtn muted" type="button" id="seed-lbl" title="Click to type a seed"></button>
         <span id="seed-edit" class="muted" hidden>Seed <input id="seed-in" type="text" inputmode="numeric" maxlength="9" aria-label="Seed"></span>
       </span>
-      <span class="grp">
+      <span class="grp tools">
         <button class="tbtn" type="button" id="hov-btn" aria-pressed="true" title="Point at a letter to see its family, style, size, shift and tracking. Canvas only, not exported.">Hover info <span class="hv">On</span></button>
+        <span class="grp">
         <span class="muted">Zoom</span>
         <button class="tbtn" type="button" id="zoom-out" aria-label="Zoom out">−</button>
         <span class="num" id="zoom-v">100%</span>
         <button class="tbtn" type="button" id="zoom-in" aria-label="Zoom in">+</button>
         <button class="tbtn" type="button" id="zoom-fit" aria-pressed="false" title="Fit the text to the canvas. Stays fitted while panels are resized, until you zoom by hand.">Fit</button>
+        </span>
       </span>
     </div>
   </div>
