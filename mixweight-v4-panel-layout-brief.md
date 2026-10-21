@@ -84,7 +84,7 @@ Changing panel widths, a Look strip under the canvas, new Looks, a tabbed single
 - [x] 1 Left panel tabs
 - [x] 2 Global groups leave the right panel
 - [x] 3 Box style for two scopes
-- [ ] 4 Selection panel behaviour
+- [x] 4 Selection panel behaviour (Hover info moved to the toolbar here, since its group was the last thing in the paragraph mode)
 - [ ] 5 Toolbar: Hover info and Guides
 - [ ] 6 Defaults and tidy
 - [ ] 7 Docs and wrap-up

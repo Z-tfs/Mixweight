@@ -258,7 +258,7 @@ textarea:focus { background: var(--g2); outline: none; }
 .tag > span { background: var(--tag); padding: 0 3px 0 2px; text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 1.5px; white-space: nowrap; }
 #hovtag { position: fixed; z-index: 70; pointer-events: none; }
 
-/* Right panel: selection or paragraph. Collapsed to a small handle on the canvas edge. */
+/* Right panel: the selected letters only. With nothing selected (or closed by hand) it folds to a 36px strip. */
 .side { border-left: var(--rule); overflow-y: auto; min-width: 0; min-height: 0; width: var(--rw); }
 .side-h { display: flex; justify-content: space-between; align-items: center; gap: 10px; min-height: var(--bar); padding: 7px 14px; border-bottom: var(--rule); text-transform: uppercase; }
 .side-h .grp { display: flex; align-items: center; gap: 18px; }
@@ -292,8 +292,10 @@ textarea:focus { background: var(--g2); outline: none; }
 .btn:disabled { color: var(--g3); border-color: var(--g3); background: var(--paper); cursor: default; }
 .chk { display: inline-flex; align-items: center; gap: 7px; text-transform: uppercase; cursor: pointer; }
 .chk input { accent-color: var(--ink); margin: 0; }
-.handle { position: absolute; z-index: 3; right: 0; top: 50%; transform: translateY(-50%); width: 15px; height: 64px; border: 1px solid var(--g3); border-right: 0; background: var(--paper); color: var(--g4); font-size: var(--s-sm); display: grid; place-items: center; }
-.handle:hover { color: var(--ink); border-color: var(--ink); }
+.strip { width: 36px; border-left: var(--rule); display: flex; flex-direction: column; align-items: center; gap: 14px; padding-top: 12px; color: var(--g4); text-transform: uppercase; min-height: 0; }
+.strip:hover { color: var(--ink); background: var(--g1); }
+.strip .vl { writing-mode: vertical-rl; letter-spacing: .02em; }
+.side-empty { padding: 14px; }
 .placeholder { font: var(--s-md)/1.5 var(--ui); color: var(--g4); max-width: 30em; white-space: normal; text-transform: uppercase; }
 
 .drop { position: fixed; inset: 10px; border: 1px dashed var(--ink); background: rgba(255,255,255,.88); display: grid; place-items: center; font-size: var(--s-lg); text-transform: uppercase; z-index: 50; pointer-events: none; }
@@ -362,6 +364,7 @@ body.resizing, body.resizing * { cursor: col-resize !important; user-select: non
   .nav { justify-content: flex-start; border-top: var(--rule); gap: 6px 18px; font-size: var(--s-md); }
   .rail { border-right: 0; border-bottom: var(--rule); overflow: visible; }
   .side { width: auto; border-left: 0; border-top: var(--rule); overflow: visible; }
+  .strip { display: none; }
   .field { min-height: 75vh; }
   .stage { padding: 48px 16px; }
 }
@@ -398,6 +401,7 @@ body.resizing, body.resizing * { cursor: col-resize !important; user-select: non
         <span id="seed-edit" class="muted" hidden>Seed <input id="seed-in" type="text" inputmode="numeric" maxlength="9" aria-label="Seed"></span>
       </span>
       <span class="grp">
+        <button class="tbtn" type="button" id="hov-btn" aria-pressed="true" title="Point at a letter to see its family, style, size, shift and tracking. Canvas only, not exported.">Hover info</button>
         <span class="muted">Zoom</span>
         <button class="tbtn" type="button" id="zoom-out" aria-label="Zoom out">−</button>
         <span class="num" id="zoom-v">100%</span>
@@ -628,15 +632,15 @@ body.resizing, body.resizing * { cursor: col-resize !important; user-select: non
       <span class="corner tr" id="c-tr"></span>
       <span class="corner bl" id="c-bl"></span>
       <span class="corner br" id="c-br">⌘Z undo · R reroll · Esc deselect</span>
-      <button type="button" class="handle" id="handle" title="Open the right panel" aria-label="Open the right panel" aria-controls="side">‹</button>
       <div class="stage" id="stage">
         <div class="sheet" id="sheet"><svg class="deco" id="deco" aria-hidden="true"></svg><div id="out"></div><svg class="selmarks" id="selmarks" aria-hidden="true"></svg></div>
       </div>
     </div>
   </main>
 
-  <aside class="side" id="side" aria-label="Selection and paragraph" hidden>
-    <div class="side-h"><span id="side-title">Paragraph</span><span class="grp"><button class="tbtn" type="button" id="clear-ov" title="Remove every edit made on selected letters: font, weight, align, case, rotation, fill, color, letter boxes and bands. Left-panel settings stay, including the paragraph band, random outline and the boxes Random letter boxes placed. ⌘Z brings them back.">Clear edits</button><button class="tbtn" type="button" id="side-close" aria-label="Close the right panel">Close ›</button></span></div>
+  <button type="button" class="strip" id="side-strip" title="Open the selection panel" aria-label="Open the selection panel" aria-controls="side"><span>‹</span><span class="vl">Selection</span></button>
+  <aside class="side" id="side" aria-label="Selection" hidden>
+    <div class="side-h"><span id="side-title">Selection</span><span class="grp"><button class="tbtn" type="button" id="clear-ov" title="Remove every edit made on selected letters: font, weight, align, case, rotation, fill, color, letter boxes and bands. Left-panel settings stay, including the paragraph band, random outline and the boxes Random letter boxes placed. ⌘Z brings them back.">Clear edits</button><button class="tbtn" type="button" id="side-close" aria-label="Close the right panel">Close ›</button></span></div>
 
     <div id="side-sel">
       <section class="cell">
@@ -711,13 +715,7 @@ body.resizing, body.resizing * { cursor: col-resize !important; user-select: non
       </section>
     </div>
 
-    <div id="side-para">
-      <section class="cell">
-        <div class="cell-h"><span>Hover info</span><span class="r" id="sum-hov"></span></div>
-        <div class="opts" id="hov" role="group" aria-label="Hover info">
-          <button type="button" data-v="on">On</button>
-          <button type="button" data-v="off">Off</button>
-        </div>
+    <p class="hint-on side-empty" id="side-empty" hidden>Nothing selected. Click a letter, or drag across letters, to edit them here.</p>
         <p class="hint">Point at a letter to see its family, style, size, shift and tracking. Canvas only, not exported.</p>
       </section>
     </div>
@@ -808,7 +806,7 @@ body.resizing, body.resizing * { cursor: col-resize !important; user-select: non
       <section><h4>Match size</h4><p>Different families at the same point size look different sizes. x-height or Cap height scales each letter's font so its lowercase x or capital H is as tall as in the base style (limited to 60–160%). It is written as the letter's point size, so it stays editable; leading follows the nominal size.</p></section>
       <section><h4>Letter align</h4><p>Top, middle and bottom alignment are written as baseline shift values. If you change a letter or its font afterwards, export again to re-align.</p></section>
       <section><h4>Group titles</h4><p>Click a group title in the left panel to fold the group to its title row (▸) or open it again (▾); each group remembers its own state. Folding Font pool hides every family; a family's name folds that family to one row, which still shows its share of mix. The left panel has two tabs: <b>Type</b> (font pool, text, mix, type, letter align, jitter) and <b>Style</b> (look, color, paragraph band, random letter boxes, decoration, random outline, layout aids). The right side of each title row sums up what the group is set to, and follows every change; hover it for the full text if it is cut short. Groups with a short note have a <b>?</b> next to their title: click it to show the note, again to hide it.</p></section>
-      <section><h4>Right panel</h4><p>Selecting letters opens it with their font, size, shift and tracking at the top, then weight, align, <b>rotation</b>, <b>fill</b> and <b>boxes</b>. With nothing selected, the handle on the right edge opens hover info. Settings for the whole text are in the left panel's <b>Style</b> tab: Random outline (with Stroke), the Paragraph band and Random letter boxes. Clear edits removes what you set on selected letters, and bands; the left panel's Clear resets the left panel's settings and removes the boxes Random letter boxes placed. A drag that starts on empty canvas selects the letters it sweeps over. The panel keeps its place: selecting other letters, deselecting and reselecting, or switching between selection and paragraph brings back the group you were using.</p></section>
+      <section><h4>Right panel</h4><p>Selecting letters opens it with their font, size, shift and tracking at the top, then weight, align, <b>rotation</b>, <b>fill</b> and <b>boxes</b>. With nothing selected it folds to a narrow <b>Selection</b> strip on the right edge, and the canvas takes the room; deselecting folds it again. Close › folds it while letters stay selected, until you select other letters; the strip's ‹ opens it. Settings for the whole text are in the left panel's <b>Style</b> tab: Random outline (with Stroke), the Paragraph band and Random letter boxes. Clear edits removes what you set on selected letters, and bands; the left panel's Clear resets the left panel's settings and removes the boxes Random letter boxes placed. A drag that starts on empty canvas selects the letters it sweeps over. The panel keeps its place: selecting other letters, or deselecting and reselecting, brings back the group you were using. <b>Hover info</b> in the bar above the canvas switches the hover tag on and off.</p></section>
       <section><h4>Boxes</h4><p>Letter boxes follow each letter's ink, size and shift, and turn with it. A band runs under the selection, as tall as its tallest letter or stepping with each one; the paragraph band does the same for every line. There are two <b>Box style</b> editors. The one in the left panel, folded under Random letter boxes, styles the whole text: the paragraph band, or every letter box (Paragraph band / Letter boxes). The one in the right panel styles the boxes and bands on the selected letters. A letter box you styled in the right panel, or whose fill you set by hand, keeps its style: the left editor and Reroll boxes leave it alone; Clear edits removes it. In Box style, Expand X and Y make a box wider or taller than the ink (negative values make it smaller), and Move X and Y shift it right and up (all four snap to 0 when you drag close to the tick at 0); a rotated letter's box moves along the letter's own axes. Letter boxes also have <b>Height</b> (Glyph: the letter's own ink; Line: as tall as the line's tallest letter) and <b>Width</b> (Glyph: the letter as set, without tracking; Advance: up to the next letter, so neighbouring boxes touch). Line + Advance makes a grid of columns. A letter can have a letter box and a band at once: when the selection has both, Box style shows <b>Letter boxes / Band</b> to pick which one its controls change (Add letter boxes and Add band switch to what they just added). With <b>Each corner</b>, the four corners sit in a grid laid out like the box: type a radius, or drag the small corner icon sideways, and pick Round, Bevel or Inverse under it. They export under the text as vector shapes: InDesign rectangles keep live corner options, Illustrator and Photoshop get the exact path.</p></section>
       <section><h4>Color</h4><p>Box fill, box stroke and the background also take <b>No color</b>: the crossed-out swatch after the hex field (or type none). A box with no fill shows only its stroke; a background with no color leaves the PNG transparent. In the .jsx export a box with no fill keeps just its stroke (no fill in Illustrator and InDesign, a shape layer with its fill switched off in Photoshop); a box with neither fill nor stroke is left out. The <b>Color</b> group in the left panel sets the <b>text</b> and <b>background</b> colors for the whole design, as RGB hex: click the big swatch for the system picker, type a hex value and press Enter, or click a small swatch (the current color's swatch is outlined). The row under each color holds the last eight colors used; with a palette active, a row of the palette's colors sits above it, under every color control. A <b>palette</b> sets text and background in one click, and the box and band fill too when it has a block color. Click the active palette again to roll a new color match from its colors (text that stays readable on the background, and a block color that shows on it); ⌘Z goes back. Fold the palette list with the arrow next to Palettes to keep just a row of its chips. Black on white goes back to the start. Selected letters get their own color under Fill (Use text color removes it); outline letters stroke in their color. Box style has Fill and Stroke colors and a <b>blend</b> mode (Normal, Multiply, Screen, Overlay, Difference), which mixes a box with the background and the boxes under it, never with the text. The background fills the text block plus a margin, the same area the PNG crops to. The guidelines' color is under Guidelines. Random letter boxes have a <b>Box color</b>: Single gives every box its own fill; From palette gives each randomly placed box a color from the active palette's block and extra colors, picked by the seed, so Reroll boxes changes placement and colors together. A box whose fill you set by hand keeps it, and Reroll leaves it in place. From palette needs a palette with a block color. Everything exports: text color per letter, RGB fills and strokes (neutral greys stay greys, a Black tint in InDesign), blend modes, and the guideline color. A background that isn't white becomes a rectangle at the very back, named Mixweight background, on its own layer (Illustrator, InDesign) or as the bottom shape layer (Photoshop). InDesign adds each RGB color as a swatch named Mixweight #RRGGBB.</p></section>
       <section><h4>Outline and rotation</h4><p>Outline letters export as live text with no fill and a stroke in the letter's color; rotation as character rotation, about the centre of the em box. Photoshop can do neither per letter inside one type layer, so those letters become their own type layers (outline as a layer-style stroke) and the main layer keeps a space of the same width.</p></section>
@@ -2578,12 +2576,16 @@ const glyphList = () => S.lines.flat();
 function paintSelection() {
   for (const sp of out.querySelectorAll('.g')) sp.classList.toggle('sel', S.sel.has(+sp.dataset.i));
   drawSelMarks();
-  // Selecting opens the right panel; deselecting closes it again unless it was opened with the handle.
-  // Not mid-drag: opening narrows the canvas and the letters would move under the pointer. A drag that starts on
-  // empty canvas clears the old selection first; the panel stays as it is until the drag ends.
+  // A new selection (from none, or with none of the letters selected before) opens the right panel; deselecting
+  // closes it. Closed by hand, it stays closed until the next new selection. Not mid-drag: opening narrows the
+  // canvas and the letters would move under the pointer. A drag that starts on empty canvas clears the old
+  // selection first; the panel stays as it is until the drag ends.
   if (dragging && !S.sel.size && side.open) return;
-  if (S.sel.size) { if (!dragging) side.open = true; }
-  else if (!side.pinned) side.open = false;
+  if (S.sel.size) {
+    if (![...S.sel].some(i => side.prev.has(i))) side.shut = false;
+    if (!dragging) side.open = !side.shut;
+  } else if (side.prev.size) { side.open = false; side.shut = false; }
+  side.prev = new Set(S.sel);
   renderInspector();
 }
 function selectRange(a, b) {
@@ -2603,17 +2605,17 @@ function cleanOv(i) {
 }
 
 let selFamily = null, dragging = false;
-const side = { open: false, pinned: false };
+const side = { open: false, shut: false, prev: new Set() }; // shut: closed by hand while letters are selected
 function syncSide() {
   const sel = S.sel.size > 0;
   $('#side').hidden = !side.open;
-  $('#handle').hidden = side.open;
+  $('#side-strip').hidden = side.open;
   $('#split-r').hidden = !side.open;
   applyPanelWidths(); // reopens at the width it was dragged to; the left panel gives way if the window is narrow
   $('#side-sel').hidden = !sel;
-  $('#side-para').hidden = sel;
-  $('#side-title').textContent = sel ? 'Selection' : 'Paragraph';
+  $('#side-empty').hidden = sel;
 }
+function syncHov() { $('#hov-btn').setAttribute('aria-pressed', S.hoverInfo); }
 function renderInspector() {
   const gs = selectedGlyphs();
   const on = gs.length > 0;
@@ -2626,7 +2628,7 @@ function renderInspector() {
   renderBoxEditor(BX.all);
   $('#bx-ed').hidden = !on; // the selection editor; the left panel's edits the whole text
   if (!side.open) return;
-  if (on) { renderSelPanel(gs); renderBoxEditor(BX.sel); } else renderParaPanel();
+  if (on) { renderSelPanel(gs); renderBoxEditor(BX.sel); }
   restoreSideScroll();
 }
 
@@ -2801,10 +2803,6 @@ function renderColor() {
   summary('sum-col', S.palette || `${S.textCol.toUpperCase()} on ${S.bgCol.toUpperCase()}`);
   $('#pal-o').textContent = S.palette ? (S.palsOpen ? '' : S.palette) : 'None';
   $('#col-reset').disabled = S.textCol === DEFAULTS.textCol && S.bgCol === DEFAULTS.bgCol && !S.palette;
-}
-function renderParaPanel() {
-  summary('sum-hov', S.hoverInfo ? 'On' : 'Off');
-  press('#hov', S.hoverInfo ? 'on' : 'off');
 }
 // Style tab groups that used to be the right panel's paragraph mode: Random outline, Paragraph band, Random letter boxes.
 function renderStyleGroups() {
@@ -4183,7 +4181,7 @@ async function boot() {
   text.addEventListener('input', () => {
     record('text');
     remapOverrides(S.text, text.value);
-    S.text = text.value; S.sel.clear(); if (!side.pinned) side.open = false; render(); save();
+    S.text = text.value; S.sel.clear(); side.prev.clear(); side.open = side.shut = false; render(); save();
   });
   $('#base').onchange = e => { record(); S.baseId = e.target.value; renderPool(); render(); save(); };
 
@@ -4352,8 +4350,8 @@ async function boot() {
 
   // right panel
   const sideRender = () => { syncSide(); renderInspector(); };
-  $('#handle').onclick = () => { side.open = true; side.pinned = true; sideRender(); };
-  $('#side-close').onclick = () => { side.open = false; side.pinned = false; sideRender(); };
+  $('#side-strip').onclick = () => { side.open = true; side.shut = false; sideRender(); };
+  $('#side-close').onclick = () => { side.open = false; side.shut = S.sel.size > 0; sideRender(); };
   const eachSel = fn => { for (const g of selectedGlyphs()) { fn(ovFor(g.i), g); cleanOv(g.i); } render(); save(); };
   const optClick = (sel, fn) => $(sel).addEventListener('click', e => { const b = e.target.closest('button'); if (b) fn(b.dataset.v, b); });
   // rotate
@@ -4395,7 +4393,8 @@ async function boot() {
   $('#lb-rm-all').onclick = () => { record(); for (const g of glyphList()) if (g.box) { delete ovFor(g.i).box; cleanOv(g.i); } render(); save(); };
   // paragraph
   $('#fold-all').onclick = () => { const close = S.families.some(f => !S.collapsed.has(f.name)); for (const f of S.families) foldFamily(f.name, close); };
-  optClick('#hov', v => { S.hoverInfo = v === 'on'; if (!S.hoverInfo) hideTag(); renderInspector(); save(); });
+  $('#hov-btn').onclick = () => { S.hoverInfo = !S.hoverInfo; if (!S.hoverInfo) hideTag(); syncHov(); save(); };
+  syncHov();
   optClick('#para-on', v => { record(); S.para.on = v === 'on'; render(); save(); });
   optClick('#para-fit', v => { record(); S.para.fit = v; render(); save(); });
   optClick('#para-col', v => { if (v !== S.para.col) { record(); S.para.col = v; render(); save(); } });
