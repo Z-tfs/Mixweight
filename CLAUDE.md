@@ -42,6 +42,13 @@ Everything is in `index.html` (~3300 lines) plus `demo-fonts.js`. Line numbers d
 - When a step's approach isn't clean, stop and discuss it with the owner before implementing.
 - Keep comments short, matching the existing style.
 
+### Briefs (how the owner's briefs are written, and how to read them)
+
+- A brief points to the relevant file and section by name (for example CLAUDE.md "Roadmap: V4 › 3. Pattern"). It never copies the whole spec.
+- Every step in a brief names the part of the tool being changed (for example "the Box style group in the left panel") and what to grep for (ids, banners, function names). Grep for those and read only that range of `index.html` (`Read` with offset / limit or `sed -n`), never the whole file.
+- Don't open images in `reference/` unless the brief names a specific file.
+- When you write or revise a brief, follow these three rules.
+
 ## V4 status (keep this section up to date)
 
 All V4 work is on branch `claude/lucid-ride-wf1xim`, in PR Z-tfs/Mixweight#8. Keep working there; don't open another branch or PR unless the owner asks. The owner tested every `.jsx` change in Illustrator, InDesign and Photoshop and approved V4 for release; she merges the PR herself. After the merge, follow-up work starts from `main` on a new branch. The PR description has a table of every commit with its fixed preview link; add each new commit to it.
