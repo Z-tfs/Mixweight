@@ -355,6 +355,11 @@ dialog::backdrop { background: rgba(255, 255, 255, .7); }
 .split:hover::after, .split.on::after { opacity: 1; }
 body.resizing, body.resizing * { cursor: col-resize !important; user-select: none !important; -webkit-user-select: none !important; }
 .tbtn[aria-pressed="true"] { text-decoration: underline; text-underline-offset: 3px; }
+/* Hover info: On with the picked-option dot, Off in grey. */
+#hov-btn { text-decoration: none; display: inline-flex; align-items: center; gap: 6px; }
+#hov-btn .hv { display: inline-flex; align-items: center; gap: 5px; }
+#hov-btn[aria-pressed="true"] .hv::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--ink); }
+#hov-btn[aria-pressed="false"] { color: var(--g4); }
 
 @media (max-width: 900px) {
   .split { display: none; }
@@ -401,7 +406,7 @@ body.resizing, body.resizing * { cursor: col-resize !important; user-select: non
         <span id="seed-edit" class="muted" hidden>Seed <input id="seed-in" type="text" inputmode="numeric" maxlength="9" aria-label="Seed"></span>
       </span>
       <span class="grp">
-        <button class="tbtn" type="button" id="hov-btn" aria-pressed="true" title="Point at a letter to see its family, style, size, shift and tracking. Canvas only, not exported.">Hover info</button>
+        <button class="tbtn" type="button" id="hov-btn" aria-pressed="true" title="Point at a letter to see its family, style, size, shift and tracking. Canvas only, not exported.">Hover info <span class="hv">On</span></button>
         <span class="muted">Zoom</span>
         <button class="tbtn" type="button" id="zoom-out" aria-label="Zoom out">−</button>
         <span class="num" id="zoom-v">100%</span>
@@ -716,9 +721,6 @@ body.resizing, body.resizing * { cursor: col-resize !important; user-select: non
     </div>
 
     <p class="hint-on side-empty" id="side-empty" hidden>Nothing selected. Click a letter, or drag across letters, to edit them here.</p>
-        <p class="hint">Point at a letter to see its family, style, size, shift and tracking. Canvas only, not exported.</p>
-      </section>
-    </div>
 
     <section class="cell" id="bx-ed">
       <div class="cell-h"><span>Box style</span><span class="r" id="bx-ed-r"></span></div>
@@ -2615,7 +2617,7 @@ function syncSide() {
   $('#side-sel').hidden = !sel;
   $('#side-empty').hidden = sel;
 }
-function syncHov() { $('#hov-btn').setAttribute('aria-pressed', S.hoverInfo); }
+function syncHov() { const b = $('#hov-btn'); b.setAttribute('aria-pressed', S.hoverInfo); b.querySelector('.hv').textContent = S.hoverInfo ? 'On' : 'Off'; }
 function renderInspector() {
   const gs = selectedGlyphs();
   const on = gs.length > 0;
