@@ -267,7 +267,7 @@ textarea:focus { background: var(--g2); outline: none; }
 .side .row { display: grid; grid-template-columns: 1fr auto; gap: 6px 10px; align-items: baseline; }
 .side .lab, .rail .lab { color: var(--g4); text-transform: uppercase; }
 .side .sub-h, .rail .sub-h { text-transform: uppercase; color: var(--g4); }
-.rail .sub-h.aid { border-top: 1px solid var(--g2); padding-top: 10px; margin-top: 4px; }
+.on-only { display: grid; grid-template-columns: minmax(0, 1fr); gap: 10px; } /* a group's controls, shown while it is On */
 .numin { display: inline-flex; align-items: baseline; gap: 0; color: var(--g4); }
 .numin input { width: 6ch; border: 0; border-bottom: var(--rule); background: transparent; text-align: right; font-variant-numeric: tabular-nums; padding: 0 1px 0 2px; border-radius: 0; -moz-appearance: textfield; }
 .numin input::-webkit-inner-spin-button { -webkit-appearance: none; }
@@ -522,18 +522,14 @@ body.resizing, body.resizing * { cursor: col-resize !important; user-select: non
         <button type="button" data-v="center">Center</button>
         <button type="button" data-v="right">Right</button>
       </div>
-      <p class="hint">Tracking is in ‰: thousandths of an em, as in Adobe apps. Match size scales each font so its x-height or cap height meets the base style's; it exports as per-letter size.</p>
-    </section>
-
-    <section class="cell" data-tab="type">
-      <div class="cell-h"><span>Letter align</span><span class="r" id="sum-valign"></span></div>
+      <div class="ctl"><label>Letter align</label><output></output></div>
       <div class="opts" id="valign" role="group" aria-label="Letter alignment">
         <button type="button" data-v="baseline">Baseline</button>
         <button type="button" data-v="top">Top</button>
         <button type="button" data-v="middle">Middle</button>
         <button type="button" data-v="bottom">Bottom</button>
       </div>
-      <p class="hint">Measured by each glyph's outline: top, middle and bottom line up the actual ink of each letter within its line. They export as baseline shift, so the text stays editable.</p>
+      <p class="hint">Tracking is in ‰: thousandths of an em, as in Adobe apps. Match size scales each font so its x-height or cap height meets the base style's; it exports as per-letter size. Letter align is measured by each glyph's outline: top, middle and bottom line up the actual ink of each letter within its line. They export as baseline shift, so the text stays editable.</p>
     </section>
 
     <section class="cell" data-tab="type">
@@ -569,17 +565,19 @@ body.resizing, body.resizing * { cursor: col-resize !important; user-select: non
         <button type="button" data-v="off">Off</button>
         <button type="button" data-v="on">On</button>
       </div>
-      <div class="opts" id="para-fit" role="group" aria-label="Paragraph band height">
-        <button type="button" data-v="max">Tallest letter</button>
-        <button type="button" data-v="each">Each letter</button>
-      </div>
-      <div class="ctl"><label for="para-dh">Adjust height</label><output id="para-dh-o"></output><input type="range" id="para-dh" min="-40" max="120" step="1"></div>
-      <div class="ctl"><label>Band color</label><output></output></div>
-      <div class="opts" id="para-col" role="group" aria-label="Paragraph band color">
-        <button type="button" data-v="single">Single</button>
-        <button type="button" data-v="palette">Per line from palette</button>
+      <div class="on-only" id="para-more">
+        <div class="opts" id="para-fit" role="group" aria-label="Paragraph band height">
+          <button type="button" data-v="max">Tallest letter</button>
+          <button type="button" data-v="each">Each letter</button>
+        </div>
+        <div class="ctl"><label for="para-dh">Adjust height</label><output id="para-dh-o"></output><input type="range" id="para-dh" min="-40" max="120" step="1"></div>
+        <div class="ctl"><label>Band color</label><output></output></div>
+        <div class="opts" id="para-col" role="group" aria-label="Paragraph band color">
+          <button type="button" data-v="single">Single</button>
+          <button type="button" data-v="palette">Per line from palette</button>
       </div>
       <p class="hint-on" id="para-col-hint" hidden>Pick a palette with block colors first.</p>
+      </div>
       <p class="hint">One band under each line of text, as tall as its tallest letter or stepping with each letter. Per line from palette gives each line the next of the palette's block and extra colors; Single uses the Fill under Box style.</p>
     </section>
 
@@ -597,37 +595,44 @@ body.resizing, body.resizing * { cursor: col-resize !important; user-select: non
     </section>
 
     <section class="cell" data-tab="style">
-      <div class="cell-h"><span>Decoration</span><span class="r" id="sum-deco"></span></div>
-      <div class="sub-h">Pattern</div>
+      <div class="cell-h"><span>Pattern</span><span class="r" id="sum-pat"></span></div>
       <div class="opts" id="pat-on" role="group" aria-label="Pattern">
         <button type="button" data-v="off">Off</button>
         <button type="button" data-v="on">On</button>
       </div>
-      <div class="opts" id="pat-type" role="group" aria-label="Pattern type">
-        <button type="button" data-v="grid">Grid</button>
-        <button type="button" data-v="dots">Dots</button>
-        <button type="button" data-v="crosses">Crosses</button>
-        <button type="button" data-v="lines">Lines</button>
-        <button type="button" data-v="diagonal">Diagonal</button>
+      <div class="on-only" id="pat-more">
+        <div class="opts" id="pat-type" role="group" aria-label="Pattern type">
+          <button type="button" data-v="grid">Grid</button>
+          <button type="button" data-v="dots">Dots</button>
+          <button type="button" data-v="crosses">Crosses</button>
+          <button type="button" data-v="lines">Lines</button>
+          <button type="button" data-v="diagonal">Diagonal</button>
+        </div>
+        <div class="pair">
+          <div class="ctl"><label for="pat-cell">Cell size</label><output id="pat-cell-o"></output><input type="range" id="pat-cell" min="2" max="120" step="1"></div>
+          <div class="ctl" id="pat-w-c"><label for="pat-w">Line weight</label><output id="pat-w-o"></output><input type="range" id="pat-w" min="0.25" max="4" step="0.25"></div>
+          <div class="ctl" id="pat-dot-c" hidden><label for="pat-dot">Dot size</label><output id="pat-dot-o"></output><input type="range" id="pat-dot" min="5" max="100" step="1"></div>
+        </div>
+        <div class="colc" id="col-pat" data-label="Color"></div>
       </div>
-      <div class="pair">
-        <div class="ctl"><label for="pat-cell">Cell size</label><output id="pat-cell-o"></output><input type="range" id="pat-cell" min="2" max="120" step="1"></div>
-        <div class="ctl" id="pat-w-c"><label for="pat-w">Line weight</label><output id="pat-w-o"></output><input type="range" id="pat-w" min="0.25" max="4" step="0.25"></div>
-        <div class="ctl" id="pat-dot-c" hidden><label for="pat-dot">Dot size</label><output id="pat-dot-o"></output><input type="range" id="pat-dot" min="5" max="100" step="1"></div>
-      </div>
-      <div class="colc" id="col-pat" data-label="Color"></div>
-      <div class="sub-h aid">Registration marks</div>
+      <p class="hint">The pattern sits behind boxes and text and fills the text block plus a margin, the area the PNG crops to. It exports to the .jsx as editable vectors on its own layer; a pattern too fine (more than 4000 pieces) is left out of the .jsx.</p>
+    </section>
+
+    <section class="cell" data-tab="style">
+      <div class="cell-h"><span>Registration marks</span><span class="r" id="sum-reg"></span></div>
       <div class="opts" id="reg-on" role="group" aria-label="Registration marks">
         <button type="button" data-v="off">Off</button>
         <button type="button" data-v="on">On</button>
       </div>
-      <div class="pair">
-        <div class="ctl"><label for="reg-size">Size</label><output id="reg-size-o"></output><input type="range" id="reg-size" min="4" max="60" step="1"></div>
-        <div class="ctl"><label for="reg-w">Line weight</label><output id="reg-w-o"></output><input type="range" id="reg-w" min="0.25" max="4" step="0.25"></div>
-        <div class="ctl"><label for="reg-inset">Inset</label><output id="reg-inset-o"></output><input type="range" id="reg-inset" min="0" max="60" step="1"></div>
+      <div class="on-only" id="reg-more">
+        <div class="pair">
+          <div class="ctl"><label for="reg-size">Size</label><output id="reg-size-o"></output><input type="range" id="reg-size" min="4" max="60" step="1"></div>
+          <div class="ctl"><label for="reg-w">Line weight</label><output id="reg-w-o"></output><input type="range" id="reg-w" min="0.25" max="4" step="0.25"></div>
+          <div class="ctl"><label for="reg-inset">Inset</label><output id="reg-inset-o"></output><input type="range" id="reg-inset" min="0" max="60" step="1"></div>
+        </div>
+        <div class="colc" id="col-reg" data-label="Color"></div>
       </div>
-      <div class="colc" id="col-reg" data-label="Color"></div>
-      <p class="hint">The pattern sits behind boxes and text and fills the text block plus a margin, the area the PNG crops to. Registration marks are crosshairs at the four corners of the same area, Inset in from each corner, so they are always inside the PNG. Both export to the .jsx as editable vectors on their own layers; a pattern too fine (more than 4000 pieces) is left out of the .jsx.</p>
+      <p class="hint">Crosshairs at the four corners of the text block plus a margin, Inset in from each corner, so they are always inside the PNG. They export to the .jsx as editable vectors on their own layer.</p>
     </section>
 
     <section class="cell" data-tab="style">
@@ -821,13 +826,13 @@ body.resizing, body.resizing * { cursor: col-resize !important; user-select: non
       <section><h4>Even gaps</h4><p>Where neighbouring letters come from different fonts, their sidebearings differ and the gaps look uneven. Even gaps adjusts the left letter's tracking so the gap moves halfway between the spacing of the two fonts it joins, instead of jumping from one to the other. It exports as tracking.</p></section>
       <section><h4>Match size</h4><p>Different families at the same point size look different sizes. x-height or Cap height scales each letter's font so its lowercase x or capital H is as tall as in the base style (limited to 60–160%). It is written as the letter's point size, so it stays editable; leading follows the nominal size.</p></section>
       <section><h4>Letter align</h4><p>Top, middle and bottom alignment are written as baseline shift values. If you change a letter or its font afterwards, export again to re-align.</p></section>
-      <section><h4>Group titles</h4><p>Click a group title in the left panel to fold the group to its title row (▸) or open it again (▾); each group remembers its own state. Folding Font pool hides every family; a family's name folds that family to one row, which still shows its share of mix. The left panel has two tabs: <b>Type</b> (font pool, text, mix, type, letter align, jitter) and <b>Style</b> (look, color, paragraph band, random letter boxes, decoration, random outline). The right side of each title row sums up what the group is set to, and follows every change; hover it for the full text if it is cut short. Groups with a short note have a <b>?</b> next to their title: click it to show the note, again to hide it.</p></section>
+      <section><h4>Group titles</h4><p>Click a group title in the left panel to fold the group to its title row (▸) or open it again (▾); each group remembers its own state. Folding Font pool hides every family; a family's name folds that family to one row, which still shows its share of mix. The left panel has two tabs: <b>Type</b> (font pool, text, mix, type with letter align, jitter) and <b>Style</b> (look, color, paragraph band, random letter boxes, pattern, registration marks, random outline). On a first visit Jitter and the palette list start folded; once you fold or open them yourself, your choice stays. Paragraph band, Pattern and Registration marks show only Off / On until you switch them on. The right side of each title row sums up what the group is set to, and follows every change; hover it for the full text if it is cut short. Groups with a short note have a <b>?</b> next to their title: click it to show the note, again to hide it.</p></section>
       <section><h4>Right panel</h4><p>Selecting letters opens it with their font, size, shift and tracking at the top, then weight, align, <b>rotation</b>, <b>fill</b> and <b>boxes</b>. With nothing selected it folds to a narrow <b>Selection</b> strip on the right edge, and the canvas takes the room; deselecting folds it again. Close › folds it while letters stay selected, until you select other letters; the strip's ‹ opens it. Settings for the whole text are in the left panel's <b>Style</b> tab: Random outline (with Stroke), the Paragraph band and Random letter boxes. Clear edits removes what you set on selected letters, and bands; the left panel's Clear resets the left panel's settings and removes the boxes Random letter boxes placed. A drag that starts on empty canvas selects the letters it sweeps over. The panel keeps its place: selecting other letters, or deselecting and reselecting, brings back the group you were using. <b>Hover info</b> in the bar above the canvas switches the hover tag on and off.</p></section>
       <section><h4>Boxes</h4><p>Letter boxes follow each letter's ink, size and shift, and turn with it. A band runs under the selection, as tall as its tallest letter or stepping with each one; the paragraph band does the same for every line. There are two <b>Box style</b> editors. The one in the left panel, folded under Random letter boxes, styles the whole text: the paragraph band, or every letter box (Paragraph band / Letter boxes). The one in the right panel styles the boxes and bands on the selected letters. A letter box you styled in the right panel, or whose fill you set by hand, keeps its style: the left editor and Reroll boxes leave it alone; Clear edits removes it. In Box style, Expand X and Y make a box wider or taller than the ink (negative values make it smaller), and Move X and Y shift it right and up (all four snap to 0 when you drag close to the tick at 0); a rotated letter's box moves along the letter's own axes. Letter boxes also have <b>Height</b> (Glyph: the letter's own ink; Line: as tall as the line's tallest letter) and <b>Width</b> (Glyph: the letter as set, without tracking; Advance: up to the next letter, so neighbouring boxes touch). Line + Advance makes a grid of columns. A letter can have a letter box and a band at once: when the selection has both, Box style shows <b>Letter boxes / Band</b> to pick which one its controls change (Add letter boxes and Add band switch to what they just added). With <b>Each corner</b>, the four corners sit in a grid laid out like the box: type a radius, or drag the small corner icon sideways, and pick Round, Bevel or Inverse under it. They export under the text as vector shapes: InDesign rectangles keep live corner options, Illustrator and Photoshop get the exact path.</p></section>
       <section><h4>Color</h4><p>Box fill, box stroke and the background also take <b>No color</b>: the crossed-out swatch after the hex field (or type none). A box with no fill shows only its stroke; a background with no color leaves the PNG transparent. In the .jsx export a box with no fill keeps just its stroke (no fill in Illustrator and InDesign, a shape layer with its fill switched off in Photoshop); a box with neither fill nor stroke is left out. The <b>Color</b> group in the left panel sets the <b>text</b> and <b>background</b> colors for the whole design, as RGB hex: click the big swatch for the system picker, type a hex value and press Enter, or click a small swatch (the current color's swatch is outlined). The row under each color holds the last eight colors used; with a palette active, a row of the palette's colors sits above it, under every color control. A <b>palette</b> sets text and background in one click, and the box and band fill too when it has a block color. Click the active palette again to roll a new color match from its colors (text that stays readable on the background, and a block color that shows on it); ⌘Z goes back. Fold the palette list with the arrow next to Palettes to keep just a row of its chips. Black on white goes back to the start. Selected letters get their own color under Fill (Use text color removes it); outline letters stroke in their color. Box style has Fill and Stroke colors and a <b>blend</b> mode (Normal, Multiply, Screen, Overlay, Difference), which mixes a box with the background and the boxes under it, never with the text. The background fills the text block plus a margin, the same area the PNG crops to. The guidelines' color is under Guidelines. Random letter boxes have a <b>Box color</b>: Single gives every box its own fill; From palette gives each randomly placed box a color from the active palette's block and extra colors, picked by the seed, so Reroll boxes changes placement and colors together. A box whose fill you set by hand keeps it, and Reroll leaves it in place. From palette needs a palette with a block color. Everything exports: text color per letter, RGB fills and strokes (neutral greys stay greys, a Black tint in InDesign), blend modes, and the guideline color. A background that isn't white becomes a rectangle at the very back, named Mixweight background, on its own layer (Illustrator, InDesign) or as the bottom shape layer (Photoshop). InDesign adds each RGB color as a swatch named Mixweight #RRGGBB.</p></section>
       <section><h4>Outline and rotation</h4><p>Outline letters export as live text with no fill and a stroke in the letter's color; rotation as character rotation, about the centre of the em box. Photoshop can do neither per letter inside one type layer, so those letters become their own type layers (outline as a layer-style stroke) and the main layer keeps a space of the same width.</p></section>
       <section><h4>Guidelines</h4><p>Baseline, x-height, cap height and ascender of the base style at the set size. Tick Include in export under Guidelines to export them as plain lines on their own layer or group, named Mixweight guidelines.</p></section>
-      <section><h4>Guides and Decoration</h4><p><b>Guides</b> in the bar above the canvas opens the guidelines: baseline, x-height, cap height and ascender of the base style, each on its own switch, their color, and Include in export. It reads On while any guideline shows; click outside or press Esc to close it. The pattern and the registration marks are in the <b>Decoration</b> group in the left panel's Style tab, each with its own switch. The <b>pattern</b> (Grid, Dots, Crosses, Lines, Diagonal) is drawn behind the boxes and the text, in the text block plus a margin, the area the PNG crops to; cells start at that area's top-left corner. Cell size runs from 2 to 120 pt. Dots have a Dot size as a share of the cell (100% and neighbouring dots touch), so they stay visible at any cell size; the other types have a Line weight. Box blend modes mix with it. <b>Registration marks</b> are crosshairs at the four corners of that same area: Size, Line weight, Inset (how far in from each corner) and Color; on a small area they stop at the middle. Pattern and marks show on the canvas and in the PNG (always inside it). They export to the .jsx as editable vectors on their own layers (Mixweight pattern, Mixweight marks); a pattern with more than 4000 pieces is too fine and is left out of the .jsx (make the Cell size larger, or use PNG).</p></section>
+      <section><h4>Guides and Decoration</h4><p><b>Guides</b> in the bar above the canvas opens the guidelines: baseline, x-height, cap height and ascender of the base style, each on its own switch, their color, and Include in export. It reads On while any guideline shows; click outside or press Esc to close it. The <b>Pattern</b> and <b>Registration marks</b> groups are in the left panel's Style tab; each shows just Off / On until you switch it on. The <b>pattern</b> (Grid, Dots, Crosses, Lines, Diagonal) is drawn behind the boxes and the text, in the text block plus a margin, the area the PNG crops to; cells start at that area's top-left corner. Cell size runs from 2 to 120 pt. Dots have a Dot size as a share of the cell (100% and neighbouring dots touch), so they stay visible at any cell size; the other types have a Line weight. Box blend modes mix with it. <b>Registration marks</b> are crosshairs at the four corners of that same area: Size, Line weight, Inset (how far in from each corner) and Color; on a small area they stop at the middle. Pattern and marks show on the canvas and in the PNG (always inside it). They export to the .jsx as editable vectors on their own layers (Mixweight pattern, Mixweight marks); a pattern with more than 4000 pieces is too fine and is left out of the .jsx (make the Cell size larger, or use PNG).</p></section>
       <section><h4>Layers</h4><p>The .jsx puts each part on its own layer, bottom to top: Mixweight background, Mixweight pattern, Mixweight boxes, Mixweight marks, Mixweight text, Mixweight guidelines (Illustrator and InDesign layers; Photoshop shape layers, with the text layers in a Mixweight text group). Exporting again into the same document reuses those layers. Only the parts you use are made.</p></section>
       <section><h4>PNG</h4><p><b>PNG</b> in the top bar saves a picture of the text and its boxes exactly as on the canvas, cropped to the text block plus a margin, without selection marks, hover or zoom. Pick the scale (1× is one pixel per point), a transparent background, and whether the guidelines that are switched on come along (separate from Include in export). Download it, or copy it to the clipboard; if the browser won't copy, it downloads instead. It is a flat image, not editable text. Chrome or Edge.</p></section>
     </div>
@@ -1742,6 +1747,7 @@ const S = Object.assign(structuredClone(DEFAULTS), {
   restoredShares: null,   // family name -> share, from the last session
   leftTab: 'type',        // left panel tab, 'type' or 'style'; view state, not in undo
   gbxOpen: false,         // the left panel's Box style is open; view state, not in undo
+  foldsSet: new Set(),    // folds the user has opened or closed by hand (group titles, 'Palettes'); view state
 });
 
 /* ---------------- sfnt parsing ---------------- */
@@ -2576,14 +2582,16 @@ function leftSummaries() {
   const unit = { glyph: 'Letter', segment: 'Fragment', word: 'Word' }[S.gran];
   summary('sum-mix', `${S.mix}% · ${dist} · ${unit}`);
   const al = { left: 'Left', center: 'Center', right: 'Right' }[S.align];
-  summary('sum-type', `${S.size} pt · ${S.leading}% lead · ${num(S.track)} track · ${al}`);
-  summary('sum-valign', { baseline: 'Baseline', top: 'Top', middle: 'Middle', bottom: 'Bottom' }[S.valign]);
+  const va = { baseline: 'Baseline', top: 'Top', middle: 'Middle', bottom: 'Bottom' }[S.valign];
+  summary('sum-type', `${S.size} pt · ${S.leading}% lead · ${num(S.track)} track · ${al}` + (S.valign !== 'baseline' ? ` · ${va}` : ''));
   summary('sum-jitter', S.sizeVar || S.baseJit || S.trackJit || S.rotJit ? `±${S.sizeVar}% · ±${num(S.baseJit)} pt · ±${S.trackJit}` + (S.rotJit ? ` · ±${S.rotJit}°` : '') : 'Off');
   syncGuidesBtn();
-  const deco = [];
-  if (S.patOn === 'on') deco.push(`${S.patType[0].toUpperCase() + S.patType.slice(1)} ${S.patCell} pt`);
-  if (S.regOn === 'on') deco.push('Marks');
-  summary('sum-deco', deco.join(' · ') || 'Off');
+  const pt = S.patType === 'dots' ? `${S.patCell} pt · ${S.patDot}%` : `${S.patCell} pt · ${ptTxt(S.patW)}`;
+  summary('sum-pat', S.patOn === 'on' ? `${S.patType[0].toUpperCase() + S.patType.slice(1)} · ${pt}` : 'Off');
+  summary('sum-reg', S.regOn === 'on' ? `On · ${S.regSize} pt` : 'Off');
+  // Pattern and Registration marks show only Off / On while off.
+  $('#pat-more').hidden = S.patOn !== 'on';
+  $('#reg-more').hidden = S.regOn !== 'on';
 }
 
 /* ---------------- selection ---------------- */
@@ -2829,7 +2837,8 @@ function renderColor() {
 // Style tab groups that used to be the right panel's paragraph mode: Random outline, Paragraph band, Random letter boxes.
 function renderStyleGroups() {
   summary('sum-fill', S.outlineAmt ? `${S.outlineAmt}% · ${ptTxt(S.strokeW)}` : 'Off');
-  summary('sum-para', S.para.on ? `On · ${S.para.fit === 'each' ? 'Each letter' : 'Tallest letter'}` + (S.para.dh ? ` · ${dhTxt(S.para.dh)}` : '') : 'Off');
+  summary('sum-para', S.para.on ? `On · ${S.para.fit === 'each' ? 'Each letter' : 'Tallest letter'}` + (S.para.dh ? ` · ${dhTxt(S.para.dh)}` : '') + (S.para.col === 'palette' && paletteColors() ? ' · per line' : '') : 'Off');
+  $('#para-more').hidden = !S.para.on;
   press('#para-on', S.para.on ? 'on' : 'off');
   press('#para-fit', S.para.fit);
   const pinks = !!paletteColors();
@@ -2840,7 +2849,8 @@ function renderStyleGroups() {
   setRange('pscat', S.boxAmt, S.boxAmt + '%');
   syncBoxCol();
   const n = glyphList().filter(g => g.box).length;
-  $('#para-lb-r').textContent = n ? `${n} on the canvas` : 'None yet';
+  const pal = S.boxCol === 'palette' && activeRoles()?.block;
+  summary('para-lb-r', n ? `${n} box${n === 1 ? '' : 'es'} · ${S.boxAmt}%` + (pal ? ' · from palette' : '') : 'None');
   $('#lb-rm-all').disabled = !n;
 }
 
@@ -3931,6 +3941,7 @@ function save() {
     o.palsOpen = S.palsOpen;
     o.leftTab = S.leftTab;
     o.gbxOpen = S.gbxOpen;
+    o.foldsSet = [...S.foldsSet];
     o.collapsed = [...S.collapsed]; // all of it: installed families may not be loaded back yet when this runs
     localStorage.setItem('mixweight', JSON.stringify(o));
   } catch (e) { /* storage unavailable */ }
@@ -4093,7 +4104,10 @@ function setupHints() {
 
 // Left-panel groups fold to their title row (the summary stays). Click the title row; remembered per group by its
 // title, not an undo step. A layer above the families' own folding in Font pool.
+// Folded on a first visit, until the user opens them; a fold the user has set by hand keeps their choice.
+const FOLDED_FIRST = ['Jitter'];
 function foldGroup(cell, closed) {
+  S.foldsSet.add(cell.dataset.group);
   cell.classList.toggle('g-closed', closed);
   cell.querySelector('.gfold').setAttribute('aria-expanded', !closed);
   closed ? S.groupsClosed.add(cell.dataset.group) : S.groupsClosed.delete(cell.dataset.group);
@@ -4154,6 +4168,7 @@ async function boot() {
     if (Array.isArray(saved.collapsed)) S.collapsed = new Set(saved.collapsed.filter(n => typeof n === 'string'));
     if (Array.isArray(saved.groupsClosed)) S.groupsClosed = new Set(saved.groupsClosed.filter(n => typeof n === 'string'));
     if (saved.palsOpen === false) S.palsOpen = false;
+    if (Array.isArray(saved.foldsSet)) S.foldsSet = new Set(saved.foldsSet.filter(n => typeof n === 'string'));
     if (saved.leftTab === 'style') S.leftTab = 'style';
     if (saved.gbxOpen === true) S.gbxOpen = true;
   }
@@ -4166,6 +4181,9 @@ async function boot() {
     S.bands = [];
   }
   fixDeco();
+  // First-visit folds: compact palettes and the groups in FOLDED_FIRST, unless the user set that fold by hand.
+  if (!S.foldsSet.has('Palettes')) S.palsOpen = false;
+  for (const g of FOLDED_FIRST) if (!S.foldsSet.has(g)) S.groupsClosed.add(g);
 
   cloneBoxEditor();
   setupHints();
@@ -4436,7 +4454,7 @@ async function boot() {
     (v, key) => { record(key); eachSel(o => { o.col = v; }); });
   $('#col-sel-auto').onclick = () => { record(); eachSel(o => { delete o.col; }); };
   $('#col-reset').onclick = () => { record(); S.textCol = DEFAULTS.textCol; S.bgCol = DEFAULTS.bgCol; S.palette = ''; S.palSeed = 0; render(); save(); };
-  $('#pals-fold').onclick = e => { e.stopPropagation(); S.palsOpen = !S.palsOpen; renderColor(); save(); };
+  $('#pals-fold').onclick = e => { e.stopPropagation(); S.palsOpen = !S.palsOpen; S.foldsSet.add('Palettes'); renderColor(); save(); };
   // box style: the same wiring for both editors
   optClick('#gbx-tgt', v => { bxTarget = v; renderInspector(); });
   optClick('#bx-tgt-sel', v => { bxSelTarget = v; renderInspector(); });
