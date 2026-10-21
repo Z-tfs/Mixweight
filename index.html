@@ -386,7 +386,7 @@ body.resizing, body.resizing * { cursor: col-resize !important; user-select: non
   </header>
 
   <div class="sub">
-    <div class="ltabs"><span class="tabs" role="tablist" aria-label="Left panel"><button type="button" role="tab" id="tab-type" data-tab="type" aria-controls="rail">Type</button><button type="button" role="tab" id="tab-style" data-tab="style" aria-controls="rail">Style</button></span><span class="grp"><button class="tbtn" type="button" id="clear-left" title="Reset everything you can set in the left panel, on both tabs, to its default: styles in the mix, share of mix and base, case, mix, type, letter align, jitter, colors and palette, layout aids, decoration. Your text, the loaded fonts and edits in the right panel stay. ⌘Z brings them back.">Clear</button></span></div>
+    <div class="ltabs"><span class="tabs" role="tablist" aria-label="Left panel"><button type="button" role="tab" id="tab-type" data-tab="type" aria-controls="rail">Type</button><button type="button" role="tab" id="tab-style" data-tab="style" aria-controls="rail">Style</button></span><span class="grp"><button class="tbtn" type="button" id="clear-left" title="Reset everything you can set in the left panel, on both tabs, to its default: styles in the mix, share of mix and base, case, mix, type, letter align, jitter, colors and palette, paragraph band, random letter boxes (the boxes they placed go too), random outline, decoration, layout aids. Your text, the loaded fonts and edits in the right panel stay. ⌘Z brings them back.">Clear</button></span></div>
     <div>
       <span class="grp">
         <button class="tbtn" type="button" id="undo" title="⌘Z" disabled>Undo</button>
@@ -525,6 +525,38 @@ body.resizing, body.resizing * { cursor: col-resize !important; user-select: non
     </section>
 
     <section class="cell" data-tab="style">
+      <div class="cell-h"><span>Paragraph band</span><span class="r" id="sum-para"></span></div>
+      <div class="opts" id="para-on" role="group" aria-label="Paragraph band">
+        <button type="button" data-v="off">Off</button>
+        <button type="button" data-v="on">On</button>
+      </div>
+      <div class="opts" id="para-fit" role="group" aria-label="Paragraph band height">
+        <button type="button" data-v="max">Tallest letter</button>
+        <button type="button" data-v="each">Each letter</button>
+      </div>
+      <div class="ctl"><label for="para-dh">Adjust height</label><output id="para-dh-o"></output><input type="range" id="para-dh" min="-40" max="120" step="1"></div>
+      <div class="ctl"><label>Band color</label><output></output></div>
+      <div class="opts" id="para-col" role="group" aria-label="Paragraph band color">
+        <button type="button" data-v="single">Single</button>
+        <button type="button" data-v="palette">Per line from palette</button>
+      </div>
+      <p class="hint-on" id="para-col-hint" hidden>Pick a palette with block colors first.</p>
+      <p class="hint">One band under each line of text, as tall as its tallest letter or stepping with each letter. Per line from palette gives each line the next of the palette's block and extra colors; Single uses the Fill under Box style.</p>
+    </section>
+
+    <section class="cell" data-tab="style">
+      <div class="cell-h"><span>Random letter boxes</span><span class="r" id="para-lb-r"></span></div>
+      <div class="ctl"><label for="pscat">Amount</label><output id="pscat-o"></output><input type="range" id="pscat" min="0" max="100" step="1"></div>
+      <div class="ctl"><label>Box color</label><output></output></div>
+      <div class="opts box-col" id="pscat-col" role="group" aria-label="Box color">
+        <button type="button" data-v="single">Single</button>
+        <button type="button" data-v="palette">From palette</button>
+      </div>
+      <p class="hint-on box-col-hint" hidden>Pick a palette with block colors first.</p>
+      <div class="btns"><button class="btn sm" type="button" id="pscat-re">Reroll boxes</button><button class="btn sm" type="button" id="lb-rm-all">Remove all</button></div>
+    </section>
+
+    <section class="cell" data-tab="style">
       <div class="cell-h"><span>Decoration</span><span class="r" id="sum-deco"></span></div>
       <div class="sub-h">Pattern</div>
       <div class="opts" id="pat-on" role="group" aria-label="Pattern">
@@ -556,6 +588,14 @@ body.resizing, body.resizing * { cursor: col-resize !important; user-select: non
       </div>
       <div class="colc" id="col-reg" data-label="Color"></div>
       <p class="hint">The pattern sits behind boxes and text and fills the text block plus a margin, the area the PNG crops to. Registration marks are crosshairs at the four corners of the same area, Inset in from each corner, so they are always inside the PNG. Both export to the .jsx as editable vectors on their own layers; a pattern too fine (more than 4000 pieces) is left out of the .jsx.</p>
+    </section>
+
+    <section class="cell" data-tab="style">
+      <div class="cell-h"><span>Random outline</span><span class="r" id="sum-fill"></span></div>
+      <div class="ctl"><label for="outline">Amount</label><output id="outline-o"></output><input type="range" id="outline" min="0" max="100" step="1"></div>
+      <div class="ctl"><label for="strokew">Stroke</label><output id="strokew-o"></output><input type="range" id="strokew" min="0.25" max="8" step="0.25"></div>
+      <div class="btns"><button class="btn sm" type="button" id="outline-re">Reroll outlines</button></div>
+      <p class="hint">Solid ↔ outline. Random outline picks a share of the letters to set as outline only: no fill, a stroke in the text color. It exports as live text with a stroke. Select letters to set them by hand.</p>
     </section>
 
     <section class="cell" data-tab="style">
@@ -593,7 +633,7 @@ body.resizing, body.resizing * { cursor: col-resize !important; user-select: non
   </main>
 
   <aside class="side" id="side" aria-label="Selection and paragraph" hidden>
-    <div class="side-h"><span id="side-title">Paragraph</span><span class="grp"><button class="tbtn" type="button" id="clear-ov" title="Remove every right-panel edit: letter font, weight, align, rotation, fill, letter boxes, bands and the paragraph band, and set Random outline and Stroke back to their defaults. Left-panel settings stay. ⌘Z brings them back.">Clear edits</button><button class="tbtn" type="button" id="side-close" aria-label="Close the right panel">Close ›</button></span></div>
+    <div class="side-h"><span id="side-title">Paragraph</span><span class="grp"><button class="tbtn" type="button" id="clear-ov" title="Remove every edit made on selected letters: font, weight, align, case, rotation, fill, color, letter boxes and bands. Left-panel settings stay, including the paragraph band, random outline and the boxes Random letter boxes placed. ⌘Z brings them back.">Clear edits</button><button class="tbtn" type="button" id="side-close" aria-label="Close the right panel">Close ›</button></span></div>
 
     <div id="side-sel">
       <section class="cell">
@@ -676,46 +716,6 @@ body.resizing, body.resizing * { cursor: col-resize !important; user-select: non
           <button type="button" data-v="off">Off</button>
         </div>
         <p class="hint">Point at a letter to see its family, style, size, shift and tracking. Canvas only, not exported.</p>
-      </section>
-
-      <section class="cell">
-        <div class="cell-h"><span>Fill</span><span class="r" id="sum-fill"></span></div>
-        <div class="ctl"><label for="outline">Random outline</label><output id="outline-o"></output><input type="range" id="outline" min="0" max="100" step="1"></div>
-        <div class="ctl"><label for="strokew">Stroke</label><output id="strokew-o"></output><input type="range" id="strokew" min="0.25" max="8" step="0.25"></div>
-        <div class="btns"><button class="btn sm" type="button" id="outline-re">Reroll outlines</button></div>
-        <p class="hint">Solid ↔ outline. Random outline picks a share of the letters to set as outline only: no fill, a stroke in the text color. It exports as live text with a stroke. Select letters to set them by hand.</p>
-      </section>
-
-      <section class="cell">
-        <div class="cell-h"><span>Paragraph band</span><span class="r" id="sum-para"></span></div>
-        <div class="opts" id="para-on" role="group" aria-label="Paragraph band">
-          <button type="button" data-v="off">Off</button>
-          <button type="button" data-v="on">On</button>
-        </div>
-        <div class="opts" id="para-fit" role="group" aria-label="Paragraph band height">
-          <button type="button" data-v="max">Tallest letter</button>
-          <button type="button" data-v="each">Each letter</button>
-        </div>
-        <div class="ctl"><label for="para-dh">Adjust height</label><output id="para-dh-o"></output><input type="range" id="para-dh" min="-40" max="120" step="1"></div>
-        <div class="ctl"><label>Band color</label><output></output></div>
-        <div class="opts" id="para-col" role="group" aria-label="Paragraph band color">
-          <button type="button" data-v="single">Single</button>
-          <button type="button" data-v="palette">Per line from palette</button>
-        </div>
-        <p class="hint-on" id="para-col-hint" hidden>Pick a palette with block colors first.</p>
-        <p class="hint">One band under each line of text, as tall as its tallest letter or stepping with each letter. Per line from palette gives each line the next of the palette's block and extra colors; Single uses the Fill under Box style.</p>
-      </section>
-
-      <section class="cell">
-        <div class="cell-h"><span>Letter boxes</span><span class="r" id="para-lb-r"></span></div>
-        <div class="ctl"><label for="pscat">Random letter boxes</label><output id="pscat-o"></output><input type="range" id="pscat" min="0" max="100" step="1"></div>
-        <div class="ctl"><label>Box color</label><output></output></div>
-        <div class="opts box-col" id="pscat-col" role="group" aria-label="Box color">
-          <button type="button" data-v="single">Single</button>
-          <button type="button" data-v="palette">From palette</button>
-        </div>
-        <p class="hint-on box-col-hint" hidden>Pick a palette with block colors first.</p>
-        <div class="btns"><button class="btn sm" type="button" id="pscat-re">Reroll boxes</button><button class="btn sm" type="button" id="lb-rm-all">Remove all</button></div>
       </section>
     </div>
 
@@ -804,8 +804,8 @@ body.resizing, body.resizing * { cursor: col-resize !important; user-select: non
       <section><h4>Even gaps</h4><p>Where neighbouring letters come from different fonts, their sidebearings differ and the gaps look uneven. Even gaps adjusts the left letter's tracking so the gap moves halfway between the spacing of the two fonts it joins, instead of jumping from one to the other. It exports as tracking.</p></section>
       <section><h4>Match size</h4><p>Different families at the same point size look different sizes. x-height or Cap height scales each letter's font so its lowercase x or capital H is as tall as in the base style (limited to 60–160%). It is written as the letter's point size, so it stays editable; leading follows the nominal size.</p></section>
       <section><h4>Letter align</h4><p>Top, middle and bottom alignment are written as baseline shift values. If you change a letter or its font afterwards, export again to re-align.</p></section>
-      <section><h4>Group titles</h4><p>Click a group title in the left panel to fold the group to its title row (▸) or open it again (▾); each group remembers its own state. Folding Font pool hides every family; the family names fold just their own styles. The right side of each title row sums up what the group is set to, and follows every change; hover it for the full text if it is cut short. Groups with a short note have a <b>?</b> next to their title: click it to show the note, again to hide it.</p></section>
-      <section><h4>Right panel</h4><p>Selecting letters opens it with their font, size, shift and tracking at the top, then weight, align, <b>rotation</b>, <b>fill</b> and <b>boxes</b>. With nothing selected, the handle on the right edge opens the paragraph settings: hover info, <b>fill</b> (random outline, stroke), the paragraph band, random letter boxes. Clear edits there also sets Random outline and Stroke back to their defaults. A drag that starts on empty canvas selects the letters it sweeps over. The panel keeps its place: selecting other letters, deselecting and reselecting, or switching between selection and paragraph brings back the group you were using.</p></section>
+      <section><h4>Group titles</h4><p>Click a group title in the left panel to fold the group to its title row (▸) or open it again (▾); each group remembers its own state. Folding Font pool hides every family; a family's name folds that family to one row, which still shows its share of mix. The left panel has two tabs: <b>Type</b> (font pool, text, mix, type, letter align, jitter) and <b>Style</b> (look, color, paragraph band, random letter boxes, decoration, random outline, layout aids). The right side of each title row sums up what the group is set to, and follows every change; hover it for the full text if it is cut short. Groups with a short note have a <b>?</b> next to their title: click it to show the note, again to hide it.</p></section>
+      <section><h4>Right panel</h4><p>Selecting letters opens it with their font, size, shift and tracking at the top, then weight, align, <b>rotation</b>, <b>fill</b> and <b>boxes</b>. With nothing selected, the handle on the right edge opens hover info and Box style. Settings for the whole text are in the left panel's <b>Style</b> tab: Random outline (with Stroke), the Paragraph band and Random letter boxes. Clear edits removes what you set on selected letters, and bands; the left panel's Clear resets the left panel's settings and removes the boxes Random letter boxes placed. A drag that starts on empty canvas selects the letters it sweeps over. The panel keeps its place: selecting other letters, deselecting and reselecting, or switching between selection and paragraph brings back the group you were using.</p></section>
       <section><h4>Boxes</h4><p>Letter boxes follow each letter's ink, size and shift, and turn with it. A band runs under the selection, as tall as its tallest letter or stepping with each one; the paragraph band does the same for every line. In Box style, Expand X and Y make a box wider or taller than the ink (negative values make it smaller), and Move X and Y shift it right and up (all four snap to 0 when you drag close to the tick at 0); a rotated letter's box moves along the letter's own axes. Letter boxes also have <b>Height</b> (Glyph: the letter's own ink; Line: as tall as the line's tallest letter) and <b>Width</b> (Glyph: the letter as set, without tracking; Advance: up to the next letter, so neighbouring boxes touch). Line + Advance makes a grid of columns. A letter can have a letter box and a band at once: when the selection has both, Box style shows <b>Letter boxes / Band</b> to pick which one its controls change (Add letter boxes and Add band switch to what they just added). With <b>Each corner</b>, the four corners sit in a grid laid out like the box: type a radius, or drag the small corner icon sideways, and pick Round, Bevel or Inverse under it. They export under the text as vector shapes: InDesign rectangles keep live corner options, Illustrator and Photoshop get the exact path.</p></section>
       <section><h4>Color</h4><p>Box fill, box stroke and the background also take <b>No color</b>: the crossed-out swatch after the hex field (or type none). A box with no fill shows only its stroke; a background with no color leaves the PNG transparent. In the .jsx export a box with no fill keeps just its stroke (no fill in Illustrator and InDesign, a shape layer with its fill switched off in Photoshop); a box with neither fill nor stroke is left out. The <b>Color</b> group in the left panel sets the <b>text</b> and <b>background</b> colors for the whole design, as RGB hex: click the big swatch for the system picker, type a hex value and press Enter, or click a small swatch (the current color's swatch is outlined). The row under each color holds the last eight colors used; with a palette active, a row of the palette's colors sits above it, under every color control. A <b>palette</b> sets text and background in one click, and the box and band fill too when it has a block color. Click the active palette again to roll a new color match from its colors (text that stays readable on the background, and a block color that shows on it); ⌘Z goes back. Fold the palette list with the arrow next to Palettes to keep just a row of its chips. Black on white goes back to the start. Selected letters get their own color under Fill (Use text color removes it); outline letters stroke in their color. Box style has Fill and Stroke colors and a <b>blend</b> mode (Normal, Multiply, Screen, Overlay, Difference), which mixes a box with the background and the boxes under it, never with the text. The background fills the text block plus a margin, the same area the PNG crops to. The guidelines' color is under Guidelines. Random letter boxes have a <b>Box color</b>: Single gives every box its own fill; From palette gives each randomly placed box a color from the active palette's block and extra colors, picked by the seed, so Reroll boxes changes placement and colors together. A box whose fill you set by hand keeps it, and Reroll leaves it in place. From palette needs a palette with a block color. Everything exports: text color per letter, RGB fills and strokes (neutral greys stay greys, a Black tint in InDesign), blend modes, and the guideline color. A background that isn't white becomes a rectangle at the very back, named Mixweight background, on its own layer (Illustrator, InDesign) or as the bottom shape layer (Photoshop). InDesign adds each RGB color as a swatch named Mixweight #RRGGBB.</p></section>
       <section><h4>Outline and rotation</h4><p>Outline letters export as live text with no fill and a stroke in the letter's color; rotation as character rotation, about the centre of the em box. Photoshop can do neither per letter inside one type layer, so those letters become their own type layers (outline as a layer-style stroke) and the main layer keeps a space of the same width.</p></section>
@@ -2617,6 +2617,7 @@ function renderInspector() {
   syncSide();
   renderColor();
   for (const c of colorCtls) c.syncPal();
+  renderStyleGroups();
   if (!side.open) return;
   if (on) renderSelPanel(gs); else renderParaPanel();
   renderBoxEditor(gs);
@@ -2797,9 +2798,12 @@ function renderColor() {
 }
 function renderParaPanel() {
   summary('sum-hov', S.hoverInfo ? 'On' : 'Off');
+  press('#hov', S.hoverInfo ? 'on' : 'off');
+}
+// Style tab groups that used to be the right panel's paragraph mode: Random outline, Paragraph band, Random letter boxes.
+function renderStyleGroups() {
   summary('sum-fill', S.outlineAmt ? `${S.outlineAmt}% · ${ptTxt(S.strokeW)}` : 'Off');
   summary('sum-para', S.para.on ? `On · ${S.para.fit === 'each' ? 'Each letter' : 'Tallest letter'}` + (S.para.dh ? ` · ${dhTxt(S.para.dh)}` : '') : 'Off');
-  press('#hov', S.hoverInfo ? 'on' : 'off');
   press('#para-on', S.para.on ? 'on' : 'off');
   press('#para-fit', S.para.fit);
   const pinks = !!paletteColors();
@@ -3815,9 +3819,10 @@ function loadSpecimen(src) {
 // Settings that live in the left panel, both tabs (Clear there resets these, plus the font pool's mix).
 const LEFT_KEYS = ['caseMode', 'caseAmt', 'mix', 'dist', 'wavePeriod', 'gran', 'valign', 'size', 'leading', 'sizeVar', 'baseJit',
   'trackJit', 'rotJit', 'track', 'gaps', 'match', 'align', 'guides', 'guideCol', 'patOn', 'patType', 'patCell', 'patW', 'patCol', 'patDot',
-  'regOn', 'regSize', 'regW', 'regInset', 'regCol', 'textCol', 'bgCol', 'palette', 'palSeed'];
-// Paragraph settings in the right panel that its Clear edits resets.
-const RIGHT_KEYS = ['outlineAmt', 'strokeW'];
+  'regOn', 'regSize', 'regW', 'regInset', 'regCol', 'textCol', 'bgCol', 'palette', 'palSeed',
+  'para', 'boxAmt', 'boxCol', 'boxSeed', 'outlineAmt', 'outlineSeed', 'strokeW'];
+// A letter box placed by Random letter boxes (left panel) and not colored by hand: left Clear removes it, Clear edits keeps it.
+const autoBox = v => !!(v && v.box && v.box.auto && !v.box.hand);
 const SAVE_KEYS = ['text', 'caseMode', 'caseAmt', 'mix', 'dist', 'gran', 'valign', 'size', 'leading', 'sizeVar', 'baseJit', 'trackJit', 'rotJit', 'track', 'align', 'seed', 'match', 'wavePeriod', 'gaps',
   'outlineAmt', 'outlineSeed', 'strokeW', 'guides', 'boxAmt', 'boxSeed', 'boxStyle', 'bandFit', 'bands', 'para', 'textCol', 'bgCol', 'guideCol', 'palette', 'palSeed', 'boxCol',
   'patOn', 'patType', 'patCell', 'patW', 'patCol', 'patDot', 'regOn', 'regSize', 'regW', 'regInset', 'regCol'];
@@ -4212,26 +4217,27 @@ async function boot() {
   seedIn.addEventListener('blur', () => closeSeed(true));
   // The proof's drag selection stops focus moving, so catch clicks outside directly too.
   document.addEventListener('pointerdown', e => { if (e.target !== seedIn) closeSeed(true); }, true);
-  // Clear edits (right panel): every per-letter adjustment (font, weight, align, rotation, fill, letter boxes),
-  // every band and the paragraph band. Left-panel settings stay as they are.
+  // Clear edits (right panel): every edit made on selected letters (font, weight, align, case, rotation, fill,
+  // color, letter boxes) and every band. Left-panel settings stay, and so do the boxes Random letter boxes placed.
   $('#clear-ov').onclick = () => {
-    const keys = RIGHT_KEYS.filter(k => S[k] !== DEFAULTS[k]);
-    if (!S.overrides.size && !S.bands.length && !S.para.on && !keys.length) return;
-    record(); S.overrides = new Map(); S.bands = []; S.para.on = false;
-    for (const k of keys) S[k] = DEFAULTS[k];
+    if (!S.bands.length && [...S.overrides.values()].every(v => autoBox(v) && Object.keys(v).length === 1)) return;
+    record();
+    S.overrides = new Map([...S.overrides].filter(([, v]) => autoBox(v)).map(([i, v]) => [i, { box: v.box }]));
+    S.bands = [];
     syncControls(); render(); save();
   };
-  // Clear (left panel): every setting on both tabs back to its default, and the font pool's mix back to how fonts
-  // load (upright styles on, equal shares, base nearest Regular). The text you typed, the loaded fonts, the seed
-  // and every right-panel edit stay.
+  // Clear (left panel): every setting on both tabs back to its default, the boxes Random letter boxes placed
+  // removed, and the font pool's mix back to how fonts load (upright styles on, equal shares, base nearest
+  // Regular). The text you typed, the loaded fonts, the seed and every right-panel edit stay.
   $('#clear-left').onclick = () => {
     const keys = LEFT_KEYS.filter(k => JSON.stringify(S[k]) !== JSON.stringify(DEFAULTS[k]));
     const ons = S.families.map(f => { const up = f.ids.filter(id => !S.styles.get(id).italic); return up.length ? up : f.ids; });
     const famsOff = S.families.some((f, k) => f.share !== 100 || f.on.size !== ons[k].length || ons[k].some(id => !f.on.has(id)));
-    const guidesX = $('#exp-guides').checked;
-    if (!keys.length && !famsOff && !guidesX) return;
+    const guidesX = $('#exp-guides').checked, autos = [...S.overrides].filter(([, v]) => autoBox(v)).map(([i]) => i);
+    if (!keys.length && !famsOff && !guidesX && !autos.length) return;
     record();
     for (const k of keys) S[k] = structuredClone(DEFAULTS[k]);
+    for (const i of autos) { delete ovFor(i).box; cleanOv(i); }
     if (famsOff) {
       S.families.forEach((f, k) => { f.share = 100; f.on = new Set(ons[k]); });
       S.baseId = pickDefaultBase();
