@@ -180,15 +180,20 @@ textarea:focus { background: var(--g2); outline: none; }
 .fam-h .r { display: flex; gap: 10px; color: var(--g4); white-space: nowrap; }
 .fam-h .x { color: var(--g4); text-transform: uppercase; }
 .fam-h .x:hover { color: var(--ink); }
-/* Collapsible family: the header row opens and closes the style list. Share of mix stays out either way. */
+/* Collapsible family: the header row folds the family to that row; its share of mix shows there while folded. */
 .fam-h { cursor: pointer; }
 .fam-h .tg { display: flex; align-items: baseline; gap: 6px; min-width: 0; text-transform: uppercase; text-align: left; }
 .fam-h .tg::before { content: "▾"; width: 9px; flex: none; color: var(--g4); }
 .fam.closed .fam-h .tg::before { content: "▸"; }
 .fam-h:hover .tg::before { color: var(--ink); }
-.fam-h .bm { color: var(--ink); overflow: hidden; text-overflow: ellipsis; max-width: 11em; }
+.fam-h .bm { color: var(--ink); overflow: hidden; text-overflow: ellipsis; max-width: 11em; min-width: 0; flex: 0 1 auto; }
+.fam-h .r > :not(.bm) { flex: none; }
+.fam-h, .fam-h .r { min-width: 0; }
+.fam-h .tg { flex: none; max-width: 50%; }
 .fam:not(.closed) .fam-h .bm { display: none; }
-.fam.closed .chips { display: none; }
+.fam.closed .chips, .fam.closed .ctl { display: none; }
+.fam-h .sh { color: var(--ink); }
+.fam:not(.closed) .fam-h .sh, .fam:only-child .fam-h .sh { display: none; }
 .cell-pool .cell-h .tbtn { color: var(--g4); }
 .cell-pool .cell-h .tbtn:hover { color: var(--ink); }
 .chips { display: flex; flex-wrap: wrap; align-items: baseline; gap: 3px 12px; }
@@ -381,7 +386,7 @@ body.resizing, body.resizing * { cursor: col-resize !important; user-select: non
   </header>
 
   <div class="sub">
-    <div class="ltabs"><span class="tabs" role="tablist" aria-label="Left panel"><button type="button" role="tab" id="tab-type" data-tab="type" aria-controls="rail">Type</button><button type="button" role="tab" id="tab-style" data-tab="style" aria-controls="rail">Style</button></span><span class="grp"><button class="tbtn" type="button" id="clear-left" title="Reset the left panel's settings (case, mix, type, letter align, jitter, layout aids, decoration) to their defaults. Text, colors, fonts and edits in the right panel stay. ⌘Z brings them back.">Clear</button></span></div>
+    <div class="ltabs"><span class="tabs" role="tablist" aria-label="Left panel"><button type="button" role="tab" id="tab-type" data-tab="type" aria-controls="rail">Type</button><button type="button" role="tab" id="tab-style" data-tab="style" aria-controls="rail">Style</button></span><span class="grp"><button class="tbtn" type="button" id="clear-left" title="Reset everything you can set in the left panel, on both tabs, to its default: styles in the mix, share of mix and base, case, mix, type, letter align, jitter, colors and palette, layout aids, decoration. Your text, the loaded fonts and edits in the right panel stay. ⌘Z brings them back.">Clear</button></span></div>
     <div>
       <span class="grp">
         <button class="tbtn" type="button" id="undo" title="⌘Z" disabled>Undo</button>
@@ -403,7 +408,7 @@ body.resizing, body.resizing * { cursor: col-resize !important; user-select: non
   <aside class="rail" id="rail" aria-label="Controls" data-tab="type">
     <section class="cell cell-pool" data-tab="type">
       <div class="cell-h"><span>Font pool</span><span class="r" id="sum-pool"></span></div>
-      <div class="pool-tools"><button class="btn sm" type="button" id="fold-all" title="Fold or open every family's style list. Share of mix stays visible.">Collapse all</button><span class="muted" id="pool-count"></span></div>
+      <div class="pool-tools"><button class="btn sm" type="button" id="fold-all" title="Fold every family to its name, or open them all.">Collapse all</button><span class="muted" id="pool-count"></span></div>
       <div class="pool" id="pool"></div>
       <div class="base-row"><label for="base">Base</label><select id="base"></select></div>
       <p class="base-hint">Right-click any style above to make it the base.</p>
@@ -3135,7 +3140,7 @@ function renderPool() {
     const box = document.createElement('div');
     box.className = 'fam' + (S.collapsed.has(fam.name) ? ' closed' : '');
     const src = fam.source === 'demo' ? 'Sample' : fam.source === 'system' ? 'Installed' : 'File';
-    box.innerHTML = `<div class="fam-h"><button class="tg" type="button"><span class="nm"></span></button><span class="r"><span class="bm"></span><span>${fam.variable ? 'Var · ' : ''}${src} · ${fam.on.size}/${fam.ids.length}</span><button class="tbtn x" type="button">Remove</button></span></div><div class="chips"></div><div class="ctl"><label>Share of mix</label><output class="share-o"></output><input type="range" min="0" max="100" step="1"></div>`;
+    box.innerHTML = `<div class="fam-h"><button class="tg" type="button"><span class="nm"></span></button><span class="r"><span class="bm"></span><span class="sh"></span><span>${fam.variable ? 'Var · ' : ''}${src} · ${fam.on.size}/${fam.ids.length}</span><button class="tbtn x" type="button">Remove</button></span></div><div class="chips"></div><div class="ctl"><label>Share of mix</label><output class="share-o"></output><input type="range" min="0" max="100" step="1"></div>`;
     box.querySelector('.nm').textContent = fam.name;
     const tg = box.querySelector('.tg');
     tg.setAttribute('aria-expanded', !S.collapsed.has(fam.name));
@@ -3236,7 +3241,7 @@ function syncShares() {
   S.families.forEach((fam, k) => {
     const box = boxes[k]; if (!box) return;
     const v = Math.round(pct[k]), r = box.querySelector('input[type=range]');
-    box.querySelector('.share-o').textContent = v + '%';
+    box.querySelector('.share-o').textContent = box.querySelector('.sh').textContent = v + '%';
     if (!r._start) r.value = v;
     r.disabled = !n.get(fam.name) || live < 2;
   });
@@ -3807,10 +3812,10 @@ function loadSpecimen(src) {
 }
 
 /* ---------------- persistence ---------------- */
-// Settings that live in the left panel and change how the text looks (Clear there resets these).
+// Settings that live in the left panel, both tabs (Clear there resets these, plus the font pool's mix).
 const LEFT_KEYS = ['caseMode', 'caseAmt', 'mix', 'dist', 'wavePeriod', 'gran', 'valign', 'size', 'leading', 'sizeVar', 'baseJit',
   'trackJit', 'rotJit', 'track', 'gaps', 'match', 'align', 'guides', 'guideCol', 'patOn', 'patType', 'patCell', 'patW', 'patCol', 'patDot',
-  'regOn', 'regSize', 'regW', 'regInset', 'regCol'];
+  'regOn', 'regSize', 'regW', 'regInset', 'regCol', 'textCol', 'bgCol', 'palette', 'palSeed'];
 // Paragraph settings in the right panel that its Clear edits resets.
 const RIGHT_KEYS = ['outlineAmt', 'strokeW'];
 const SAVE_KEYS = ['text', 'caseMode', 'caseAmt', 'mix', 'dist', 'gran', 'valign', 'size', 'leading', 'sizeVar', 'baseJit', 'trackJit', 'rotJit', 'track', 'align', 'seed', 'match', 'wavePeriod', 'gaps',
@@ -4216,14 +4221,23 @@ async function boot() {
     for (const k of keys) S[k] = DEFAULTS[k];
     syncControls(); render(); save();
   };
-  // Clear (left panel): its visual settings back to their defaults. Text, font pool, base style, seed and every
-  // right-panel edit stay.
+  // Clear (left panel): every setting on both tabs back to its default, and the font pool's mix back to how fonts
+  // load (upright styles on, equal shares, base nearest Regular). The text you typed, the loaded fonts, the seed
+  // and every right-panel edit stay.
   $('#clear-left').onclick = () => {
     const keys = LEFT_KEYS.filter(k => JSON.stringify(S[k]) !== JSON.stringify(DEFAULTS[k]));
-    if (!keys.length) return;
+    const ons = S.families.map(f => { const up = f.ids.filter(id => !S.styles.get(id).italic); return up.length ? up : f.ids; });
+    const famsOff = S.families.some((f, k) => f.share !== 100 || f.on.size !== ons[k].length || ons[k].some(id => !f.on.has(id)));
+    const guidesX = $('#exp-guides').checked;
+    if (!keys.length && !famsOff && !guidesX) return;
     record();
     for (const k of keys) S[k] = structuredClone(DEFAULTS[k]);
-    syncControls(); render(); save();
+    if (famsOff) {
+      S.families.forEach((f, k) => { f.share = 100; f.on = new Set(ons[k]); });
+      S.baseId = pickDefaultBase();
+    }
+    $('#exp-guides').checked = false;
+    syncControls(); renderPool(); render(); save();
   };
 
   // selection bar
