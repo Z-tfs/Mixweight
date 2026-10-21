@@ -87,4 +87,4 @@ Changing panel widths, a Look strip under the canvas, new Looks, a tabbed single
 - [x] 4 Selection panel behaviour (Hover info moved to the toolbar here, since its group was the last thing in the paragraph mode)
 - [x] 5 Toolbar: Hover info and Guides (option A: Guides button with a popover; left Clear no longer resets guides)
 - [x] 6 Defaults and tidy (owner: Font pool families and Text stay open; Decoration split into Pattern and Registration marks)
-- [ ] 7 Docs and wrap-up
+- [x] 7 Docs and wrap-up
