@@ -85,6 +85,6 @@ Changing panel widths, a Look strip under the canvas, new Looks, a tabbed single
 - [x] 2 Global groups leave the right panel
 - [x] 3 Box style for two scopes
 - [x] 4 Selection panel behaviour (Hover info moved to the toolbar here, since its group was the last thing in the paragraph mode)
-- [ ] 5 Toolbar: Hover info and Guides
+- [x] 5 Toolbar: Hover info and Guides (option A: Guides button with a popover; left Clear no longer resets guides)
 - [ ] 6 Defaults and tidy
 - [ ] 7 Docs and wrap-up
