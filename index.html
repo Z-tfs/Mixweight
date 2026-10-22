@@ -261,8 +261,10 @@ textarea:focus { background: var(--g2); outline: none; }
 
 /* Right panel: the selected letters only. With nothing selected (or closed by hand) it folds to a 36px strip. */
 .side { border-left: var(--rule); overflow-y: auto; min-width: 0; min-height: 0; width: var(--rw); }
-.side-h { display: flex; justify-content: space-between; align-items: center; gap: 10px; min-height: var(--bar); padding: 7px 14px; border-bottom: var(--rule); text-transform: uppercase; }
+.side-h { display: flex; justify-content: space-between; align-items: stretch; gap: 10px; min-height: var(--bar); padding: 0 14px 0 0; border-bottom: var(--rule); text-transform: uppercase; }
 .side-h .grp { display: flex; align-items: center; gap: 18px; }
+/* The panel's title is inverted like the active left-panel tab: it holds the selection. */
+#side-title { display: flex; align-items: center; padding: 0 14px; background: var(--ink); color: var(--paper); }
 .side #sel-styles button { text-transform: none; font-size: var(--s-md); }
 .side .row { display: grid; grid-template-columns: 1fr auto; gap: 6px 10px; align-items: baseline; }
 .side .lab, .rail .lab { color: var(--g4); text-transform: uppercase; }
@@ -299,6 +301,7 @@ textarea:focus { background: var(--g2); outline: none; }
 .strip { width: 36px; border-left: var(--rule); display: flex; flex-direction: column; align-items: center; gap: 14px; padding-top: 12px; color: var(--g4); text-transform: uppercase; min-height: 0; }
 .strip:hover { color: var(--ink); background: var(--g1); }
 .strip .vl { writing-mode: vertical-rl; letter-spacing: .02em; }
+.strip.has-sel, .strip.has-sel:hover { background: var(--ink); color: var(--paper); } /* closed while letters are selected */
 .side-empty { padding: 14px; }
 .placeholder { font: var(--s-md)/1.5 var(--ui); color: var(--g4); max-width: 30em; white-space: normal; text-transform: uppercase; }
 
@@ -2636,6 +2639,7 @@ function syncSide() {
   const sel = S.sel.size > 0;
   $('#side').hidden = !side.open;
   $('#side-strip').hidden = side.open;
+  $('#side-strip').classList.toggle('has-sel', sel);
   $('#split-r').hidden = !side.open;
   applyPanelWidths(); // reopens at the width it was dragged to; the left panel gives way if the window is narrow
   $('#side-sel').hidden = !sel;
