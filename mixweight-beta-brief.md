@@ -134,7 +134,7 @@ After Effects export, SVG export, accounts, payments, analytics, public gallery,
 
 ## Progress (update after each step)
 
-- [ ] 1 Skeleton and Backstage entry
+- [x] 1 Skeleton and Backstage entry
 - [ ] 1b Feedback dialog
 - [ ] 2 Hover info: Off / Basic / Full
 - [ ] 3 Right-click panel

@@ -3802,7 +3802,7 @@ async function pngOut(copy) {
 // A specimen is a whole look as parameters: every saved setting, the per-letter edits, the pool and the base style,
 // with fonts named (family, style, PostScript name) rather than embedded. Loading it with the same fonts gives the
 // same result; loading checks every value, so a hand-edited or newer specimen never breaks anything.
-const SPEC_VERSION = 1, TOOL_VERSION = '4.0';
+const SPEC_VERSION = 1, TOOL_VERSION = '4.1-beta.1';
 const LIMITS = {}; // allowed range or options per setting, filled by bindRange / bindOpts
 const fontRef = id => { const s = S.styles.get(id); return s ? { family: s.family, style: s.style, ps: s.ps } : null; };
 // A named font → the id of a loaded style: family and style first, then PostScript name; null when not loaded.
