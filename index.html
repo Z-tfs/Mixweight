@@ -378,6 +378,16 @@ body.resizing, body.resizing * { cursor: col-resize !important; user-select: non
 #hov-btn[aria-pressed="true"] .hv::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--ink); }
 #hov-btn[aria-pressed="false"] { color: var(--g4); }
 
+/* backstage: the entry to the beta, and the beta's own mark; outside #sheet, so never exported */
+.bs-btn { position: absolute; right: 14px; bottom: 8px; z-index: 3; font-size: var(--s-sm); padding: 3px 7px; text-decoration: none; color: var(--ink); }
+.bs-on .corner.br { right: 112px; }
+.bs-card { position: absolute; right: 14px; bottom: 40px; z-index: 30; width: 250px; background: var(--paper); border: var(--rule); padding: 11px 13px 13px; display: grid; gap: 10px; font-size: var(--s-sm); }
+.bs-card h4 { margin: 0; font-size: var(--s-sm); text-transform: uppercase; letter-spacing: .02em; }
+.bs-card p { margin: 0; color: var(--g4); }
+.bs-card .acts { display: flex; gap: 8px; }
+.bs-card .acts a { text-decoration: none; }
+.beta-mark { background: var(--ink); color: var(--paper); padding: 2px 6px; }
+.sub a.tbtn { color: var(--ink); text-decoration: none; }
 @media (max-width: 900px) {
   .split { display: none; }
   .app { grid-template-columns: 1fr; grid-template-rows: auto; height: auto; }
@@ -4080,6 +4090,72 @@ function bindSplit(k) {
   el.addEventListener('dblclick', () => { S.panelW[k] = PANEL[k].def; applyPanelWidths(); save(); });
 }
 
+/* ---------------- backstage ---------------- */
+// The way from the stable page to the beta, and the beta's own mark. BETA_URL '' hides all of it.
+const BETA_URL = 'https://beta.mixweight.pages.dev';
+const FEEDBACK_URL = 'https://docs.google.com/forms/d/e/1FAIpQLScZv_zCPDJIXGyQhfqrusm61mm9zhhCZmLuKcFzvh32UM82iA/viewform';
+const BETA_NOTE = 'Experimental. Exports and saved files may change.';
+const BS_KEY = 'mixweight-backstage', BS_WAIT = 60; // seconds of visible time before the one-time question
+const isBetaHost = (h = location.hostname) => h.startsWith('beta.');
+function backstage() {
+  if (!BETA_URL) return;
+  const el = (tag, cls, html) => { const e = document.createElement(tag); if (cls) e.className = cls; if (html) e.innerHTML = html; return e; };
+  const link = (url, cls, txt) => { const a = el('a', cls, txt); a.href = url; a.target = '_blank'; a.rel = 'noopener'; return a; };
+  const help = $('#help .help');
+  if (isBetaHost()) {
+    const grp = el('span', 'grp');
+    const mark = el('span', 'beta-mark', 'Beta'); mark.title = BETA_NOTE;
+    grp.append(mark, link(FEEDBACK_URL, 'tbtn', 'Feedback ↗'));
+    const bar = $('.sub .grp.tools') || $('.sub > div:last-child');
+    bar.prepend(grp);
+    const sec = el('section', '', `<h4>Beta</h4><p>${BETA_NOTE} This is the Mixweight beta, where new features are tried out before they reach the stable page. </p>`);
+    sec.querySelector('p').append(link(FEEDBACK_URL, '', 'Send feedback'), ' (opens a form in a new tab).');
+    help.prepend(sec);
+    return;
+  }
+  // Stable page: a Backstage button at the canvas's bottom-right, and after a minute of visible time a one-time
+  // question. Remembered per browser (view state, not a setting).
+  const store = v => { try { localStorage.setItem(BS_KEY, v); } catch (e) { /* storage blocked */ } };
+  const done = () => { try { return !!localStorage.getItem(BS_KEY); } catch (e) { return true; } };
+  const main = $('.main');
+  let card = null;
+  const btn = link(BETA_URL, 'btn bs-btn', 'Backstage');
+  btn.title = 'Open the Mixweight beta in a new tab: new features, still being tried out.';
+  btn.onclick = () => { store('used'); close(); };
+  main.append(btn);
+  document.body.classList.add('bs-on');
+  const sec = el('section', '', '<h4>Backstage</h4><p><b>Backstage</b>, at the bottom right of the canvas, opens the Mixweight beta in a new tab, where new features are tried out first. Exports and saved files there may change.</p>');
+  help.append(sec);
+  if (done()) return;
+  card = el('div', 'bs-card', '<h4 id="bs-h">Backstage</h4><p>Try the beta features? New tools, still rough, in a separate page. Your work here stays as it is.</p><div class="acts"></div>');
+  card.setAttribute('role', 'dialog'); card.setAttribute('aria-labelledby', 'bs-h'); card.hidden = true;
+  const go = link(BETA_URL, 'btn solid sm', 'Open the beta ↗'), no = el('button', 'btn sm', 'Not now');
+  no.type = 'button';
+  card.querySelector('.acts').append(go, no);
+  main.append(card);
+  function close() { if (card && !card.hidden) { card.hidden = true; document.removeEventListener('keydown', esc, true); } }
+  function esc(e) { if (e.key === 'Escape') { e.stopPropagation(); store('dismissed'); close(); } }
+  go.onclick = () => { store('used'); close(); };
+  no.onclick = () => { store('dismissed'); close(); btn.focus(); };
+  // Only visible time counts; never while dragging, typing in a field, or with a dialog or popover open.
+  let shown = 0, down = false, dropAt = 0;
+  window.addEventListener('pointerdown', () => { down = true; }, true);
+  window.addEventListener('pointerup', () => { down = false; }, true);
+  window.addEventListener('pointercancel', () => { down = false; }, true);
+  window.addEventListener('dragover', () => { dropAt = Date.now(); }, true);
+  const busy = () => down || Date.now() - dropAt < 1500 || !!document.querySelector('dialog[open], .pop:not([hidden]), .ctxmenu:not([hidden])')
+    || !!(document.activeElement && document.activeElement.matches('input:not([type=range]):not([type=checkbox]):not([type=radio]):not([type=button]), textarea, select, [contenteditable]'));
+  const tick = setInterval(() => {
+    if (document.visibilityState !== 'visible') return;
+    if (shown < BS_WAIT) { shown++; return; }
+    if (busy()) return;
+    clearInterval(tick);
+    if (done()) return; // answered in another tab meanwhile
+    card.hidden = false;
+    document.addEventListener('keydown', esc, true);
+  }, 1000);
+}
+
 /* ---------------- boot ---------------- */
 async function loadDemo() {
   if (typeof DEMO_FONTS === 'undefined') return;
@@ -4641,6 +4717,7 @@ async function boot() {
   if ($('#sheet').getBoundingClientRect().width > $('#stage').clientWidth - 96) fitZoom();
 }
 boot();
+backstage();
 </script>
 </body>
 </html>
