@@ -386,7 +386,15 @@ body.resizing, body.resizing * { cursor: col-resize !important; user-select: non
 .bs-card p { margin: 0; color: var(--g4); }
 .bs-card .acts { display: flex; gap: 8px; }
 .bs-card .acts a { text-decoration: none; }
-.beta-mark { background: var(--ink); color: var(--paper); padding: 2px 6px; }
+.fb-fields { display: grid; gap: 14px; }
+.fb-q { display: grid; gap: 6px; }
+.fb-many { display: grid; gap: 5px; }
+.fb-b textarea { min-height: 80px; font: inherit; }
+#fb-msg:empty { display: none; }
+#fb-msg { color: var(--ink); }
+#fb { width: min(460px, calc(100% - 32px)); }
+.beta-mark { background: var(--ink); color: var(--paper); padding: 2px 6px; text-transform: uppercase; }
+button.beta-mark:hover { background: var(--g4); }
 .sub a.tbtn { color: var(--ink); text-decoration: none; }
 @media (max-width: 900px) {
   .split { display: none; }
@@ -4103,13 +4111,21 @@ function backstage() {
   const link = (url, cls, txt) => { const a = el('a', cls, txt); a.href = url; a.target = '_blank'; a.rel = 'noopener'; return a; };
   const help = $('#help .help');
   if (isBetaHost()) {
+    // The feedback dialog once the form's questions are in FEEDBACK_FIELDS; until then a plain link to the form.
+    const fb = FEEDBACK_FIELDS.length ? feedbackDialog() : null;
     const grp = el('span', 'grp');
-    const mark = el('span', 'beta-mark', 'Beta'); mark.title = BETA_NOTE;
-    grp.append(mark, link(FEEDBACK_URL, 'tbtn', 'Feedback ↗'));
+    const mark = el(fb ? 'button' : 'span', 'beta-mark', 'Beta'); mark.title = BETA_NOTE + (fb ? ' Click to send feedback.' : '');
+    const send = fb ? el('button', 'tbtn', 'Send feedback') : link(FEEDBACK_URL, 'tbtn', 'Feedback ↗');
+    if (fb) { mark.type = send.type = 'button'; mark.onclick = send.onclick = fb; }
+    grp.append(mark, send);
     const bar = $('.sub .grp.tools') || $('.sub > div:last-child');
     bar.prepend(grp);
     const sec = el('section', '', `<h4>Beta</h4><p>${BETA_NOTE} This is the Mixweight beta, where new features are tried out before they reach the stable page. </p>`);
-    sec.querySelector('p').append(link(FEEDBACK_URL, '', 'Send feedback'), ' (opens a form in a new tab).');
+    if (fb) {
+      const b = el('button', 'btn sm', 'Send feedback'); b.type = 'button';
+      b.onclick = () => { $('#help').close(); fb(); };
+      sec.querySelector('p').append('Tell us what works and what doesn\'t: ', b);
+    } else sec.querySelector('p').append(link(FEEDBACK_URL, '', 'Send feedback'), ' (opens a form in a new tab).');
     help.prepend(sec);
     return;
   }
@@ -4154,6 +4170,85 @@ function backstage() {
     card.hidden = false;
     document.addEventListener('keydown', esc, true);
   }, 1000);
+}
+
+// Beta only: the owner's Google Form, in the tool's own dialog. Only the answers are sent: no session, no cookies,
+// no referrer. The response is opaque (no-cors), so "Sent" means the request left without a network error.
+// Field: name (the form's entry.<id>), title, type ('text' | 'para' | 'one' | 'many' | 'scale'), options, required.
+const FEEDBACK_FIELDS = [];
+const FB_MAX = { text: 300, para: 3000 };
+function feedbackDialog() {
+  const dlg = document.createElement('dialog');
+  dlg.id = 'fb';
+  dlg.innerHTML = `<form method="dialog" class="dlg ask" novalidate>
+    <header><span>Send feedback</span><span class="hd-r"><span>Beta</span><button class="x-close" value="cancel" aria-label="Close" title="Close">×</button></span></header>
+    <div class="ask-b spec-b fb-b"><div class="fb-fields"></div>
+      <div class="btns"><button class="btn solid" type="submit" id="fb-send">Send</button></div>
+      <p class="hint-on">Only what you type here is sent.</p>
+      <p class="hint-on" id="fb-msg" role="status"></p>
+    </div></form>`;
+  document.body.append(dlg);
+  const form = dlg.querySelector('form'), box = dlg.querySelector('.fb-fields'), sendB = dlg.querySelector('#fb-send'), msg = dlg.querySelector('#fb-msg');
+  const vals = {};
+  const say = (t, fallback) => {
+    msg.textContent = t;
+    if (fallback) { const a = document.createElement('a'); a.href = FEEDBACK_URL; a.target = '_blank'; a.rel = 'noopener'; a.textContent = 'Open the form in a new tab'; msg.append(' ', a); }
+  };
+  FEEDBACK_FIELDS.forEach((f, n) => {
+    const wrap = document.createElement('div'); wrap.className = 'fb-q';
+    const id = 'fb-' + n, h = document.createElement('div');
+    h.className = 'sub-h'; h.id = id + '-h'; h.textContent = f.title + (f.required ? ' *' : '');
+    wrap.append(h);
+    if (f.type === 'text' || f.type === 'para') {
+      const i = document.createElement(f.type === 'para' ? 'textarea' : 'input');
+      if (f.type === 'text') i.type = 'text';
+      i.id = id; i.maxLength = FB_MAX[f.type]; i.autocomplete = 'off'; i.setAttribute('aria-labelledby', h.id);
+      i.oninput = () => { vals[f.name] = i.value; };
+      wrap.append(i);
+    } else if (f.type === 'many') {
+      const g = document.createElement('div'); g.className = 'fb-many'; g.setAttribute('role', 'group'); g.setAttribute('aria-labelledby', h.id);
+      vals[f.name] = [];
+      for (const o of f.options) {
+        const l = document.createElement('label'); l.className = 'chk';
+        const c = document.createElement('input'); c.type = 'checkbox';
+        c.onchange = () => { vals[f.name] = c.checked ? [...vals[f.name], o] : vals[f.name].filter(x => x !== o); };
+        l.append(c, ' ' + o); g.append(l);
+      }
+      wrap.append(g);
+    } else { // one of several, or a scale: the option-button pattern
+      const g = document.createElement('div'); g.className = 'opts'; g.setAttribute('role', 'group'); g.setAttribute('aria-labelledby', h.id);
+      for (const o of f.options) {
+        const b = document.createElement('button'); b.type = 'button'; b.textContent = o; b.setAttribute('aria-pressed', 'false');
+        b.onclick = () => { const on = vals[f.name] !== o; vals[f.name] = on ? o : ''; for (const x of g.children) x.setAttribute('aria-pressed', on && x === b); };
+        g.append(b);
+      }
+      wrap.append(g);
+    }
+    box.append(wrap);
+  });
+  let sending = false;
+  form.addEventListener('submit', async e => {
+    e.preventDefault();
+    if (sending) return;
+    const miss = FEEDBACK_FIELDS.find(f => f.required && !(Array.isArray(vals[f.name]) ? vals[f.name].length : (vals[f.name] || '').trim()));
+    if (miss) { say('Please answer: ' + miss.title); box.children[FEEDBACK_FIELDS.indexOf(miss)].querySelector('input, textarea, button').focus(); return; }
+    const body = new URLSearchParams();
+    for (const f of FEEDBACK_FIELDS) {
+      const v = vals[f.name];
+      if (Array.isArray(v)) v.forEach(x => body.append(f.name, x));
+      else if (v && v.trim()) body.append(f.name, v.slice(0, FB_MAX.para));
+    }
+    if (![...body.keys()].length) { say('Nothing to send yet.'); return; }
+    sending = true; sendB.disabled = true; say('Sending…');
+    try {
+      await fetch(FEEDBACK_URL.replace(/\/viewform.*$/, '/formResponse'), { method: 'POST', mode: 'no-cors', credentials: 'omit', referrerPolicy: 'no-referrer', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body });
+      form.reset(); for (const k in vals) vals[k] = Array.isArray(vals[k]) ? [] : '';
+      for (const b of box.querySelectorAll('.opts button')) b.setAttribute('aria-pressed', 'false');
+      say('Sent. Thank you.');
+    } catch (err) { say('Could not send.', true); }
+    sending = false; sendB.disabled = false;
+  });
+  return () => { if (!sending) say(''); dlg.showModal(); };
 }
 
 /* ---------------- boot ---------------- */
