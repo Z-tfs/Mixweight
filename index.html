@@ -221,6 +221,12 @@ textarea:focus { background: var(--g2); outline: none; }
 .fam .ctl input:disabled { opacity: .35; cursor: default; }
 .pool .empty { padding: 14px; color: var(--g4); text-transform: uppercase; }
 
+/* right-click panel on selected letters */
+.ctxp { position: fixed; z-index: 65; width: 250px; max-height: calc(100vh - 8px); overflow-y: auto; background: var(--paper); border: var(--rule); font-size: var(--s-sm); }
+.ctxp-h { display: flex; justify-content: space-between; align-items: baseline; padding: 6px 10px 5px; border-bottom: var(--rule); text-transform: uppercase; }
+.ctxp-b { padding: 10px; display: grid; gap: 10px; }
+.ctxp-b > .lab { margin-bottom: -6px; }
+
 /* right side */
 .main { position: relative; display: grid; grid-template-rows: auto minmax(0, 1fr); min-width: 0; min-height: 0; }
 .insp { border-bottom: var(--rule); padding: 7px 14px; display: flex; flex-wrap: wrap; align-items: center; gap: 6px 22px; min-height: var(--bar); text-transform: uppercase; }
@@ -265,9 +271,9 @@ textarea:focus { background: var(--g2); outline: none; }
 .side-h .grp { display: flex; align-items: center; gap: 18px; }
 /* The panel's title is inverted like the active left-panel tab: it holds the selection. */
 #side-title { display: flex; align-items: center; padding: 0 14px; background: var(--ink); color: var(--paper); }
-.side #sel-styles button { text-transform: none; font-size: var(--s-md); }
-.side .row { display: grid; grid-template-columns: 1fr auto; gap: 6px 10px; align-items: baseline; }
-.side .lab, .rail .lab { color: var(--g4); text-transform: uppercase; }
+.side #sel-styles button, .ctxp #ctx-sel-styles button { text-transform: none; font-size: var(--s-md); }
+.side .row, .ctxp .row { display: grid; grid-template-columns: 1fr auto; gap: 6px 10px; align-items: baseline; }
+.side .lab, .rail .lab, .ctxp .lab { color: var(--g4); text-transform: uppercase; }
 .side .sub-h, .rail .sub-h { text-transform: uppercase; color: var(--g4); }
 .on-only { display: grid; grid-template-columns: minmax(0, 1fr); gap: 10px; } /* a group's controls, shown while it is On */
 .numin { display: inline-flex; align-items: baseline; gap: 0; color: var(--g4); }
@@ -850,7 +856,7 @@ button.beta-mark:hover { background: var(--g4); }
       <section><h4>Match size</h4><p>Different families at the same point size look different sizes. x-height or Cap height scales each letter's font so its lowercase x or capital H is as tall as in the base style (limited to 60–160%). It is written as the letter's point size, so it stays editable; leading follows the nominal size.</p></section>
       <section><h4>Letter align</h4><p>Top, middle and bottom alignment are written as baseline shift values. If you change a letter or its font afterwards, export again to re-align.</p></section>
       <section><h4>Group titles</h4><p>Click a group title in the left panel to fold the group to its title row (▸) or open it again (▾); each group remembers its own state. Folding Font pool hides every family; a family's name folds that family to one row, which still shows its share of mix. The left panel has two tabs: <b>Type</b> (font pool, text, mix, type with letter align, jitter) and <b>Style</b> (look, color, paragraph band, random letter boxes, pattern, registration marks, random outline). On a first visit Jitter and the palette list start folded; once you fold or open them yourself, your choice stays. Paragraph band, Pattern and Registration marks show only Off / On until you switch them on. The right side of each title row sums up what the group is set to, and follows every change; hover it for the full text if it is cut short. Groups with a short note have a <b>?</b> next to their title: click it to show the note, again to hide it. <b>Clear</b>, next to the tabs, sets everything in the left panel (both tabs) back to its default and removes the boxes Random letter boxes placed; your text, fonts, seed, guides and right-panel edits stay.</p></section>
-      <section><h4>Right panel</h4><p>Selecting letters opens it with their font, size, shift and tracking at the top, then weight, align, <b>rotation</b>, <b>fill</b> and <b>boxes</b>. With nothing selected it folds to a narrow <b>Selection</b> strip on the right edge, and the canvas takes the room; deselecting folds it again. Close › folds it while letters stay selected, until you select other letters; the strip's ‹ opens it. Settings for the whole text are in the left panel's <b>Style</b> tab: Random outline (with Stroke), the Paragraph band and Random letter boxes. Clear edits removes what you set on selected letters, and bands; the left panel's Clear resets the left panel's settings and removes the boxes Random letter boxes placed. A drag that starts on empty canvas selects the letters it sweeps over. The panel keeps its place: selecting other letters, or deselecting and reselecting, brings back the group you were using. <b>Hover info</b> in the bar above the canvas sets the hover tag: Off, Basic (family, style, size, shift and tracking) or Full, which adds a line for each thing that applies to the letter: its box fit and fill, bands, blend mode, rotation and fill (solid or outline). Canvas only, never exported.</p></section>
+      <section><h4>Right panel</h4><p>Selecting letters opens it with their font, size, shift and tracking at the top, then weight, align, <b>rotation</b>, <b>fill</b> and <b>boxes</b>. With nothing selected it folds to a narrow <b>Selection</b> strip on the right edge, and the canvas takes the room; deselecting folds it again. Close › folds it while letters stay selected, until you select other letters; the strip's ‹ opens it. Settings for the whole text are in the left panel's <b>Style</b> tab: Random outline (with Stroke), the Paragraph band and Random letter boxes. Clear edits removes what you set on selected letters, and bands; the left panel's Clear resets the left panel's settings and removes the boxes Random letter boxes placed. A drag that starts on empty canvas selects the letters it sweeps over. The panel keeps its place: selecting other letters, or deselecting and reselecting, brings back the group you were using. <b>Right-click</b> a letter (Ctrl+click on a Mac) for a small panel beside the selection with the controls used most: weight, angle, fill, letter boxes, band, box fill, Reroll, Reset and Deselect. They are the right panel's own controls, so a change in one shows in the other. Esc or a click elsewhere closes it; right-click on empty canvas keeps the browser's menu. <b>Hover info</b> in the bar above the canvas sets the hover tag: Off, Basic (family, style, size, shift and tracking) or Full, which adds a line for each thing that applies to the letter: its box fit and fill, bands, blend mode, rotation and fill (solid or outline). Canvas only, never exported.</p></section>
       <section><h4>Boxes</h4><p>Letter boxes follow each letter's ink, size and shift, and turn with it. A band runs under the selection, as tall as its tallest letter or stepping with each one; the paragraph band does the same for every line. There are two <b>Box style</b> editors. The one in the left panel, folded under Random letter boxes, styles the whole text: the paragraph band, or every letter box (Paragraph band / Letter boxes). The one in the right panel styles the boxes and bands on the selected letters. A letter box you styled in the right panel, or whose fill you set by hand, keeps its style: the left editor and Reroll boxes leave it alone; Clear edits removes it. In Box style, Expand X and Y make a box wider or taller than the ink (negative values make it smaller), and Move X and Y shift it right and up (all four snap to 0 when you drag close to the tick at 0); a rotated letter's box moves along the letter's own axes. Letter boxes also have <b>Height</b> (Glyph: the letter's own ink; Line: as tall as the line's tallest letter) and <b>Width</b> (Glyph: the letter as set, without tracking; Advance: up to the next letter, so neighbouring boxes touch). Line + Advance makes a grid of columns. A letter can have a letter box and a band at once: when the selection has both, Box style shows <b>Letter boxes / Band</b> to pick which one its controls change (Add letter boxes and Add band switch to what they just added). With <b>Each corner</b>, the four corners sit in a grid laid out like the box: type a radius, or drag the small corner icon sideways, and pick Round, Bevel or Inverse under it. They export under the text as vector shapes: InDesign rectangles keep live corner options, Illustrator and Photoshop get the exact path.</p></section>
       <section><h4>Color</h4><p>Box fill, box stroke and the background also take <b>No color</b>: the crossed-out swatch after the hex field (or type none). A box with no fill shows only its stroke; a background with no color leaves the PNG transparent. In the .jsx export a box with no fill keeps just its stroke (no fill in Illustrator and InDesign, a shape layer with its fill switched off in Photoshop); a box with neither fill nor stroke is left out. The <b>Color</b> group in the left panel's Style tab sets the <b>text</b> and <b>background</b> colors for the whole design, as RGB hex: click the big swatch for the system picker, type a hex value and press Enter, or click a small swatch (the current color's swatch is outlined). The row under each color holds the last eight colors used; with a palette active, a row of the palette's colors sits above it, under every color control. A <b>palette</b> sets text and background in one click, and the box and band fill too when it has a block color. Click the active palette again to roll a new color match from its colors (text that stays readable on the background, and a block color that shows on it); ⌘Z goes back. The palette list starts as a row of chips; open it with the arrow next to Palettes to see the names, and Mixweight remembers your choice. Black on white goes back to the start. Selected letters get their own color under Fill in the right panel (Use text color removes it); outline letters stroke in their color. Box style has Fill and Stroke colors and a <b>blend</b> mode (Normal, Multiply, Screen, Overlay, Difference), which mixes a box with the background and the boxes under it, never with the text. The background fills the text block plus a margin, the same area the PNG crops to. The guidelines' color is under <b>Guides</b> in the bar above the canvas. Random letter boxes have a <b>Box color</b>: Single gives every box its own fill; From palette gives each randomly placed box a color from the active palette's block and extra colors, picked by the seed, so Reroll boxes changes placement and colors together. A box whose fill you set by hand keeps it, and Reroll leaves it in place. From palette needs a palette with a block color. Everything exports: text color per letter, RGB fills and strokes (neutral greys stay greys, a Black tint in InDesign), blend modes, and the guideline color. A background that isn't white becomes a rectangle at the very back, named Mixweight background, on its own layer (Illustrator, InDesign) or as the bottom shape layer (Photoshop). InDesign adds each RGB color as a swatch named Mixweight #RRGGBB.</p></section>
       <section><h4>Outline and rotation</h4><p>Outline letters export as live text with no fill and a stroke in the letter's color; rotation as character rotation, about the centre of the em box. Photoshop can do neither per letter inside one type layer, so those letters become their own type layers (outline as a layer-style stroke) and the main layer keeps a space of the same width.</p></section>
@@ -2682,8 +2688,10 @@ function renderInspector() {
   renderStyleGroups();
   renderBoxEditor(BX.all);
   $('#bx-ed').hidden = !on; // the selection editor; the left panel's edits the whole text
-  if (!side.open) return;
+  if (CTX.open && !on) closeCtx();
+  if (!side.open) { if (CTX.open) { renderSelPanel(gs); syncCtx(gs); } return; } // the right-click panel reads the right panel's controls
   if (on) { renderSelPanel(gs); renderBoxEditor(BX.sel); }
+  if (CTX.open) syncCtx(gs);
   restoreSideScroll();
 }
 
@@ -3248,6 +3256,100 @@ function rerollGlyphs(gs) {
   }
   render(); save();
 }
+
+/* ---------------- right-click panel ---------------- */
+// Right-click (or Ctrl+click on a Mac) on a letter: a small panel with the most-used selection controls. They are
+// copies of the right panel's (ids prefixed ctx-, as cloneBoxEditor() does) that hand every click and value to the
+// original control, so both places run on the same bindings and the same state; syncCtx() copies the originals'
+// state back after every redraw. Canvas UI only, never exported.
+const IS_MAC = /Mac/.test(navigator.platform);
+const CTX = { el: null, parts: [], open: false };
+// [label, source element, rebuilt when its buttons change (weights follow the family)]
+const CTX_PARTS = [
+  ['Weight', () => $('#sel-styles'), true],
+  [null, () => $('#rot').closest('.ctl')],
+  ['Fill', () => $('#sel-fill')],
+  [null, () => $('#lb-add').closest('.row')],
+  [null, () => $('#band-add').closest('.row')],
+  [null, () => $('#sel-reset').parentElement],
+];
+const ctxKey = el => [...el.children].map(c => c.textContent).join('|');
+// The right panel redraws the weight buttons on every change, so a live part's copies match by position.
+const ctxOrig = (part, c) => part.live && c.parentElement === part.node ? part.src().children[[...part.node.children].indexOf(c)] : part.map.get(c);
+function ctxClone(part) {
+  const src = part.src(), c = src.cloneNode(true), map = new Map();
+  const a = [src, ...src.querySelectorAll('*')], b = [c, ...c.querySelectorAll('*')];
+  b.forEach((el, n) => {
+    for (const k of ['id', 'for', 'aria-controls']) { const v = el.getAttribute(k); if (v) el.setAttribute(k, 'ctx-' + v); }
+    map.set(el, a[n]);
+  });
+  if (part.node) part.node.replaceWith(c);
+  Object.assign(part, { node: c, map, key: ctxKey(src) });
+}
+function setupCtx() {
+  const el = document.createElement('div');
+  el.className = 'ctxp'; el.id = 'ctxp'; el.hidden = true;
+  el.setAttribute('role', 'dialog'); el.setAttribute('aria-label', 'Selected letters');
+  el.innerHTML = '<div class="ctxp-h"><span id="ctx-count"></span><button type="button" class="x-close" aria-label="Close" title="Close (Esc)">×</button></div><div class="ctxp-b"></div>';
+  const body = el.lastElementChild;
+  CTX.parts = CTX_PARTS.map(([label, src, live]) => ({ label, src, live }));
+  for (const part of CTX.parts) {
+    if (part.label) body.insertAdjacentHTML('beforeend', `<span class="lab">${part.label}</span>`);
+    ctxClone(part); body.appendChild(part.node);
+    if (part.src() === $('#lb-add').closest('.row')) body.insertAdjacentHTML('beforeend', '<div class="colc" id="col-ctx-fill" data-label="Box fill"></div>');
+  }
+  document.body.appendChild(el);
+  CTX.el = el;
+  const orig = t => { for (const p of CTX.parts) if (p.map.has(t)) return ctxOrig(p, t); return null; };
+  el.querySelector('.x-close').onclick = closeCtx;
+  el.addEventListener('click', e => {
+    const b = e.target.closest('button'); if (!b || !body.contains(b) || b.closest('.colc')) return;
+    const o = orig(b); if (o && !o.disabled) o.click();
+  });
+  el.addEventListener('input', e => {
+    const o = orig(e.target); if (!o) return;
+    o.value = e.target.value; o.dispatchEvent(new Event('input', { bubbles: true }));
+  });
+  el.addEventListener('keydown', e => { if (e.target.matches('input[type=number]') && e.key === 'Enter') e.target.blur(); });
+}
+function syncCtx(gs) {
+  const n = gs.length;
+  $('#ctx-count').textContent = `${n} letter${n === 1 ? '' : 's'} selected`;
+  for (const part of CTX.parts) {
+    if (part.live && ctxKey(part.src()) !== part.key) ctxClone(part);
+    for (const [c, o0] of part.map) {
+      const o = ctxOrig(part, c) || o0;
+      c.hidden = o.hidden;
+      if (o.hasAttribute('aria-pressed')) c.setAttribute('aria-pressed', o.getAttribute('aria-pressed'));
+      if ('disabled' in o) c.disabled = o.disabled;
+      if (o.tagName === 'OUTPUT') c.innerHTML = o.innerHTML;
+      if (o.tagName === 'INPUT' && document.activeElement !== c) { c.value = o.value; c.placeholder = o.placeholder; }
+    }
+  }
+  $('#col-ctx-fill').hidden = !(gs.some(g => g.box) || selBands().length);
+  colCtl.ctxFill?.sync();
+}
+// Beside the selected letters when there is room (right, left, below, above), else at the pointer.
+function placeCtx(x, y) {
+  const el = CTX.el, w = el.offsetWidth, h = el.offsetHeight, m = 4, gap = 14;
+  const rs = $$('#out .g.sel').map(sp => sp.getBoundingClientRect());
+  const fits = (l, t) => l >= m && t >= m && l + w <= innerWidth - m && t + h <= innerHeight - m;
+  const cy = t => clamp(t, m, innerHeight - m - h), cx = l => clamp(l, m, innerWidth - m - w);
+  let pos = [cx(x + 8), cy(y + 8)];
+  if (rs.length) {
+    const U = { l: Math.min(...rs.map(r => r.left)), r: Math.max(...rs.map(r => r.right)), t: Math.min(...rs.map(r => r.top)), b: Math.max(...rs.map(r => r.bottom)) };
+    const tries = [[U.r + gap, cy(y - 20)], [U.l - gap - w, cy(y - 20)], [cx(x - 20), U.b + gap], [cx(x - 20), U.t - gap - h]];
+    pos = tries.find(([l, t]) => fits(l, t)) || pos;
+  }
+  el.style.left = pos[0] + 'px'; el.style.top = pos[1] + 'px';
+}
+function openCtx(x, y) {
+  CTX.open = true; CTX.el.hidden = false;
+  hideTag();
+  renderInspector();
+  requestAnimationFrame(() => { if (CTX.open) placeCtx(x, y); }); // after the right panel has opened and the letters settled
+}
+function closeCtx() { if (!CTX.open) return; CTX.open = false; CTX.el.hidden = true; }
 
 /* ---------------- panel UI ---------------- */
 function renderPool() {
@@ -3834,7 +3936,7 @@ async function pngOut(copy) {
 // A specimen is a whole look as parameters: every saved setting, the per-letter edits, the pool and the base style,
 // with fonts named (family, style, PostScript name) rather than embedded. Loading it with the same fonts gives the
 // same result; loading checks every value, so a hand-edited or newer specimen never breaks anything.
-const SPEC_VERSION = 1, TOOL_VERSION = '4.1-beta.2';
+const SPEC_VERSION = 1, TOOL_VERSION = '4.1-beta.3';
 const LIMITS = {}; // allowed range or options per setting, filled by bindRange / bindOpts
 const fontRef = id => { const s = S.styles.get(id); return s ? { family: s.family, style: s.style, ps: s.ps } : null; };
 // A named font → the id of a loaded style: family and style first, then PostScript name; null when not loaded.
@@ -4184,7 +4286,7 @@ function backstage() {
   window.addEventListener('pointerup', () => { down = false; }, true);
   window.addEventListener('pointercancel', () => { down = false; }, true);
   window.addEventListener('dragover', () => { dropAt = Date.now(); }, true);
-  const busy = () => down || Date.now() - dropAt < 1500 || !!document.querySelector('dialog[open], .pop:not([hidden]), .ctxmenu:not([hidden])')
+  const busy = () => down || Date.now() - dropAt < 1500 || !!document.querySelector('dialog[open], .pop:not([hidden]), .ctxmenu:not([hidden]), .ctxp:not([hidden])')
     || !!(document.activeElement && document.activeElement.matches('input:not([type=range]):not([type=checkbox]):not([type=radio]):not([type=button]), textarea, select, [contenteditable]'));
   const tick = setInterval(() => {
     if (document.visibilityState !== 'visible') return;
@@ -4660,6 +4762,7 @@ async function boot() {
   $('#col-sel-auto').onclick = () => { record(); eachSel(o => { delete o.col; }); };
   $('#col-reset').onclick = () => { record(); S.textCol = DEFAULTS.textCol; S.bgCol = DEFAULTS.bgCol; S.palette = ''; S.palSeed = 0; render(); save(); };
   $('#pals-fold').onclick = e => { e.stopPropagation(); S.palsOpen = !S.palsOpen; S.foldsSet.add('Palettes'); renderColor(); save(); };
+  setupCtx();
   // box style: the same wiring for both editors
   optClick('#gbx-tgt', v => { bxTarget = v; renderInspector(); });
   optClick('#bx-tgt-sel', v => { bxSelTarget = v; renderInspector(); });
@@ -4672,12 +4775,11 @@ async function boot() {
     optClick('#' + p + '-h', v => editBox(E, 'h', st => { st.h = v; }));
     optClick('#' + p + '-w', v => editBox(E, 'w', st => { st.w = v; }));
     for (const key of ['fill', 'stroke']) {
-      E[key] = colorCtl(`col-${p}-${key === 'fill' ? 'fill' : 'stroke'}`, () => {
-        // A box colored from the palette shows the color it is drawn in.
-        const gs = E.gs(), st = E.targets().list[0], g = (gs.length ? gs : glyphList()).find(g => g.box && ovOf(g).box === st);
-        return g ? g.box[key] : st[key];
-      },
-        (v, k) => editBox(E, key + (k ? ':' + k : ''), st => { st[key] = v; if (key === 'fill') st.hand = true; }), true);
+      // A box colored from the palette shows the color it is drawn in.
+      const get = () => { const gs = E.gs(), st = E.targets().list[0], g = (gs.length ? gs : glyphList()).find(g => g.box && ovOf(g).box === st); return g ? g.box[key] : st[key]; };
+      const set = (v, k) => editBox(E, key + (k ? ':' + k : ''), st => { st[key] = v; if (key === 'fill') st.hand = true; });
+      E[key] = colorCtl(`col-${p}-${key === 'fill' ? 'fill' : 'stroke'}`, get, set, true);
+      if (E === BX.sel && key === 'fill') colCtl.ctxFill = colorCtl('col-ctx-fill', get, set, true); // the right-click panel's Box fill
     }
     optClick('#' + p + '-lock', v => {
       const lock = v === 'all';
@@ -4771,7 +4873,7 @@ async function boot() {
 
   // click / drag selection on the proof
   out.addEventListener('pointerdown', e => {
-    const sp = e.target.closest('.g'); if (!sp || e.button !== 0) return;
+    const sp = e.target.closest('.g'); if (!sp || e.button !== 0 || (IS_MAC && e.ctrlKey)) return; // Ctrl+click on a Mac is a right-click
     const i = +sp.dataset.i;
     if (e.shiftKey && S.anchor != null) selectRange(S.anchor, i);
     else if (e.metaKey || e.ctrlKey) { S.sel.has(i) ? S.sel.delete(i) : S.sel.add(i); S.anchor = i; }
@@ -4787,6 +4889,19 @@ async function boot() {
     paintSelection();
   });
   window.addEventListener('pointerup', () => { if (dragging) { dragging = false; paintSelection(); } });
+  // Right-click on a letter: select it if it isn't, and open the right-click panel. Anywhere else the system menu stays.
+  out.addEventListener('contextmenu', e => {
+    const sp = e.target.closest('.g'), g = sp && S.gmap && S.gmap.get(+sp.dataset.i);
+    if (!g || /\s/.test(g.ch)) return;
+    e.preventDefault();
+    if (!S.sel.has(g.i)) { S.anchor = g.i; S.sel = new Set([g.i]); paintSelection(); }
+    openCtx(e.clientX, e.clientY);
+  });
+  // A click away closes it; the right panel doesn't count, so both can be used side by side.
+  window.addEventListener('pointerdown', e => { if (CTX.open && !CTX.el.contains(e.target) && !e.target.closest('#side')) closeCtx(); }, true);
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && CTX.open) { e.preventDefault(); e.stopImmediatePropagation(); closeCtx(); } }, true);
+  window.addEventListener('resize', closeCtx);
+  $('#stage').addEventListener('scroll', closeCtx, { passive: true });
   // Empty canvas: a click deselects; a drag selects the letters it sweeps over.
   $('#stage').addEventListener('pointerdown', e => {
     if (e.target.closest('.g') || e.button !== 0) return;
