@@ -267,12 +267,12 @@ textarea:focus { background: var(--g2); outline: none; }
 
 /* Right panel: the selected letters only. With nothing selected (or closed by hand) it folds to a 36px strip. */
 .side { border-left: var(--rule); overflow-y: auto; min-width: 0; min-height: 0; width: var(--rw); }
-.side-h { display: flex; justify-content: space-between; align-items: stretch; gap: 10px; min-height: var(--bar); padding: 0; border-bottom: var(--rule); text-transform: uppercase; }
+.side-h { display: flex; justify-content: space-between; align-items: stretch; gap: 0; min-height: var(--bar); padding: 0; border-bottom: var(--rule); text-transform: uppercase; }
 .side-h .grp { display: flex; align-items: stretch; gap: 0; }
 /* Clear edits | Close › as cells divided by rules, like Type | Style | Clear in the left panel */
 .side-h .grp .tbtn { margin: 0; padding: 0 14px; display: flex; align-items: center; border-left: var(--rule); }
 /* The panel's title is inverted like the active left-panel tab: it holds the selection. */
-#side-title { display: flex; align-items: center; padding: 0 14px; background: var(--ink); color: var(--paper); }
+#side-title { flex: 1 1 auto; display: flex; align-items: center; justify-content: center; padding: 0 14px; background: var(--ink); color: var(--paper); } /* fills up to Clear edits, like the active tab */
 .side #sel-styles button, .ctxp #ctx-sel-styles button { text-transform: none; font-size: var(--s-md); }
 .side .row, .ctxp .row { display: grid; grid-template-columns: 1fr auto; gap: 6px 10px; align-items: baseline; }
 .side .lab, .rail .lab, .ctxp .lab { color: var(--g4); text-transform: uppercase; }
