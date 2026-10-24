@@ -341,7 +341,22 @@ dialog::backdrop { background: rgba(255, 255, 255, .7); }
 .spec-b input[type=text] { width: 100%; min-width: 0; border: 0; border-bottom: var(--rule); background: transparent; padding: 3px 1px; border-radius: 0; }
 .spec-b input[type=text]:focus { outline: 0; background: var(--g1); }
 .spec-b textarea { min-height: 90px; font: var(--s-sm)/1.4 ui-monospace, Menlo, monospace; }
-#spec-msg:empty { display: none; }
+#spec-msg:empty, #my-msg:empty { display: none; }
+#my-msg { color: var(--ink); }
+#spec .spec-b { overflow-y: auto; max-height: calc(100vh - 110px); }
+.my-save { display: grid; grid-template-columns: 1fr auto; gap: 10px; align-items: end; }
+.my-list { display: grid; border-top: 1px solid var(--g2); max-height: 300px; overflow-y: auto; }
+.my-list:empty { display: none; }
+.my-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 10px; border-bottom: 1px solid var(--g2); padding: 6px 0; }
+.my-open { display: grid; grid-template-columns: 72px minmax(0, 1fr); grid-template-rows: auto auto; column-gap: 10px; align-items: center; text-align: left; padding: 0; }
+.my-open:hover .my-nm { text-decoration: underline; text-underline-offset: 3px; }
+.my-th { grid-row: 1 / 3; width: 72px; height: 48px; object-fit: contain; background: var(--g1); display: block; }
+.my-nm { font-size: var(--s-md); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.my-dt { color: var(--g4); text-transform: uppercase; }
+.my-acts { display: flex; gap: 12px; }
+.my-row input[type=text] { width: 100%; }
+.my-ask { border: var(--rule); padding: 10px; display: grid; gap: 8px; }
+.my-ask p { margin: 0; }
 #spec-msg { color: var(--ink); }
 .png-set { display: grid; gap: 10px; }
 .png-row { display: flex; justify-content: space-between; align-items: baseline; gap: 14px; text-transform: uppercase; }
@@ -850,6 +865,7 @@ button.beta-mark:hover { background: var(--g4); }
       <section><h4>Base style</h4><p>The base style is the one letters keep at 0% mix. Pick it from the Base menu, or right-click any style in the pool: Set as base style, or Add to mix + set as base for a style that is off. It must be switched on in the pool: styles that are off are greyed out in the list, and switching off the base moves it to the nearest weight that is on.</p></section>
       <section><h4>Look</h4><p>The <b>Look</b> group, at the top of the left panel's Style tab, sets a whole look in one click, from settings that already exist: the palette, the paragraph band, random letter boxes, the pattern and registration marks. Riso Block, Stacked Bands, Tone on Tone and Dark Glow. A look only sets colors and decoration: your text, seed, fonts, mix, type settings, jitter, outline and letter edits stay as they are; random letter boxes from before are replaced, boxes you added or colored by hand stay. It is a starting point: change anything afterwards, and ⌘Z goes back.</p></section>
       <section><h4>Specimen</h4><p><b>Specimen</b> in the top bar keeps a whole look as settings: the text, every setting, your letter edits, the pool and base style, and the names of the fonts (family, style and PostScript name), not the fonts themselves. <b>Copy specimen</b> puts it on the clipboard; <b>Download specimen</b> saves a .json; give it a title and author if you like. To load one, paste it and press Load pasted, or Choose file. Loading is one step, so ⌘Z goes back. With the same fonts it gives exactly the same result. If some fonts aren't loaded, Mixweight lists them, lets the base style or your other fonts stand in, and the layout will differ because their widths differ. Everything works offline; nothing is uploaded.</p></section>
+      <section><h4>My specimens</h4><p>At the bottom of the <b>Specimen</b> window: give the current look a name and press <b>Save current</b> to keep it in a list, with the date and a small picture. Click an entry to load it (one step, so ⌘Z goes back); Download saves it as a specimen file; Rename and Delete do what they say. The list lives in this browser only, for this address: the beta and the stable page, or a copy opened from disk, each keep their own, and clearing the browser's site data erases it. So use <b>Export all</b> to keep a backup in one .json file, and <b>Import…</b> to bring it back or move it to another browser. Import also takes a single specimen file, adds to the list and never replaces an entry without asking when a name is already there.</p></section>
       <section><h4>Seed</h4><p>Every random choice comes from the seed, so the same seed and settings always give the same result. Click Seed in the toolbar to type one, Enter to apply, Esc to cancel. Note a seed to get a layout back later.</p></section>
       <section><h4>Fonts</h4><p>Fonts are matched by family and style name, then by PostScript name. Variable fonts use their named instances (Light, Bold…), so the app shows what the preview shows. Fonts the app can't find are listed and swapped for its default; the text stays editable.</p></section>
       <section><h4>Family share</h4><p>Share of mix is each family's part of the letters that leave the base style. At first it follows the number of styles switched on. Drag one family and the others make room, keeping their proportions, so the total stays 100%. Styles keep their place in the light → heavy range.</p></section>
@@ -926,6 +942,18 @@ button.beta-mark:hover { background: var(--g4); }
       </div>
       <p class="hint-on" id="spec-msg" role="status"></p>
       <p class="hint-on">A specimen holds the text, every setting, your letter edits and the names of the fonts, not the fonts. Loading it is one step: ⌘Z goes back. With the same fonts it gives exactly the same result.</p>
+      <div class="sub-h aid">My specimens</div>
+      <div class="my-save"><input type="text" id="my-name" placeholder="Name" maxlength="80" autocomplete="off" aria-label="Name for this specimen"><button class="btn solid" type="button" id="my-save">Save current</button></div>
+      <div class="my-list" id="my-list" role="list" aria-label="My specimens"></div>
+      <p class="hint-on" id="my-empty">Nothing saved yet. Save current keeps this look here, with a small picture.</p>
+      <div class="my-ask" id="my-ask" hidden></div>
+      <div class="btns">
+        <button class="btn" type="button" id="my-export">Export all</button>
+        <button class="btn" type="button" id="my-import-b">Import…</button>
+        <input type="file" id="my-import" accept=".json,application/json,text/plain" hidden>
+      </div>
+      <p class="hint-on" id="my-msg" role="status"></p>
+      <p class="hint-on">Stored in this browser. Use Export all to keep a backup.</p>
     </div>
   </form>
 </dialog>
@@ -3940,7 +3968,7 @@ async function pngOut(copy) {
 // A specimen is a whole look as parameters: every saved setting, the per-letter edits, the pool and the base style,
 // with fonts named (family, style, PostScript name) rather than embedded. Loading it with the same fonts gives the
 // same result; loading checks every value, so a hand-edited or newer specimen never breaks anything.
-const SPEC_VERSION = 1, TOOL_VERSION = '4.1-beta.3';
+const SPEC_VERSION = 1, TOOL_VERSION = '4.1-beta.4';
 const LIMITS = {}; // allowed range or options per setting, filled by bindRange / bindOpts
 const fontRef = id => { const s = S.styles.get(id); return s ? { family: s.family, style: s.style, ps: s.ps } : null; };
 // A named font → the id of a loaded style: family and style first, then PostScript name; null when not loaded.
@@ -4033,6 +4061,193 @@ function loadSpecimen(src) {
   } catch (e) {
     return { error: 'This specimen could not be read: ' + e.message };
   }
+}
+
+/* ---------------- my specimens ---------------- */
+// A personal list of specimens in this browser, in IndexedDB (localStorage is too small for thumbnails). An entry is
+// { id, name, saved, spec, thumb }: spec exactly as Download specimen writes it, thumb a small PNG from the PNG
+// export. Per browser and per origin, so Export all and Import keep and move them. Not settings: never in SAVE_KEYS.
+const MY_DB = 'mixweight-specimens', MY_STORE = 'specimens', MY_THUMB = 360, MY_FILE = 'mixweight-specimens';
+let myDB = null;
+function myOpen() {
+  if (!myDB) myDB = new Promise(res => {
+    try {
+      const rq = indexedDB.open(MY_DB, 1);
+      rq.onupgradeneeded = () => rq.result.createObjectStore(MY_STORE, { keyPath: 'id', autoIncrement: true });
+      rq.onsuccess = () => res(rq.result);
+      rq.onerror = rq.onblocked = () => res(null);
+    } catch (e) { res(null); }
+  });
+  return myDB;
+}
+async function myTx(mode, fn) {
+  const db = await myOpen();
+  if (!db) throw new Error('storage');
+  return new Promise((res, rej) => {
+    let out;
+    try {
+      const tx = db.transaction(MY_STORE, mode), rq = fn(tx.objectStore(MY_STORE));
+      rq.onsuccess = () => { out = rq.result; };
+      tx.oncomplete = () => res(out);
+      tx.onerror = tx.onabort = () => rej(tx.error || new Error('storage'));
+    } catch (e) { rej(e); }
+  });
+}
+const myAll = () => myTx('readonly', st => st.getAll());
+const myPut = e => myTx('readwrite', st => st.put(e));
+const myDel = id => myTx('readwrite', st => st.delete(id));
+// The thumbnail is the PNG export, small, with the background and without guidelines.
+async function myThumb() {
+  try { const { w, h } = frame(); return await pngBlob({ scale: Math.min(2, MY_THUMB / Math.max(w, h, 1)), transparent: false, guides: false }); }
+  catch (e) { return null; }
+}
+const blobToData = b => new Promise(res => { if (!b) return res(null); const r = new FileReader(); r.onload = () => res(r.result); r.onerror = () => res(null); r.readAsDataURL(b); });
+function dataToBlob(d) {
+  const m = typeof d === 'string' && /^data:(image\/png);base64,([A-Za-z0-9+/=]+)$/.exec(d);
+  if (!m) return null;
+  try { return new Blob([Uint8Array.from(atob(m[2]), c => c.charCodeAt(0))], { type: m[1] }); } catch (e) { return null; }
+}
+const isSpecimen = o => !!(o && typeof o === 'object' && o.mixweight === 'specimen' && o.settings && typeof o.settings === 'object');
+const specSlug = t => String(t || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+const myDate = iso => { const d = new Date(iso); return isNaN(d) ? '' : d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }); };
+// "Name", "Name (2)", "Name (3)"… so a kept-both copy never shares a name.
+function myUnique(name, items) {
+  const names = new Set(items.map(e => e.name));
+  if (!names.has(name)) return name;
+  let n = 2; while (names.has(`${name} (${n})`)) n++;
+  return `${name} (${n})`;
+}
+
+// specLoad: the Specimen dialog's loader (one undo step, reports missing fonts).
+function setupMySpecimens(specLoad) {
+  const list = $('#my-list'), msg = t => { $('#my-msg').textContent = t; };
+  let urls = [], blocked = false;
+  // A question inside the dialog, in its own style: resolves with the value of the button pressed.
+  const ask = (text, opts) => new Promise(res => {
+    const box = $('#my-ask');
+    box.replaceChildren(Object.assign(document.createElement('p'), { textContent: text }));
+    const bs = document.createElement('div'); bs.className = 'btns';
+    opts.forEach(([label, v], n) => {
+      const b = document.createElement('button');
+      b.type = 'button'; b.className = 'btn sm' + (n ? '' : ' solid'); b.textContent = label;
+      b.onclick = () => { box.hidden = true; box.replaceChildren(); res(v); };
+      bs.append(b);
+    });
+    box.append(bs); box.hidden = false; bs.firstChild.focus();
+  });
+  const block = () => {
+    blocked = true;
+    for (const id of ['#my-save', '#my-export', '#my-import-b', '#my-name']) $(id).disabled = true;
+    $('#my-empty').hidden = true;
+    msg('This browser won’t let Mixweight keep data here (a private window, or site data blocked), so My specimens can’t be saved. Copy and Download specimen still work.');
+  };
+  function row(e) {
+    const r = document.createElement('div'); r.className = 'my-row'; r.setAttribute('role', 'listitem');
+    const open = document.createElement('button'); open.type = 'button'; open.className = 'my-open'; open.title = 'Load this specimen';
+    const img = document.createElement('img'); img.className = 'my-th'; img.alt = '';
+    if (e.thumb instanceof Blob) { const u = URL.createObjectURL(e.thumb); urls.push(u); img.src = u; }
+    const nm = Object.assign(document.createElement('span'), { className: 'my-nm', textContent: e.name });
+    const dt = Object.assign(document.createElement('span'), { className: 'my-dt', textContent: myDate(e.saved) });
+    open.append(img, nm, dt);
+    open.onclick = () => specLoad(e.spec);
+    const acts = document.createElement('span'); acts.className = 'my-acts';
+    const act = (label, fn) => { const b = document.createElement('button'); b.type = 'button'; b.className = 'tbtn'; b.textContent = label; b.onclick = fn; acts.append(b); };
+    act('Download', () => { const n = `mixweight-specimen${specSlug(e.name) ? '-' + specSlug(e.name) : ''}.json`; download(n, JSON.stringify(e.spec, null, 1)); toast('Saved ' + n); });
+    act('Rename', () => {
+      const inp = Object.assign(document.createElement('input'), { type: 'text', value: e.name, maxLength: 80 });
+      inp.setAttribute('aria-label', 'New name');
+      nm.replaceWith(inp); inp.focus(); inp.select();
+      let done = false;
+      const end = async keep => {
+        if (done) return; done = true;
+        const v = inp.value.trim();
+        if (keep && v && v !== e.name) { e.name = v; e.spec.title = v; try { await myPut(e); } catch (err) { msg('Could not rename it: storage refused.'); } }
+        refresh();
+      };
+      inp.addEventListener('keydown', ev => {
+        if (ev.key === 'Enter') { ev.preventDefault(); end(true); }
+        if (ev.key === 'Escape') { ev.preventDefault(); ev.stopPropagation(); end(false); } // Esc cancels the rename, not the dialog
+      });
+      inp.addEventListener('blur', () => end(true));
+    });
+    act('Delete', async () => {
+      if (!await ask(`Delete “${e.name}” from My specimens? This can’t be undone.`, [['Delete', true], ['Cancel', false]])) return;
+      try { await myDel(e.id); msg(`Deleted “${e.name}”.`); } catch (err) { msg('Could not delete it: storage refused.'); }
+      refresh();
+    });
+    r.append(open, acts);
+    return r;
+  }
+  async function refresh() {
+    let items;
+    try { items = await myAll(); } catch (e) { block(); return []; }
+    urls.forEach(u => URL.revokeObjectURL(u)); urls = [];
+    items.sort((a, b) => String(b.saved).localeCompare(String(a.saved)));
+    list.replaceChildren(...items.map(row));
+    $('#my-empty').hidden = items.length > 0;
+    $('#my-export').disabled = !items.length;
+    return items;
+  }
+  // A new entry, asking first when its name is taken: Keep both (numbered), Replace or Skip.
+  async function add(entry, items, verb) {
+    const same = items.find(x => x.name === entry.name);
+    const v = same ? await ask(`“${entry.name}” is already in My specimens.`, [['Keep both', 'both'], ['Replace', 'replace'], [verb === 'save' ? 'Cancel' : 'Skip', 'skip']]) : 'new';
+    if (v === 'skip') return false;
+    if (v === 'replace') entry.id = same.id;
+    if (v === 'both') { entry.name = myUnique(entry.name, items); entry.spec.title = entry.name; }
+    await myPut(entry);
+    if (v === 'replace') items[items.indexOf(same)] = entry; else items.push(entry);
+    return true;
+  }
+  $('#btn-spec').addEventListener('click', () => { if (!blocked) { msg(''); refresh(); } });
+  $('#spec').addEventListener('close', () => { $('#my-ask').hidden = true; });
+  $('#my-save').onclick = async () => {
+    if (!S.styles.size || !S.lines.some(l => l.length)) { msg('Add fonts and some text first.'); return; }
+    const name = ($('#my-name').value.trim() || $('#spec-title').value.trim()).slice(0, 80);
+    if (!name) { msg('Give it a name first.'); $('#my-name').focus(); return; }
+    $('#my-save').disabled = true; msg('Saving…');
+    try {
+      const items = await myAll();
+      const spec = buildSpecimen({ title: name, author: $('#spec-author').value.trim() });
+      const entry = { name, saved: new Date().toISOString(), spec, thumb: await myThumb() };
+      if (await add(entry, items, 'save')) { msg(`Saved “${entry.name}”.`); $('#my-name').value = ''; } else msg('');
+    } catch (e) { msg('Could not save it: this browser’s storage refused.'); }
+    $('#my-save').disabled = false;
+    refresh();
+  };
+  $('#my-export').onclick = async () => {
+    let items;
+    try { items = await myAll(); } catch (e) { block(); return; }
+    if (!items.length) return;
+    const out = { mixweight: 'specimens', version: 1, tool: TOOL_VERSION, exported: new Date().toISOString(), items: [] };
+    for (const e of items) out.items.push({ name: e.name, saved: e.saved, spec: e.spec, thumb: await blobToData(e.thumb) });
+    const n = `${MY_FILE}-${new Date().toISOString().slice(0, 10)}.json`;
+    download(n, JSON.stringify(out));
+    msg(`Exported ${items.length} specimen${items.length === 1 ? '' : 's'} to ${n}.`);
+  };
+  $('#my-import-b').onclick = () => $('#my-import').click();
+  // Import merges: a file from Export all, or one specimen from Download specimen. Never overwrites without asking.
+  $('#my-import').onchange = async ev => {
+    const f = ev.target.files[0]; ev.target.value = '';
+    if (!f) return;
+    let o;
+    try { o = JSON.parse(await f.text()); } catch (e) { msg('That file is not a specimen file: it is not valid JSON.'); return; }
+    const raw = o && o.mixweight === 'specimens' && Array.isArray(o.items) ? o.items
+      : isSpecimen(o) ? [{ name: o.title || f.name.replace(/\.json$/i, ''), saved: o.created, spec: o }] : null;
+    if (!raw) { msg('That file holds no Mixweight specimens.'); return; }
+    const entries = raw.filter(x => x && isSpecimen(x.spec)).map(x => ({
+      name: (typeof x.name === 'string' && x.name.trim() ? x.name.trim() : x.spec.title || 'Untitled').slice(0, 80),
+      saved: typeof x.saved === 'string' && !isNaN(new Date(x.saved)) ? x.saved : new Date().toISOString(),
+      spec: x.spec, thumb: dataToBlob(x.thumb),
+    }));
+    let items, n = 0;
+    try { items = await myAll(); } catch (e) { block(); return; }
+    try { for (const e of entries) if (await add(e, items, 'import')) n++; }
+    catch (e) { msg(`Imported ${n}, then this browser’s storage refused the rest.`); refresh(); return; }
+    const skipped = raw.length - n;
+    msg(`Imported ${n} specimen${n === 1 ? '' : 's'}` + (skipped ? `; ${skipped} skipped.` : '.'));
+    refresh();
+  };
 }
 
 /* ---------------- persistence ---------------- */
@@ -4695,6 +4910,7 @@ async function boot() {
       toast(`Loaded ${what}. ⌘Z goes back.${newer}`, 6000);
     }
   };
+  setupMySpecimens(specLoad);
   $('#spec-load').onclick = () => { const t = $('#spec-in').value.trim(); if (t) specLoad(t); else specMsg('Paste a specimen into the box first.'); };
   $('#spec-file-b').onclick = () => $('#spec-file').click();
   $('#spec-file').onchange = async e => {

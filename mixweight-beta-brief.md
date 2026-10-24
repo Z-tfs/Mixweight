@@ -137,7 +137,7 @@ After Effects export, SVG export, accounts, payments, analytics, public gallery,
 - [x] 1 Skeleton and Backstage entry
 - [x] 2 Hover info: Off / Basic / Full
 - [x] 3 Right-click panel
-- [ ] 4 My specimens
+- [x] 4 My specimens
 - [ ] 5 Motion engine, Weight breathing, WebM and MP4
 - [ ] 6a Jitter loop
 - [ ] 6b Typing in
