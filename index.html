@@ -2758,7 +2758,6 @@ function hoverRows(g) {
     blends.add(S.para.st.blend);
   }
   for (const b of S.bands) if (inRun(line.filter(q => q.i >= b.a && q.i <= b.b))) { rows.push('Band ' + fillName(b.st.fill)); blends.add(b.st.blend); }
-  blends.delete('normal');
   if (blends.size) rows.push('Blend ' + [...blends].map(capName).join(', '));
   if (g.rot) rows.push('Rotate ' + sgn(g.rot) + '°');
   rows.push(g.sw ? 'Fill outline ' + num(g.sw) + ' pt' : 'Fill solid');
