@@ -40,6 +40,17 @@ Where to look: the top bar markup and its CSS, `<dialog id="help">`, the `boot` 
 
 Check: with `BETA_URL` empty nothing shows and nothing is stored; with it set, the 60-second rule, the once-only rule and Esc work; the beta-host branch is verified by stubbing the hostname in a local test; works from `file://`.
 
+### 1b. Feedback dialog (beta host only)
+Where to look: the dialog markup and CSS of `exp-ask`, `png-ask`, `spec` and `help`, and the Beta mark from step 1.
+
+- Replace the plain feedback link with a **Send feedback** dialog in the tool's own style (black on white, ruled lines, the button pattern of `exp-ask`). Open it from the Beta mark and from the Help dialog. Beta host only; on other hosts nothing changes.
+- The fields are the questions of the owner's Google Form, in the same order, with the titles and options exactly as the form has them. The owner gives a pre-filled link of the form; derive the `entry.<id>` map from it. If a question or an id is unclear, stop and ask.
+- Submit with `fetch` (`method: 'POST'`, `mode: 'no-cors'`, `application/x-www-form-urlencoded`) to the form's `formResponse` address (the same form id as `FEEDBACK_URL`, ending in `/formResponse`). The response is opaque, so success cannot be confirmed: on a network error show "Could not send" with a link "Open the form in a new tab" (`FEEDBACK_URL`); otherwise show "Sent. Thank you." Disable the button while sending, no double submit, no retry loop, a sensible length limit per field.
+- Under the button say: "Only what you type here is sent." Send nothing else: no session, no Specimen, no analytics, no cookies.
+- Dialog state is view state, not in `SAVE_KEYS`. No dependency. Offline, the fallback link is what remains.
+
+Check: send a test entry from the preview (the owner deletes it in the sheet); network off shows the fallback; Esc closes; keyboard-only use works; the dialog and Beta mark do not exist on a non-beta host; `var D` byte-identical.
+
 ### 2. Hover info: Off / Basic / Full
 Where to look: the "hover info / selection info" banner, `tagRows()`, `fillTag()`, the Hover info control in the toolbar, and its state key (grep for it). `reference/hover-tag.png` is the visual reference for the tag (you may open that one image).
 
@@ -124,6 +135,7 @@ After Effects export, SVG export, accounts, payments, analytics, public gallery,
 ## Progress (update after each step)
 
 - [ ] 1 Skeleton and Backstage entry
+- [ ] 1b Feedback dialog
 - [ ] 2 Hover info: Off / Basic / Full
 - [ ] 3 Right-click panel
 - [ ] 4 My specimens
