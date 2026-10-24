@@ -344,7 +344,6 @@ dialog::backdrop { background: rgba(255, 255, 255, .7); }
 #spec-msg:empty, #my-msg:empty { display: none; }
 #my-msg { color: var(--ink); }
 #spec .spec-b { overflow-y: auto; max-height: calc(100vh - 110px); }
-.my-save { display: grid; grid-template-columns: 1fr auto; gap: 10px; align-items: end; }
 .my-list { display: grid; border-top: 1px solid var(--g2); max-height: 300px; overflow-y: auto; }
 .my-list:empty { display: none; }
 .my-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 10px; border-bottom: 1px solid var(--g2); padding: 6px 0; }
@@ -865,7 +864,7 @@ button.beta-mark:hover { background: var(--g4); }
       <section><h4>Base style</h4><p>The base style is the one letters keep at 0% mix. Pick it from the Base menu, or right-click any style in the pool: Set as base style, or Add to mix + set as base for a style that is off. It must be switched on in the pool: styles that are off are greyed out in the list, and switching off the base moves it to the nearest weight that is on.</p></section>
       <section><h4>Look</h4><p>The <b>Look</b> group, at the top of the left panel's Style tab, sets a whole look in one click, from settings that already exist: the palette, the paragraph band, random letter boxes, the pattern and registration marks. Riso Block, Stacked Bands, Tone on Tone and Dark Glow. A look only sets colors and decoration: your text, seed, fonts, mix, type settings, jitter, outline and letter edits stay as they are; random letter boxes from before are replaced, boxes you added or colored by hand stay. It is a starting point: change anything afterwards, and ⌘Z goes back.</p></section>
       <section><h4>Specimen</h4><p><b>Specimen</b> in the top bar keeps a whole look as settings: the text, every setting, your letter edits, the pool and base style, and the names of the fonts (family, style and PostScript name), not the fonts themselves. <b>Copy specimen</b> puts it on the clipboard; <b>Download specimen</b> saves a .json; give it a title and author if you like. To load one, paste it and press Load pasted, or Choose file. Loading is one step, so ⌘Z goes back. With the same fonts it gives exactly the same result. If some fonts aren't loaded, Mixweight lists them, lets the base style or your other fonts stand in, and the layout will differ because their widths differ. Everything works offline; nothing is uploaded.</p></section>
-      <section><h4>My specimens</h4><p>At the bottom of the <b>Specimen</b> window: give the current look a name and press <b>Save current</b> to keep it in a list, with the date and a small picture. Click an entry to load it (one step, so ⌘Z goes back); Download saves it as a specimen file; Rename and Delete do what they say. The list lives in this browser only, for this address: the beta and the stable page, or a copy opened from disk, each keep their own, and clearing the browser's site data erases it. So use <b>Export all</b> to keep a backup in one .json file, and <b>Import…</b> to bring it back or move it to another browser. Import also takes a single specimen file, adds to the list and never replaces an entry without asking when a name is already there.</p></section>
+      <section><h4>My specimens</h4><p>In the <b>Specimen</b> window: give the current look a title and press <b>Save to My specimens</b> to keep it in a list under that title, with the date and a small picture. Click an entry to load it (one step, so ⌘Z goes back); Download saves it as a specimen file; Rename and Delete do what they say. The list lives in this browser only, for this address: the beta and the stable page, or a copy opened from disk, each keep their own, and clearing the browser's site data erases it. So use <b>Export all</b> to keep a backup in one .json file, and <b>Import…</b> to bring it back or move it to another browser. Import also takes a single specimen file, adds to the list and never replaces an entry without asking when a name is already there.</p></section>
       <section><h4>Seed</h4><p>Every random choice comes from the seed, so the same seed and settings always give the same result. Click Seed in the toolbar to type one, Enter to apply, Esc to cancel. Note a seed to get a layout back later.</p></section>
       <section><h4>Fonts</h4><p>Fonts are matched by family and style name, then by PostScript name. Variable fonts use their named instances (Light, Bold…), so the app shows what the preview shows. Fonts the app can't find are listed and swapped for its default; the text stays editable.</p></section>
       <section><h4>Family share</h4><p>Share of mix is each family's part of the letters that leave the base style. At first it follows the number of styles switched on. Drag one family and the others make room, keeping their proportions, so the total stays 100%. Styles keep their place in the light → heavy range.</p></section>
@@ -926,13 +925,25 @@ button.beta-mark:hover { background: var(--g4); }
     <div class="ask-b spec-b">
       <div class="sub-h">Keep this look</div>
       <div class="pair">
-        <input type="text" id="spec-title" placeholder="Title (optional)" autocomplete="off" aria-label="Title">
+        <input type="text" id="spec-title" placeholder="Title" maxlength="80" autocomplete="off" aria-label="Title">
         <input type="text" id="spec-author" placeholder="Author (optional)" autocomplete="off" aria-label="Author">
       </div>
       <div class="btns">
-        <button class="btn solid" type="button" id="spec-copy">Copy specimen</button>
+        <button class="btn solid" type="button" id="my-save" title="Keep it in My specimens below, under its title, with a small picture">Save to My specimens</button>
+        <button class="btn" type="button" id="spec-copy">Copy specimen</button>
         <button class="btn" type="button" id="spec-dl">Download specimen</button>
       </div>
+      <div class="sub-h aid">My specimens</div>
+      <div class="my-list" id="my-list" role="list" aria-label="My specimens"></div>
+      <p class="hint-on" id="my-empty">Nothing saved yet. Give the look a title and press Save to My specimens.</p>
+      <div class="my-ask" id="my-ask" hidden></div>
+      <div class="btns">
+        <button class="btn" type="button" id="my-export">Export all</button>
+        <button class="btn" type="button" id="my-import-b">Import…</button>
+        <input type="file" id="my-import" accept=".json,application/json,text/plain" hidden>
+      </div>
+      <p class="hint-on" id="my-msg" role="status"></p>
+      <p class="hint-on">Stored in this browser. Use Export all to keep a backup.</p>
       <div class="sub-h aid">Load a specimen</div>
       <textarea id="spec-in" placeholder="Paste a specimen here" spellcheck="false" aria-label="Specimen to load"></textarea>
       <div class="btns">
@@ -942,18 +953,6 @@ button.beta-mark:hover { background: var(--g4); }
       </div>
       <p class="hint-on" id="spec-msg" role="status"></p>
       <p class="hint-on">A specimen holds the text, every setting, your letter edits and the names of the fonts, not the fonts. Loading it is one step: ⌘Z goes back. With the same fonts it gives exactly the same result.</p>
-      <div class="sub-h aid">My specimens</div>
-      <div class="my-save"><input type="text" id="my-name" placeholder="Name" maxlength="80" autocomplete="off" aria-label="Name for this specimen"><button class="btn solid" type="button" id="my-save">Save current</button></div>
-      <div class="my-list" id="my-list" role="list" aria-label="My specimens"></div>
-      <p class="hint-on" id="my-empty">Nothing saved yet. Save current keeps this look here, with a small picture.</p>
-      <div class="my-ask" id="my-ask" hidden></div>
-      <div class="btns">
-        <button class="btn" type="button" id="my-export">Export all</button>
-        <button class="btn" type="button" id="my-import-b">Import…</button>
-        <input type="file" id="my-import" accept=".json,application/json,text/plain" hidden>
-      </div>
-      <p class="hint-on" id="my-msg" role="status"></p>
-      <p class="hint-on">Stored in this browser. Use Export all to keep a backup.</p>
     </div>
   </form>
 </dialog>
@@ -4137,7 +4136,7 @@ function setupMySpecimens(specLoad) {
   });
   const block = () => {
     blocked = true;
-    for (const id of ['#my-save', '#my-export', '#my-import-b', '#my-name']) $(id).disabled = true;
+    for (const id of ['#my-save', '#my-export', '#my-import-b']) $(id).disabled = true;
     $('#my-empty').hidden = true;
     msg('This browser won’t let Mixweight keep data here (a private window, or site data blocked), so My specimens can’t be saved. Copy and Download specimen still work.');
   };
@@ -4203,14 +4202,14 @@ function setupMySpecimens(specLoad) {
   $('#spec').addEventListener('close', () => { $('#my-ask').hidden = true; });
   $('#my-save').onclick = async () => {
     if (!S.styles.size || !S.lines.some(l => l.length)) { msg('Add fonts and some text first.'); return; }
-    const name = ($('#my-name').value.trim() || $('#spec-title').value.trim()).slice(0, 80);
-    if (!name) { msg('Give it a name first.'); $('#my-name').focus(); return; }
+    const name = $('#spec-title').value.trim().slice(0, 80);
+    if (!name) { msg('Give it a title first: it is the name in the list.'); $('#spec-title').focus(); return; }
     $('#my-save').disabled = true; msg('Saving…');
     try {
       const items = await myAll();
       const spec = buildSpecimen({ title: name, author: $('#spec-author').value.trim() });
       const entry = { name, saved: new Date().toISOString(), spec, thumb: await myThumb() };
-      if (await add(entry, items, 'save')) { msg(`Saved “${entry.name}”.`); $('#my-name').value = ''; } else msg('');
+      if (await add(entry, items, 'save')) msg(`Saved “${entry.name}”.`); else msg('');
     } catch (e) { msg('Could not save it: this browser’s storage refused.'); }
     $('#my-save').disabled = false;
     refresh();
