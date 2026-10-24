@@ -138,7 +138,7 @@ After Effects export, SVG export, accounts, payments, analytics, public gallery,
 - [x] 2 Hover info: Off / Basic / Full
 - [x] 3 Right-click panel
 - [x] 4 My specimens
-- [ ] 5 Motion engine, Weight breathing, WebM and MP4
+- [x] 5 Motion engine, Weight breathing, WebM and MP4
 - [ ] 6a Jitter loop
 - [ ] 6b Typing in
 - [ ] 6c Baseline wave

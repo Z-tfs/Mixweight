@@ -73,12 +73,12 @@ button { background: none; border: 0; padding: 0; cursor: pointer; }
 .sub .grp.tools { gap: 34px; } /* separate functions (Hover info, Zoom) sit further apart than the parts of one */
 /* Left panel tabs: Type | Style, the active one inverted. View state, not in undo. */
 .sub > .ltabs { padding: 0 14px 0 0; align-items: stretch; flex-wrap: nowrap; }
-.tabs { display: grid; grid-template-columns: 1fr 1fr; flex: 1 1 auto; border-right: var(--rule); }
+.tabs { display: grid; grid-template-columns: 1fr 1fr 1fr; flex: 1 1 auto; border-right: var(--rule); }
 .tabs button { text-transform: uppercase; padding: 5px 0; }
 .tabs button + button { border-left: var(--rule); }
 .tabs button:hover { background: var(--g1); }
 .tabs button[aria-selected="true"] { background: var(--ink); color: var(--paper); }
-.rail[data-tab="type"] > .cell[data-tab="style"], .rail[data-tab="style"] > .cell[data-tab="type"] { display: none; }
+.rail[data-tab="type"] > .cell:not([data-tab="type"]), .rail[data-tab="style"] > .cell:not([data-tab="style"]), .rail[data-tab="motion"] > .cell:not([data-tab="motion"]) { display: none; }
 .sub .muted { color: var(--g4); }
 #seed-lbl:hover { color: var(--ink); }
 #seed-in { font: inherit; width: 9ch; padding: 0 3px; border: 0; border-bottom: var(--rule); background: var(--g1); color: var(--ink); outline: 0; }
@@ -220,6 +220,11 @@ textarea:focus { background: var(--g2); outline: none; }
 .chips:has(.is-base) { padding-top: 6px; row-gap: 12px; }
 .fam .ctl input:disabled { opacity: .35; cursor: default; }
 .pool .empty { padding: 14px; color: var(--g4); text-transform: uppercase; }
+
+/* motion: while a loop plays, the selection and the hover tag stay out of the way */
+#sheet.playing .selmarks { display: none; }
+.m-play { display: flex; align-items: baseline; gap: 14px; }
+#m-prog { color: var(--g4); font-variant-numeric: tabular-nums; }
 
 /* right-click panel on selected letters */
 .ctxp { position: fixed; z-index: 65; width: 250px; max-height: calc(100vh - 8px); overflow-y: auto; background: var(--paper); border: var(--rule); font-size: var(--s-sm); }
@@ -452,7 +457,7 @@ button.beta-mark:hover { background: var(--g4); }
   </header>
 
   <div class="sub">
-    <div class="ltabs"><span class="tabs" role="tablist" aria-label="Left panel"><button type="button" role="tab" id="tab-type" data-tab="type" aria-controls="rail">Type</button><button type="button" role="tab" id="tab-style" data-tab="style" aria-controls="rail">Style</button></span><span class="grp"><button class="tbtn" type="button" id="clear-left" title="Reset everything you can set in the left panel, on both tabs, to its default: styles in the mix, share of mix and base, case, mix, type, letter align, jitter, colors and palette, paragraph band, random letter boxes (the boxes they placed go too), random outline, decoration. Your text, the loaded fonts and edits in the right panel stay. ⌘Z brings them back.">Clear</button></span></div>
+    <div class="ltabs"><span class="tabs" role="tablist" aria-label="Left panel"><button type="button" role="tab" id="tab-type" data-tab="type" aria-controls="rail">Type</button><button type="button" role="tab" id="tab-style" data-tab="style" aria-controls="rail">Style</button><button type="button" role="tab" id="tab-motion" data-tab="motion" aria-controls="rail">Motion</button></span><span class="grp"><button class="tbtn" type="button" id="clear-left" title="Reset everything you can set in the left panel, on both tabs, to its default: styles in the mix, share of mix and base, case, mix, type, letter align, jitter, colors and palette, paragraph band, random letter boxes (the boxes they placed go too), random outline, decoration. Your text, the loaded fonts and edits in the right panel stay. ⌘Z brings them back.">Clear</button></span></div>
     <div>
       <span class="grp">
         <button class="tbtn" type="button" id="undo" title="⌘Z" disabled>Undo</button>
@@ -687,6 +692,35 @@ button.beta-mark:hover { background: var(--g4); }
       <div class="btns"><button class="btn sm" type="button" id="outline-re">Reroll outlines</button></div>
       <p class="hint">Solid ↔ outline. Random outline picks a share of the letters to set as outline only: no fill, a stroke in the text color. It exports as live text with a stroke. Select letters to set them by hand.</p>
     </section>
+
+    <section class="cell" data-tab="motion">
+      <div class="cell-h"><span>Motion</span><span class="r" id="sum-motion"></span></div>
+      <div class="ctl"><label>Template</label><output></output></div>
+      <div class="opts" id="m-tpl" role="group" aria-label="Template"><button type="button" data-v="breath">Weight breathing</button></div>
+      <div class="ctl"><label>Loop</label><output id="m-loop-o"></output></div>
+      <div class="opts" id="m-loop" role="group" aria-label="Loop length"><button type="button" data-v="4">4 beats</button><button type="button" data-v="8">8 beats</button><button type="button" data-v="16">16 beats</button></div>
+      <div class="ctl"><label>Speed</label><output id="m-speed-o"></output></div>
+      <div class="opts" id="m-speed" role="group" aria-label="Beats per cycle"><button type="button" data-v="1">1</button><button type="button" data-v="2">2</button><button type="button" data-v="4">4</button><button type="button" data-v="8">8</button><button type="button" data-v="16">16</button></div>
+      <div class="ctl"><label for="m-range">Range</label><output id="m-range-o"></output><input type="range" id="m-range" min="1" max="4" step="1"></div>
+      <div class="ctl"><label for="m-stagger">Stagger</label><output id="m-stagger-o"></output><input type="range" id="m-stagger" min="0" max="14" step="1"></div>
+      <div class="ctl"><label>Direction</label><output></output></div>
+      <div class="opts" id="m-dir" role="group" aria-label="Direction"><button type="button" data-v="ltr">Left to right</button><button type="button" data-v="rtl">Right to left</button><button type="button" data-v="random">Random</button></div>
+      <div class="ctl"><label>Hold</label><output id="m-hold-o"></output></div>
+      <div class="opts" id="m-hold" role="group" aria-label="Hold, frames"><button type="button" data-v="1">1</button><button type="button" data-v="2">2</button><button type="button" data-v="7">7</button><button type="button" data-v="14">14</button></div>
+      <div class="row"><span class="lab">Seed <span class="numin"><input type="number" id="m-seed" min="1" max="99999" step="1" aria-label="Motion seed"></span></span><button class="btn sm" type="button" id="m-seed-re">Reroll</button></div>
+      <div class="m-play"><button class="btn solid" type="button" id="m-play">Play</button><span id="m-frame" class="lab"></span></div>
+      <p class="hint">Each letter steps through the named styles of its own family that are on in the font pool, light to heavy, never in between: Range is how many styles up and down from its own. Speed is beats per cycle; one beat is 14 frames at 30 fps, so loops land on the music and always join up. Stagger delays each letter by that many frames; Hold keeps each state for that many frames. The seed only orders Random. Motion is a video: the text, the .jsx and PNG exports stay as set.</p>
+    </section>
+
+    <section class="cell" data-tab="motion">
+      <div class="cell-h"><span>Export video</span><span class="r" id="sum-video"></span></div>
+      <div class="ctl"><label>Format</label><output></output></div>
+      <div class="opts" id="m-fmt" role="group" aria-label="Video format"><button type="button" data-v="mp4">MP4</button><button type="button" data-v="webm">WebM</button></div>
+      <div class="ctl"><label>Size</label><output></output></div>
+      <div class="opts" id="m-scale" role="group" aria-label="Video size"><button type="button" data-v="1">1×</button><button type="button" data-v="2">2×</button></div>
+      <div class="m-play"><button class="btn solid" type="button" id="m-export">Export video</button><span id="m-prog" role="status"></span></div>
+      <p class="hint-on">The text block plus a margin, as the PNG, at 30 fps, drawn frame by frame. MP4 (H.264) is opaque: a background with no color becomes white. WebM (VP9) keeps a background with no color transparent. Chrome or Edge.</p>
+    </section>
   </aside>
 
   <main class="main">
@@ -864,6 +898,7 @@ button.beta-mark:hover { background: var(--g4); }
       <section><h4>Base style</h4><p>The base style is the one letters keep at 0% mix. Pick it from the Base menu, or right-click any style in the pool: Set as base style, or Add to mix + set as base for a style that is off. It must be switched on in the pool: styles that are off are greyed out in the list, and switching off the base moves it to the nearest weight that is on.</p></section>
       <section><h4>Look</h4><p>The <b>Look</b> group, at the top of the left panel's Style tab, sets a whole look in one click, from settings that already exist: the palette, the paragraph band, random letter boxes, the pattern and registration marks. Riso Block, Stacked Bands, Tone on Tone and Dark Glow. A look only sets colors and decoration: your text, seed, fonts, mix, type settings, jitter, outline and letter edits stay as they are; random letter boxes from before are replaced, boxes you added or colored by hand stay. It is a starting point: change anything afterwards, and ⌘Z goes back.</p></section>
       <section><h4>Specimen</h4><p><b>Specimen</b> in the top bar keeps a whole look as settings: the text, every setting, your letter edits, the pool and base style, and the names of the fonts (family, style and PostScript name), not the fonts themselves. <b>Copy specimen</b> puts it on the clipboard; <b>Download specimen</b> saves a .json; give it a title and author if you like. To load one, paste it and press Load pasted, or Choose file. Loading is one step, so ⌘Z goes back. With the same fonts it gives exactly the same result. If some fonts aren't loaded, Mixweight lists them, lets the base style or your other fonts stand in, and the layout will differ because their widths differ. Everything works offline; nothing is uploaded.</p></section>
+      <section><h4>Motion</h4><p>The left panel's <b>Motion</b> tab turns the text into a short video loop. <b>Weight breathing</b>: each letter steps through the named styles of its own family that are on in the font pool, up and down from its own style, never in between, so every frame is real type. Loop, Speed (beats per cycle) and Stagger are counted in beats and frames: one beat is 14 frames at 30 fps, so loops land on the music, and a loop always joins up with its start. Hold keeps each state for that many frames. Direction sets the order the letters start in; the seed orders Random. <b>Play</b> shows it on the canvas (selection and hover info stay out of the way); <b>Export video</b> draws it frame by frame, as the PNG, and saves an MP4 (H.264, opaque) or a WebM (VP9, which keeps a background with no color transparent), at 1× or 2×. Motion never changes your text or settings, and the .jsx and PNG exports always show the type as set. Chrome or Edge.</p></section>
       <section><h4>My specimens</h4><p>In the <b>Specimen</b> window: give the current look a title and press <b>Save to My specimens</b> to keep it in a list under that title, with the date and a small picture. Click an entry to load it (one step, so ⌘Z goes back); Download saves it as a specimen file; Rename and Delete do what they say. The list lives in this browser only, for this address: the beta and the stable page, or a copy opened from disk, each keep their own, and clearing the browser's site data erases it. So use <b>Export all</b> to keep a backup in one .json file, and <b>Import…</b> to bring it back or move it to another browser. Import also takes a single specimen file, adds to the list and never replaces an entry without asking when a name is already there.</p></section>
       <section><h4>Seed</h4><p>Every random choice comes from the seed, so the same seed and settings always give the same result. Click Seed in the toolbar to type one, Enter to apply, Esc to cancel. Note a seed to get a layout back later.</p></section>
       <section><h4>Fonts</h4><p>Fonts are matched by family and style name, then by PostScript name. Variable fonts use their named instances (Light, Bold…), so the app shows what the preview shows. Fonts the app can't find are listed and swapped for its default; the text stays editable.</p></section>
@@ -1711,6 +1746,9 @@ const DEFAULTS = {
   align: 'left', seed: 1952,
   outlineAmt: 0, outlineSeed: 7, strokeW: 1,
   guides: { base: false, x: false, cap: false, asc: false },
+  // Motion (video only, never in the .jsx): template, loop and cycle in beats (one beat = 14 frames at 30 fps),
+  // Range in styles, Stagger and Hold in frames, Direction and its seed; video format and size.
+  mTpl: 'breath', mLoop: '8', mSpeed: '2', mRange: 2, mStagger: 2, mDir: 'ltr', mHold: '1', mSeed: 1, mFmt: 'mp4', mScale: '1',
   hover: 'basic', // hover tag: 'off', 'basic' (family, style, size, shift, track) or 'full' (plus what applies to the letter)
   expAsk: '', // export: '' asks each time; 'howto' or 'script' once Stop asking is ticked
   png: { scale: 2, transparent: false, guides: false }, // the PNG dialog's last choices
@@ -2179,6 +2217,7 @@ function compute() {
       at.alt = picks;
       st = pickFrom(pool, widths, rnd(seed, unit, 1), at);
     }
+    if (MOTION && !space) st = motionStyle(MOTION.f, i, chars.length, st); // a video frame: on top of the static choice
     const size = r1(Math.max(1, S.size * matchFactor(st, base) * (1 + S.sizeVar / 100 * (2 * rnd(seed, unit, 2) - 1))));
     const jit = r1(S.baseJit * (2 * rnd(seed, unit, 3) - 1));
     const tr = Math.round(S.track + S.trackJit * (2 * rnd(seed, unit, 4) - 1));
@@ -2233,6 +2272,244 @@ function alignLine(line) {
     else if (g.va === 'middle') shift = (refTop + refBot) / 2 - (g.inkTop + g.inkBot) / 2;
     g.bs = r1(shift);
   }
+}
+
+/* ---------------- motion ---------------- */
+// A loop is a pure function of the frame index and the settings: motionStyle() swaps a letter's style for the
+// frame, on top of what compute() picked, and touches no state. While a frame shows, MOTION is { f }; the static
+// state, S.overrides and the .jsx never see it.
+const FPS = 30, BEAT = 14; // one beat is 14 frames at 30 fps
+let MOTION = null;
+const motionLen = () => +S.mLoop * BEAT;
+// The styles a letter steps through: its family's styles that are on in the pool, light to heavy as the family
+// lists them (all of them when fewer than two are on).
+function motionSteps(st) {
+  const fam = S.families.find(f => f.ids.includes(st.id));
+  if (!fam) return [st.id];
+  const on = fam.ids.filter(id => fam.on.has(id));
+  return on.length > 1 ? on : fam.ids;
+}
+// Weight breathing: up Range styles, back, down Range styles, back, once per cycle. Each letter starts Stagger
+// frames after the one before it in the chosen order. Stepped: a letter is always one named style. Hold divides
+// 14 and the cycle divides the loop, so frame L is frame 0 again.
+function motionStyle(f, i, n, st) {
+  const ids = motionSteps(st), c = ids.indexOf(st.id);
+  if (c < 0 || ids.length < 2) return st;
+  const hold = +S.mHold, ff = Math.floor(f / hold) * hold;
+  const cyc = Math.min(+S.mSpeed, +S.mLoop) * BEAT;
+  const ord = S.mDir === 'rtl' ? n - 1 - i : S.mDir === 'random' ? Math.floor(rnd(S.mSeed, i, 13) * n) : i;
+  const t = (((ff - ord * S.mStagger) % cyc) + cyc) % cyc / cyc;
+  const tri = t < 0.25 ? t * 4 : t < 0.75 ? 2 - t * 4 : t * 4 - 4; // 0 → 1 → 0 → −1 → 0
+  const k = clamp(c + Math.round(tri * S.mRange), 0, ids.length - 1);
+  return S.styles.get(ids[k]) || st;
+}
+// The text block's width while a loop shows: the widest frame, so the frame, the pattern and the marks stay put.
+const motionWidth = () => Math.ceil(S.W || 0);
+function showFrame(f, minW) {
+  MOTION = { f };
+  out.style.minWidth = minW ? minW + 'px' : '';
+  render();
+}
+function endMotion() {
+  MOTION = null;
+  out.style.minWidth = '';
+  $('#sheet').classList.remove('playing');
+}
+
+// Preview: real time on the canvas, one frame per 1/30 s. The block's width grows to the widest frame seen.
+const PLAY = { on: false, raf: 0, t0: 0, f: -1, w: 0 };
+function playStep(now) {
+  const L = motionLen(), f = Math.floor((now - PLAY.t0) / 1000 * FPS) % L;
+  if (f !== PLAY.f) {
+    PLAY.f = f;
+    showFrame(f, PLAY.w);
+    const w = motionWidth();
+    if (w > PLAY.w) { PLAY.w = w; out.style.minWidth = w + 'px'; }
+    $('#m-frame').textContent = `Frame ${f + 1} / ${L}`;
+  }
+  PLAY.raf = requestAnimationFrame(playStep);
+}
+function playMotion() {
+  if (!S.styles.size) { toast('Add fonts and some text first.'); return; }
+  PLAY.on = true; PLAY.f = -1; PLAY.w = 0; PLAY.t0 = performance.now();
+  hideTag();
+  $('#sheet').classList.add('playing');
+  $('#m-play').textContent = 'Pause';
+  PLAY.raf = requestAnimationFrame(playStep);
+}
+function stopMotion() {
+  if (!PLAY.on) return;
+  PLAY.on = false;
+  cancelAnimationFrame(PLAY.raf);
+  endMotion();
+  $('#m-play').textContent = 'Play';
+  $('#m-frame').textContent = '';
+  render();
+}
+
+// Video: rendered offline, frame by frame, through the PNG path (fonts embedded, named instances exact), encoded
+// with WebCodecs and written by the small muxers below. The same settings give the same frames.
+const MP4_CODECS = ['avc1.640034', 'avc1.4d0034', 'avc1.42e034', 'avc1.640028', 'avc1.42e01f'];
+async function pickCodec(webm, w, h) {
+  const list = webm ? ['vp09.00.10.08', 'vp8'] : MP4_CODECS;
+  for (const codec of list) {
+    const cfg = { codec, width: w, height: h, framerate: FPS, bitrate: Math.round(Math.max(2e6, w * h * FPS * 0.15)), latencyMode: 'quality' };
+    if (!webm) cfg.avc = { format: 'avc' };
+    try { if ((await VideoEncoder.isConfigSupported(cfg)).supported) return cfg; } catch (e) { /* try the next */ }
+  }
+  return null;
+}
+const evenUp = v => v + (v % 2);
+async function exportVideo() {
+  if (!S.styles.size || !S.lines.some(l => l.length)) { toast('Add fonts and some text first.'); return; }
+  if (typeof VideoEncoder === 'undefined') { toast('This browser cannot write video. Use Chrome or Edge.'); return; }
+  stopMotion();
+  const btn = $('#m-export'), prog = t => { $('#m-prog').textContent = t; };
+  const webm = S.mFmt === 'webm', sc = +S.mScale, L = motionLen();
+  const alpha = webm && S.bgCol === 'none'; // WebM keeps a background with no color transparent
+  btn.disabled = true;
+  try {
+    await document.fonts.ready;
+    // Pass 1: the widest frame, so every frame has the same size.
+    let wMax = 0;
+    for (let f = 0; f < L; f++) { showFrame(f, 0); wMax = Math.max(wMax, motionWidth()); }
+    showFrame(0, wMax);
+    const o = { scale: sc, transparent: alpha, guides: false };
+    const first = pngSVG(o), W = evenUp(first.w), H = evenUp(first.h);
+    const cfg = await pickCodec(webm, W, H);
+    if (!cfg) throw new Error(webm ? 'no VP9 or VP8 encoder' : 'no H.264 encoder (try WebM)');
+    // Transparent WebM as Matroska stores it: the color frames, and the alpha as a second stream of grey frames
+    // (white = opaque) that rides along with each color frame.
+    let desc = null, err = null;
+    const encoder = list => new VideoEncoder({
+      output: (chunk, meta) => {
+        const data = new Uint8Array(chunk.byteLength); chunk.copyTo(data);
+        if (list === chunks && meta && meta.decoderConfig && meta.decoderConfig.description && !desc) {
+          const d = meta.decoderConfig.description;
+          desc = d instanceof ArrayBuffer ? new Uint8Array(d.slice(0)) : new Uint8Array(d.buffer.slice(d.byteOffset, d.byteOffset + d.byteLength));
+        }
+        list.push({ data, ts: chunk.timestamp, key: chunk.type === 'key' });
+      },
+      error: e => { err = e; },
+    });
+    const chunks = [], alphas = [];
+    const enc = encoder(chunks), aenc = alpha ? encoder(alphas) : null;
+    enc.configure(cfg); if (aenc) aenc.configure(cfg);
+    const cv = document.createElement('canvas'); cv.width = W; cv.height = H;
+    const ctx = cv.getContext('2d', { willReadFrequently: alpha });
+    const acv = alpha ? document.createElement('canvas') : null, actx = acv && (acv.width = W, acv.height = H, acv.getContext('2d'));
+    for (let f = 0; f < L; f++) {
+      if (err) throw err;
+      showFrame(f, wMax);
+      const { svg, w, h } = pngSVG(o);
+      const img = new Image();
+      img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+      await img.decode();
+      ctx.clearRect(0, 0, W, H);
+      if (!o.transparent) { ctx.fillStyle = S.bgCol === 'none' ? '#ffffff' : S.bgCol; ctx.fillRect(0, 0, W, H); }
+      ctx.drawImage(img, 0, 0, w, h);
+      const at = { timestamp: Math.round(f * 1e6 / FPS), duration: Math.round(1e6 / FPS) }, key = { keyFrame: f % FPS === 0 };
+      if (aenc) {
+        const px = ctx.getImageData(0, 0, W, H), a = px.data;
+        for (let q = 0; q < a.length; q += 4) { a[q] = a[q + 1] = a[q + 2] = a[q + 3]; a[q + 3] = 255; }
+        actx.putImageData(px, 0, 0);
+        const af = new VideoFrame(acv, at); aenc.encode(af, key); af.close();
+      }
+      const vf = new VideoFrame(cv, at);
+      enc.encode(vf, key);
+      vf.close();
+      while (enc.encodeQueueSize > 6 || (aenc && aenc.encodeQueueSize > 6)) await new Promise(r => setTimeout(r, 5));
+      if (f % 5 === 0) prog(`Frame ${f + 1} / ${L}`);
+    }
+    await enc.flush(); enc.close();
+    if (aenc) { await aenc.flush(); aenc.close(); }
+    if (err) throw err;
+    if (aenc) chunks.forEach((c, k) => { c.alpha = alphas[k] ? alphas[k].data : null; });
+    const bytes = webm ? webmMux(chunks, cfg.codec.startsWith('vp09') ? 'V_VP9' : 'V_VP8', W, H, alpha) : mp4Mux(chunks, desc, W, H);
+    const name = `mixweight-motion.${webm ? 'webm' : 'mp4'}`;
+    download(name, new Blob([bytes], { type: webm ? 'video/webm' : 'video/mp4' }));
+    prog('');
+    toast(`Saved ${name}: ${L} frames, ${r1(L / FPS)} s, ${W} × ${H}${alpha ? ', transparent' : ''}.`, 7000);
+  } catch (e) {
+    prog('');
+    toast('Could not write the video: ' + (e && e.message || e));
+  } finally {
+    endMotion(); render();
+    btn.disabled = false;
+  }
+}
+
+// Byte writers for the two muxers.
+function bytesOf(parts) {
+  let n = 0;
+  for (const p of parts) n += p.length;
+  const u = new Uint8Array(n);
+  let o = 0;
+  for (const p of parts) { u.set(p, o); o += p.length; }
+  return u;
+}
+const u8 = (...a) => Uint8Array.from(a);
+const u16 = n => u8(n >> 8 & 255, n & 255);
+const u32 = n => u8(n >>> 24 & 255, n >>> 16 & 255, n >>> 8 & 255, n & 255);
+const ascii = t => Uint8Array.from(t, c => c.charCodeAt(0));
+// MP4 (ISO BMFF), one H.264 track, moov before mdat so it plays while it loads.
+function mp4Mux(chunks, avcC, w, h) {
+  if (!avcC) throw new Error('the encoder gave no H.264 setup');
+  const box = (type, ...p) => { const b = bytesOf(p); return bytesOf([u32(b.length + 8), ascii(type), b]); };
+  const full = (type, v, flags, ...p) => box(type, u8(v, flags >> 16 & 255, flags >> 8 & 255, flags & 255), ...p);
+  const ts = FPS * 1000, n = chunks.length, dur = n * 1000, z = k => new Uint8Array(k);
+  const matrix = bytesOf([0x10000, 0, 0, 0, 0x10000, 0, 0, 0, 0x40000000].map(u32));
+  const sizes = chunks.map(c => c.data.length);
+  const moov = off => box('moov',
+    full('mvhd', 0, 0, u32(0), u32(0), u32(ts), u32(dur), u32(0x10000), u16(0x100), z(10), matrix, z(24), u32(2)),
+    box('trak',
+      full('tkhd', 0, 3, u32(0), u32(0), u32(1), z(4), u32(dur), z(8), u16(0), u16(0), u16(0), z(2), matrix, u32(w * 65536), u32(h * 65536)),
+      box('mdia',
+        full('mdhd', 0, 0, u32(0), u32(0), u32(ts), u32(dur), u16(0x55c4), u16(0)),
+        full('hdlr', 0, 0, u32(0), ascii('vide'), z(12), ascii('VideoHandler'), z(1)),
+        box('minf',
+          full('vmhd', 0, 1, z(8)),
+          box('dinf', full('dref', 0, 0, u32(1), full('url ', 0, 1))),
+          box('stbl',
+            full('stsd', 0, 0, u32(1), box('avc1', z(6), u16(1), z(16), u16(w), u16(h), u32(0x480000), u32(0x480000), z(4), u16(1), z(32), u16(0x18), u16(0xffff), box('avcC', avcC))),
+            full('stts', 0, 0, u32(1), u32(n), u32(1000)),
+            full('stss', 0, 0, u32(chunks.filter(c => c.key).length), ...chunks.map((c, k) => c.key ? u32(k + 1) : z(0))),
+            full('stsc', 0, 0, u32(1), u32(1), u32(n), u32(1)),
+            full('stsz', 0, 0, u32(0), u32(n), ...sizes.map(u32)),
+            full('stco', 0, 0, u32(1), u32(off)))))));
+  const ftyp = box('ftyp', ascii('isom'), u32(0x200), ascii('isomiso2avc1mp41'));
+  const head = ftyp.length + moov(0).length + 8;
+  const data = bytesOf(chunks.map(c => c.data));
+  return bytesOf([ftyp, moov(head), u32(data.length + 8), ascii('mdat'), data]);
+}
+// WebM (Matroska), one VP9 or VP8 track; with alpha, each frame's alpha travels as BlockAdditional 1.
+function webmMux(chunks, codecId, w, h, alpha) {
+  const id = hex => Uint8Array.from(hex.match(/../g), x => parseInt(x, 16));
+  const size = n => { const b = new Uint8Array(8); b[0] = 1; for (let k = 7, v = n; k > 0; k--) { b[k] = v % 256; v = Math.floor(v / 256); } return b; };
+  const el = (hex, ...p) => { const b = bytesOf(p); return bytesOf([id(hex), size(b.length), b]); };
+  const uint = (hex, v) => { const b = []; do { b.unshift(v & 255); v = Math.floor(v / 256); } while (v > 0); return el(hex, Uint8Array.from(b)); };
+  const f64 = (hex, v) => { const b = new Uint8Array(8); new DataView(b.buffer).setFloat64(0, v); return el(hex, b); };
+  const str = (hex, t) => el(hex, ascii(t));
+  const ms = c => Math.round(c.ts / 1000);
+  const header = el('1a45dfa3', uint('4286', 1), uint('42f7', 1), uint('42f2', 4), uint('42f3', 8), str('4282', 'webm'), uint('4287', 4), uint('4285', 2));
+  const info = el('1549a966', uint('2ad7b1', 1000000), f64('4489', chunks.length * 1000 / FPS), str('4d80', 'Mixweight'), str('5741', 'Mixweight'));
+  const video = el('e0', uint('b0', w), uint('ba', h), ...(alpha ? [uint('53c0', 1)] : []));
+  const tracks = el('1654ae6b', el('ae', uint('d7', 1), uint('73c5', 1), uint('83', 1), str('86', codecId), uint('9c', 0), ...(alpha ? [uint('55ee', 1)] : []), video));
+  const clusters = [];
+  let cur = null, base = 0, prev = 0;
+  for (const c of chunks) {
+    const t = ms(c);
+    if (c.key || !cur) { if (cur) clusters.push(el('1f43b675', ...cur)); cur = [uint('e7', t)]; base = t; }
+    const rel = t - base, head = bytesOf([u8(0x81), u16(rel & 0xffff)]);
+    if (alpha && c.alpha) {
+      const parts = [el('a1', head, u8(0), c.data), el('75a1', el('a6', uint('ee', 1), el('a5', c.alpha)))];
+      if (!c.key) parts.push(el('fb', u16((prev - t) & 0xffff)));
+      cur.push(el('a0', ...parts));
+    } else cur.push(el('a3', head, u8(c.key ? 0x80 : 0), c.data));
+    prev = t;
+  }
+  if (cur) clusters.push(el('1f43b675', ...cur));
+  return bytesOf([header, el('18538067', info, tracks, ...clusters)]);
 }
 
 /* ---------------- render ---------------- */
@@ -2817,7 +3094,7 @@ function placeTag() {
 }
 function hoverAt(sp, e) {
   const g = sp && S.gmap && S.gmap.get(+sp.dataset.i);
-  if (S.hover === 'off' || !g || /\s/.test(g.ch)) { hideTag(); return; }
+  if (S.hover === 'off' || PLAY.on || !g || /\s/.test(g.ch)) { hideTag(); return; }
   hovPt = [e.clientX, e.clientY];
   if (hovI !== g.i) {
     hideTag();
@@ -3967,7 +4244,7 @@ async function pngOut(copy) {
 // A specimen is a whole look as parameters: every saved setting, the per-letter edits, the pool and the base style,
 // with fonts named (family, style, PostScript name) rather than embedded. Loading it with the same fonts gives the
 // same result; loading checks every value, so a hand-edited or newer specimen never breaks anything.
-const SPEC_VERSION = 1, TOOL_VERSION = '4.1-beta.4';
+const SPEC_VERSION = 1, TOOL_VERSION = '4.1-beta.5';
 const LIMITS = {}; // allowed range or options per setting, filled by bindRange / bindOpts
 const fontRef = id => { const s = S.styles.get(id); return s ? { family: s.family, style: s.style, ps: s.ps } : null; };
 // A named font → the id of a loaded style: family and style first, then PostScript name; null when not loaded.
@@ -4254,12 +4531,14 @@ function setupMySpecimens(specLoad) {
 const LEFT_KEYS = ['caseMode', 'caseAmt', 'mix', 'dist', 'wavePeriod', 'gran', 'valign', 'size', 'leading', 'sizeVar', 'baseJit',
   'trackJit', 'rotJit', 'track', 'gaps', 'match', 'align', 'patOn', 'patType', 'patCell', 'patW', 'patCol', 'patDot',
   'regOn', 'regSize', 'regW', 'regInset', 'regCol', 'textCol', 'bgCol', 'palette', 'palSeed',
-  'para', 'boxAmt', 'boxCol', 'boxSeed', 'outlineAmt', 'outlineSeed', 'strokeW'];
+  'para', 'boxAmt', 'boxCol', 'boxSeed', 'outlineAmt', 'outlineSeed', 'strokeW',
+  'mTpl', 'mLoop', 'mSpeed', 'mRange', 'mStagger', 'mDir', 'mHold', 'mSeed', 'mFmt', 'mScale'];
 // A letter box placed by Random letter boxes (left panel) and not colored by hand: left Clear removes it, Clear edits keeps it.
 const autoBox = v => !!(v && v.box && v.box.auto && !byHand(v.box));
 const SAVE_KEYS = ['text', 'caseMode', 'caseAmt', 'mix', 'dist', 'gran', 'valign', 'size', 'leading', 'sizeVar', 'baseJit', 'trackJit', 'rotJit', 'track', 'align', 'seed', 'match', 'wavePeriod', 'gaps',
   'outlineAmt', 'outlineSeed', 'strokeW', 'guides', 'boxAmt', 'boxSeed', 'boxStyle', 'bandFit', 'bands', 'para', 'textCol', 'bgCol', 'guideCol', 'palette', 'palSeed', 'boxCol',
-  'patOn', 'patType', 'patCell', 'patW', 'patCol', 'patDot', 'regOn', 'regSize', 'regW', 'regInset', 'regCol'];
+  'patOn', 'patType', 'patCell', 'patW', 'patCol', 'patDot', 'regOn', 'regSize', 'regW', 'regInset', 'regCol',
+  'mTpl', 'mLoop', 'mSpeed', 'mRange', 'mStagger', 'mDir', 'mHold', 'mSeed', 'mFmt', 'mScale'];
 // Saved state from older versions, or edited by hand: keep only well-formed decoration settings.
 function fixDeco() {
   const g = S.guides && typeof S.guides === 'object' ? S.guides : {};
@@ -4289,6 +4568,14 @@ function fixDeco() {
   S.regOn = S.regOn === 'on' ? 'on' : 'off';
   for (const [k, a, b] of [['regSize', 4, 60], ['regW', 0.25, 4], ['regInset', 0, 60]]) S[k] = Number.isFinite(S[k]) ? clamp(S[k], a, b) : DEFAULTS[k];
   S.regCol = hexOf(S.regCol) || DEFAULTS.regCol;
+  // Motion, missing from sessions and specimens before the beta: the defaults.
+  const pick = (k, opts) => { S[k] = opts.includes(String(S[k])) ? String(S[k]) : DEFAULTS[k]; };
+  pick('mTpl', ['breath']); pick('mLoop', ['4', '8', '16']); pick('mSpeed', ['1', '2', '4', '8', '16']); pick('mDir', ['ltr', 'rtl', 'random']);
+  pick('mHold', ['1', '2', '7', '14']); pick('mFmt', ['mp4', 'webm']); pick('mScale', ['1', '2']);
+  if (+S.mSpeed > +S.mLoop) S.mSpeed = S.mLoop;
+  S.mRange = Number.isFinite(S.mRange) ? clamp(Math.round(S.mRange), 1, 4) : DEFAULTS.mRange;
+  S.mStagger = Number.isFinite(S.mStagger) ? clamp(Math.round(S.mStagger), 0, 14) : DEFAULTS.mStagger;
+  S.mSeed = Number.isFinite(S.mSeed) ? clamp(Math.round(S.mSeed), 1, 99999) : DEFAULTS.mSeed;
 }
 function save() {
   try {
@@ -4670,7 +4957,7 @@ function setupTabs() {
   for (const b of $$('.tabs [role="tab"]')) b.onclick = () => { setTab(b.dataset.tab); save(); };
   $('.tabs').addEventListener('keydown', e => {
     if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
-    const t = S.leftTab === 'type' ? 'style' : 'type';
+    const tabs = ['type', 'style', 'motion'], t = tabs[(tabs.indexOf(S.leftTab) + (e.key === 'ArrowRight' ? 1 : 2)) % 3];
     setTab(t); save(); $('#tab-' + t).focus(); e.preventDefault();
   });
   setTab(S.leftTab);
@@ -4695,7 +4982,7 @@ async function boot() {
     if (Array.isArray(saved.groupsClosed)) S.groupsClosed = new Set(saved.groupsClosed.filter(n => typeof n === 'string'));
     if (saved.palsOpen === false) S.palsOpen = false;
     if (Array.isArray(saved.foldsSet)) S.foldsSet = new Set(saved.foldsSet.filter(n => typeof n === 'string'));
-    if (saved.leftTab === 'style') S.leftTab = 'style';
+    if (saved.leftTab === 'style' || saved.leftTab === 'motion') S.leftTab = saved.leftTab;
     if (saved.gbxOpen === true) S.gbxOpen = true;
   }
   // Your own text stays; a built-in sample is swapped for a different one on each open.
@@ -4795,8 +5082,37 @@ async function boot() {
   $('#btn-files').onclick = () => $('#file-in').click();
   $('#file-in').onchange = e => { addFiles(e.target.files); e.target.value = ''; };
   $('#btn-help').onclick = () => $('#help').showModal();
-  $$('[data-exp]').forEach(b => { b.onclick = () => exportFor(b.dataset.exp); });
-  $('#exp-png').onclick = exportPNG;
+  // Exports, the Specimen window and its thumbnails always see the static state, never a video frame.
+  $$('[data-exp]').forEach(b => { b.onclick = () => { stopMotion(); exportFor(b.dataset.exp); }; });
+  $('#exp-png').onclick = () => { stopMotion(); exportPNG(); };
+  $('#btn-spec').addEventListener('click', stopMotion, true);
+  // motion
+  const loopTxt = () => `${S.mLoop} beats · ${r1(motionLen() / FPS)} s`;
+  const syncMotion = () => {
+    $('#m-loop-o').textContent = loopTxt();
+    $$('#m-speed button').forEach(b => { b.disabled = +b.dataset.v > +S.mLoop; });
+    $('#m-speed-o').textContent = `${S.mSpeed} beat${S.mSpeed === '1' ? '' : 's'} per cycle`;
+    $('#m-hold-o').textContent = S.mHold === '1' ? 'Smooth' : `${S.mHold} frames`;
+    $('#m-seed').value = S.mSeed;
+    $('#m-seed').disabled = $('#m-seed-re').disabled = S.mDir !== 'random';
+    summary('sum-motion', `Weight breathing · ${loopTxt()}`);
+    summary('sum-video', `${S.mFmt === 'mp4' ? 'MP4' : 'WebM'} · ${S.mScale}×`);
+  };
+  bindOpts('m-tpl', 'mTpl', syncMotion);
+  bindOpts('m-loop', 'mLoop', () => { if (+S.mSpeed > +S.mLoop) S.mSpeed = S.mLoop; syncMotion(); });
+  bindOpts('m-speed', 'mSpeed', syncMotion);
+  bindOpts('m-dir', 'mDir', syncMotion);
+  bindOpts('m-hold', 'mHold', syncMotion);
+  bindOpts('m-fmt', 'mFmt', syncMotion);
+  bindOpts('m-scale', 'mScale', syncMotion);
+  bindRange('m-range', 'mRange', v => `±${v} style${v === 1 ? '' : 's'}`);
+  bindRange('m-stagger', 'mStagger', v => `${v} frame${v === 1 ? '' : 's'}`);
+  LIMITS.mSeed = { min: 1, max: 99999 };
+  $('#m-seed').addEventListener('change', e => { const v = Math.round(+e.target.value); if (!Number.isFinite(v)) return syncMotion(); record(); S.mSeed = clamp(v, 1, 99999); syncMotion(); save(); });
+  $('#m-seed-re').onclick = () => { record(); S.mSeed = 1 + Math.floor(Math.random() * 99999); syncMotion(); save(); };
+  syncers.push(syncMotion); syncMotion();
+  $('#m-play').onclick = () => PLAY.on ? stopMotion() : playMotion();
+  $('#m-export').onclick = exportVideo;
   const syncAsk = () => {
     $('#ask-state').textContent = S.expAsk
       ? `You asked not to be asked: every export gives ${S.expAsk === 'howto' ? 'the script and a how-to .txt' : 'just the script'}. Ask me again brings the question back.`
