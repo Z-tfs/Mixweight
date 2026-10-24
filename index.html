@@ -373,10 +373,9 @@ body.resizing, body.resizing * { cursor: col-resize !important; user-select: non
 .pop { position: absolute; top: calc(100% + 9px); right: -6px; z-index: 40; width: 280px; background: var(--paper); border: var(--rule); padding: 12px 14px 14px; display: grid; gap: 10px; text-transform: none; }
 .pop .sub-h, .pop .chk { text-transform: uppercase; }
 .pop .sub-h { color: var(--g4); }
-#hov-btn { text-decoration: none; display: inline-flex; align-items: center; gap: 6px; }
-#hov-btn .hv { display: inline-flex; align-items: center; gap: 5px; }
-#hov-btn[aria-pressed="true"] .hv::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--ink); }
-#hov-btn[aria-pressed="false"] { color: var(--g4); }
+#hov-w { display: inline-flex; align-items: baseline; gap: 10px; }
+#hov-w .opts { gap: 4px 10px; }
+#hov-w.off > span:first-child { color: var(--g4); }
 
 /* backstage: the entry to the beta, and the beta's own mark; outside #sheet, so never exported */
 .bs-btn { position: absolute; right: 14px; bottom: 8px; z-index: 3; font-size: var(--s-sm); padding: 3px 7px; text-decoration: none; color: var(--ink); }
@@ -456,7 +455,7 @@ button.beta-mark:hover { background: var(--g4); }
             <p class="hint-on">Lines at the base style's metrics: baseline, x-height, cap height and ascender, at the set size.</p>
           </div>
         </span>
-        <button class="tbtn" type="button" id="hov-btn" aria-pressed="true" title="Point at a letter to see its family, style, size, shift and tracking. Canvas only, not exported.">Hover info <span class="hv">On</span></button>
+        <span id="hov-w" title="Point at a letter to see its family, style, size, shift and tracking. Full adds its box, band, blend, rotation and fill. Canvas only, not exported."><span>Hover info</span><span class="opts" id="hov-opts" role="group" aria-label="Hover info"><button type="button" data-v="off">Off</button><button type="button" data-v="basic">Basic</button><button type="button" data-v="full">Full</button></span></span>
         <span class="grp">
         <span class="muted">Zoom</span>
         <button class="tbtn" type="button" id="zoom-out" aria-label="Zoom out">−</button>
@@ -851,7 +850,7 @@ button.beta-mark:hover { background: var(--g4); }
       <section><h4>Match size</h4><p>Different families at the same point size look different sizes. x-height or Cap height scales each letter's font so its lowercase x or capital H is as tall as in the base style (limited to 60–160%). It is written as the letter's point size, so it stays editable; leading follows the nominal size.</p></section>
       <section><h4>Letter align</h4><p>Top, middle and bottom alignment are written as baseline shift values. If you change a letter or its font afterwards, export again to re-align.</p></section>
       <section><h4>Group titles</h4><p>Click a group title in the left panel to fold the group to its title row (▸) or open it again (▾); each group remembers its own state. Folding Font pool hides every family; a family's name folds that family to one row, which still shows its share of mix. The left panel has two tabs: <b>Type</b> (font pool, text, mix, type with letter align, jitter) and <b>Style</b> (look, color, paragraph band, random letter boxes, pattern, registration marks, random outline). On a first visit Jitter and the palette list start folded; once you fold or open them yourself, your choice stays. Paragraph band, Pattern and Registration marks show only Off / On until you switch them on. The right side of each title row sums up what the group is set to, and follows every change; hover it for the full text if it is cut short. Groups with a short note have a <b>?</b> next to their title: click it to show the note, again to hide it. <b>Clear</b>, next to the tabs, sets everything in the left panel (both tabs) back to its default and removes the boxes Random letter boxes placed; your text, fonts, seed, guides and right-panel edits stay.</p></section>
-      <section><h4>Right panel</h4><p>Selecting letters opens it with their font, size, shift and tracking at the top, then weight, align, <b>rotation</b>, <b>fill</b> and <b>boxes</b>. With nothing selected it folds to a narrow <b>Selection</b> strip on the right edge, and the canvas takes the room; deselecting folds it again. Close › folds it while letters stay selected, until you select other letters; the strip's ‹ opens it. Settings for the whole text are in the left panel's <b>Style</b> tab: Random outline (with Stroke), the Paragraph band and Random letter boxes. Clear edits removes what you set on selected letters, and bands; the left panel's Clear resets the left panel's settings and removes the boxes Random letter boxes placed. A drag that starts on empty canvas selects the letters it sweeps over. The panel keeps its place: selecting other letters, or deselecting and reselecting, brings back the group you were using. <b>Hover info</b> in the bar above the canvas switches the hover tag on and off.</p></section>
+      <section><h4>Right panel</h4><p>Selecting letters opens it with their font, size, shift and tracking at the top, then weight, align, <b>rotation</b>, <b>fill</b> and <b>boxes</b>. With nothing selected it folds to a narrow <b>Selection</b> strip on the right edge, and the canvas takes the room; deselecting folds it again. Close › folds it while letters stay selected, until you select other letters; the strip's ‹ opens it. Settings for the whole text are in the left panel's <b>Style</b> tab: Random outline (with Stroke), the Paragraph band and Random letter boxes. Clear edits removes what you set on selected letters, and bands; the left panel's Clear resets the left panel's settings and removes the boxes Random letter boxes placed. A drag that starts on empty canvas selects the letters it sweeps over. The panel keeps its place: selecting other letters, or deselecting and reselecting, brings back the group you were using. <b>Hover info</b> in the bar above the canvas sets the hover tag: Off, Basic (family, style, size, shift and tracking) or Full, which adds a line for each thing that applies to the letter: its box fit and fill, bands, blend mode, rotation and fill (solid or outline). Canvas only, never exported.</p></section>
       <section><h4>Boxes</h4><p>Letter boxes follow each letter's ink, size and shift, and turn with it. A band runs under the selection, as tall as its tallest letter or stepping with each one; the paragraph band does the same for every line. There are two <b>Box style</b> editors. The one in the left panel, folded under Random letter boxes, styles the whole text: the paragraph band, or every letter box (Paragraph band / Letter boxes). The one in the right panel styles the boxes and bands on the selected letters. A letter box you styled in the right panel, or whose fill you set by hand, keeps its style: the left editor and Reroll boxes leave it alone; Clear edits removes it. In Box style, Expand X and Y make a box wider or taller than the ink (negative values make it smaller), and Move X and Y shift it right and up (all four snap to 0 when you drag close to the tick at 0); a rotated letter's box moves along the letter's own axes. Letter boxes also have <b>Height</b> (Glyph: the letter's own ink; Line: as tall as the line's tallest letter) and <b>Width</b> (Glyph: the letter as set, without tracking; Advance: up to the next letter, so neighbouring boxes touch). Line + Advance makes a grid of columns. A letter can have a letter box and a band at once: when the selection has both, Box style shows <b>Letter boxes / Band</b> to pick which one its controls change (Add letter boxes and Add band switch to what they just added). With <b>Each corner</b>, the four corners sit in a grid laid out like the box: type a radius, or drag the small corner icon sideways, and pick Round, Bevel or Inverse under it. They export under the text as vector shapes: InDesign rectangles keep live corner options, Illustrator and Photoshop get the exact path.</p></section>
       <section><h4>Color</h4><p>Box fill, box stroke and the background also take <b>No color</b>: the crossed-out swatch after the hex field (or type none). A box with no fill shows only its stroke; a background with no color leaves the PNG transparent. In the .jsx export a box with no fill keeps just its stroke (no fill in Illustrator and InDesign, a shape layer with its fill switched off in Photoshop); a box with neither fill nor stroke is left out. The <b>Color</b> group in the left panel's Style tab sets the <b>text</b> and <b>background</b> colors for the whole design, as RGB hex: click the big swatch for the system picker, type a hex value and press Enter, or click a small swatch (the current color's swatch is outlined). The row under each color holds the last eight colors used; with a palette active, a row of the palette's colors sits above it, under every color control. A <b>palette</b> sets text and background in one click, and the box and band fill too when it has a block color. Click the active palette again to roll a new color match from its colors (text that stays readable on the background, and a block color that shows on it); ⌘Z goes back. The palette list starts as a row of chips; open it with the arrow next to Palettes to see the names, and Mixweight remembers your choice. Black on white goes back to the start. Selected letters get their own color under Fill in the right panel (Use text color removes it); outline letters stroke in their color. Box style has Fill and Stroke colors and a <b>blend</b> mode (Normal, Multiply, Screen, Overlay, Difference), which mixes a box with the background and the boxes under it, never with the text. The background fills the text block plus a margin, the same area the PNG crops to. The guidelines' color is under <b>Guides</b> in the bar above the canvas. Random letter boxes have a <b>Box color</b>: Single gives every box its own fill; From palette gives each randomly placed box a color from the active palette's block and extra colors, picked by the seed, so Reroll boxes changes placement and colors together. A box whose fill you set by hand keeps it, and Reroll leaves it in place. From palette needs a palette with a block color. Everything exports: text color per letter, RGB fills and strokes (neutral greys stay greys, a Black tint in InDesign), blend modes, and the guideline color. A background that isn't white becomes a rectangle at the very back, named Mixweight background, on its own layer (Illustrator, InDesign) or as the bottom shape layer (Photoshop). InDesign adds each RGB color as a swatch named Mixweight #RRGGBB.</p></section>
       <section><h4>Outline and rotation</h4><p>Outline letters export as live text with no fill and a stroke in the letter's color; rotation as character rotation, about the centre of the em box. Photoshop can do neither per letter inside one type layer, so those letters become their own type layers (outline as a layer-style stroke) and the main layer keeps a space of the same width.</p></section>
@@ -1677,7 +1676,7 @@ const DEFAULTS = {
   align: 'left', seed: 1952,
   outlineAmt: 0, outlineSeed: 7, strokeW: 1,
   guides: { base: false, x: false, cap: false, asc: false },
-  hoverInfo: true,
+  hover: 'basic', // hover tag: 'off', 'basic' (family, style, size, shift, track) or 'full' (plus what applies to the letter)
   expAsk: '', // export: '' asks each time; 'howto' or 'script' once Stop asking is ticked
   png: { scale: 2, transparent: false, guides: false }, // the PNG dialog's last choices
   panelW: { l: 320, r: 300 }, // panel widths in px; view state, not in undo
@@ -2670,7 +2669,8 @@ function syncGuidesBtn() {
   b.querySelector('.hv').textContent = gl.length ? 'On' : 'Off';
   b.title = 'Guidelines: ' + (gl.length ? gl.join(', ') + ($('#exp-guides').checked ? '; included in export' : '') : 'off');
 }
-function syncHov() { const b = $('#hov-btn'); b.setAttribute('aria-pressed', S.hoverInfo); b.querySelector('.hv').textContent = S.hoverInfo ? 'On' : 'Off'; }
+const HOVER_MODES = ['off', 'basic', 'full'];
+function syncHov() { press('#hov-opts', S.hover); $('#hov-w').classList.toggle('off', S.hover === 'off'); }
 function renderInspector() {
   const gs = selectedGlyphs();
   const on = gs.length > 0;
@@ -2739,6 +2739,31 @@ function tagRows(gs) {
 function fillTag(el, rows) {
   el.replaceChildren(...rows.map(t => { const s = document.createElement('span'); unitText(s, t); return s; }));
 }
+// Full: the Basic rows, then a line for each thing that applies to this letter, never an empty one.
+const capName = v => v[0].toUpperCase() + v.slice(1);
+const fillName = v => v === 'none' ? 'None' : v.toUpperCase();
+function hoverRows(g) {
+  const rows = tagRows([g]);
+  if (S.hover !== 'full') return rows;
+  const blends = new Set();
+  if (g.box) {
+    rows.push(`Box ${capName(g.box.h)} × ${capName(g.box.w)}`, 'Box fill ' + fillName(g.box.fill));
+    blends.add(g.box.blend);
+  }
+  const line = S.lines[g.k] || [], inked = line.filter(q => q.inkTop != null);
+  const inRun = gs => { const a = gs.filter(q => q.inkTop != null); return a.length && g.i >= a[0].i && g.i <= a[a.length - 1].i; };
+  if (S.para.on && inked.length && inRun(line)) {
+    const inks = S.para.col === 'palette' ? paletteColors() : null;
+    rows.push('Paragraph band ' + fillName(inks ? inks[g.k % inks.length] : S.para.st.fill));
+    blends.add(S.para.st.blend);
+  }
+  for (const b of S.bands) if (inRun(line.filter(q => q.i >= b.a && q.i <= b.b))) { rows.push('Band ' + fillName(b.st.fill)); blends.add(b.st.blend); }
+  blends.delete('normal');
+  if (blends.size) rows.push('Blend ' + [...blends].map(capName).join(', '));
+  if (g.rot) rows.push('Rotate ' + sgn(g.rot) + '°');
+  rows.push(g.sw ? 'Fill outline ' + num(g.sw) + ' pt' : 'Fill solid');
+  return rows;
+}
 const hovtag = $('#hovtag');
 let hovI = null, hovPt = null;
 function hideTag() {
@@ -2756,13 +2781,13 @@ function placeTag() {
 }
 function hoverAt(sp, e) {
   const g = sp && S.gmap && S.gmap.get(+sp.dataset.i);
-  if (!S.hoverInfo || !g || /\s/.test(g.ch)) { hideTag(); return; }
+  if (S.hover === 'off' || !g || /\s/.test(g.ch)) { hideTag(); return; }
   hovPt = [e.clientX, e.clientY];
   if (hovI !== g.i) {
     hideTag();
     hovI = g.i;
     sp.classList.add('hov');
-    fillTag(hovtag, tagRows([g]));
+    fillTag(hovtag, hoverRows(g));
     hovtag.hidden = false;
   }
   placeTag();
@@ -2771,9 +2796,9 @@ function hoverAt(sp, e) {
 function refreshHover() {
   if (hovI == null) return;
   const g = S.gmap.get(hovI), sp = out.querySelector(`.g[data-i="${hovI}"]`);
-  if (!S.hoverInfo || !g || !sp) { hovI = null; hovtag.hidden = true; return; }
+  if (S.hover === 'off' || !g || !sp) { hovI = null; hovtag.hidden = true; return; }
   sp.classList.add('hov');
-  fillTag(hovtag, tagRows([g]));
+  fillTag(hovtag, hoverRows(g));
   placeTag();
 }
 
@@ -3810,7 +3835,7 @@ async function pngOut(copy) {
 // A specimen is a whole look as parameters: every saved setting, the per-letter edits, the pool and the base style,
 // with fonts named (family, style, PostScript name) rather than embedded. Loading it with the same fonts gives the
 // same result; loading checks every value, so a hand-edited or newer specimen never breaks anything.
-const SPEC_VERSION = 1, TOOL_VERSION = '4.1-beta.1';
+const SPEC_VERSION = 1, TOOL_VERSION = '4.1-beta.2';
 const LIMITS = {}; // allowed range or options per setting, filled by bindRange / bindOpts
 const fontRef = id => { const s = S.styles.get(id); return s ? { family: s.family, style: s.style, ps: s.ps } : null; };
 // A named font → the id of a loaded style: family and style first, then PostScript name; null when not loaded.
@@ -3957,7 +3982,8 @@ function save() {
     for (const fam of S.families) for (const id of fam.ids) if (!fam.on.has(id)) o.off.push(id);
     o.shares = Object.fromEntries(S.families.filter(f => f.share !== 100).map(f => [f.name, f.share]));
     o.overrides = [...S.overrides.entries()];
-    o.hoverInfo = S.hoverInfo;
+    o.hover = S.hover;
+    o.hoverInfo = S.hover !== 'off'; // what V4 and older read
     o.expAsk = S.expAsk;
     o.png = S.png;
     o.recent = S.recent;
@@ -4337,7 +4363,9 @@ async function boot() {
     S.restoredOff = new Set(saved.off || []);
     if (saved.shares && typeof saved.shares === 'object') S.restoredShares = saved.shares;
     if (Array.isArray(saved.overrides)) S.overrides = new Map(saved.overrides.filter(e => e && e[1] && typeof e[1] === 'object'));
-    if (typeof saved.hoverInfo === 'boolean') S.hoverInfo = saved.hoverInfo;
+    // Sessions before the three modes saved On / Off: On is Basic.
+    if (HOVER_MODES.includes(saved.hover)) S.hover = saved.hover;
+    else if (typeof saved.hoverInfo === 'boolean') S.hover = saved.hoverInfo ? 'basic' : 'off';
     if (saved.expAsk === 'howto' || saved.expAsk === 'script') S.expAsk = saved.expAsk;
     if (Array.isArray(saved.recent)) S.recent = saved.recent.map(hexOf).filter(Boolean).slice(0, RECENT_MAX);
     if (saved.png && typeof saved.png === 'object') S.png = {
@@ -4616,7 +4644,7 @@ async function boot() {
   $('#lb-rm-all').onclick = () => { record(); for (const g of glyphList()) if (g.box) { delete ovFor(g.i).box; cleanOv(g.i); } render(); save(); };
   // paragraph
   $('#fold-all').onclick = () => { const close = S.families.some(f => !S.collapsed.has(f.name)); for (const f of S.families) foldFamily(f.name, close); };
-  $('#hov-btn').onclick = () => { S.hoverInfo = !S.hoverInfo; if (!S.hoverInfo) hideTag(); syncHov(); save(); };
+  $$('#hov-opts button').forEach(b => b.onclick = () => { S.hover = b.dataset.v; hideTag(); syncHov(); save(); });
   syncHov();
   optClick('#para-on', v => { record(); S.para.on = v === 'on'; render(); save(); });
   optClick('#para-fit', v => { record(); S.para.fit = v; render(); save(); });

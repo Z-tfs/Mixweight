@@ -135,8 +135,8 @@ After Effects export, SVG export, accounts, payments, analytics, public gallery,
 ## Progress (update after each step)
 
 - [x] 1 Skeleton and Backstage entry
-- [ ] 1b Feedback dialog
-- [ ] 2 Hover info: Off / Basic / Full
+- [ ] 1b Feedback dialog (built, dormant: waiting for the form's questions)
+- [x] 2 Hover info: Off / Basic / Full
 - [ ] 3 Right-click panel
 - [ ] 4 My specimens
 - [ ] 5 Motion engine, Weight breathing, WebM and MP4
