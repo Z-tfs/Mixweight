@@ -225,6 +225,7 @@ textarea:focus { background: var(--g2); outline: none; }
 #sheet.playing .selmarks { display: none; }
 .m-play { display: flex; align-items: baseline; gap: 14px; }
 #m-prog { color: var(--g4); font-variant-numeric: tabular-nums; }
+.m-set { display: grid; gap: 10px; }
 
 /* right-click panel on selected letters */
 .ctxp { position: fixed; z-index: 65; width: 250px; max-height: calc(100vh - 8px); overflow-y: auto; background: var(--paper); border: var(--rule); font-size: var(--s-sm); }
@@ -696,20 +697,29 @@ button.beta-mark:hover { background: var(--g4); }
     <section class="cell" data-tab="motion">
       <div class="cell-h"><span>Motion</span><span class="r" id="sum-motion"></span></div>
       <div class="ctl"><label>Template</label><output></output></div>
-      <div class="opts" id="m-tpl" role="group" aria-label="Template"><button type="button" data-v="breath">Weight breathing</button></div>
+      <div class="opts" id="m-tpl" role="group" aria-label="Template"><button type="button" data-v="breath">Weight breathing</button><button type="button" data-v="jitter">Jitter loop</button></div>
       <div class="ctl"><label>Loop</label><output id="m-loop-o"></output></div>
       <div class="opts" id="m-loop" role="group" aria-label="Loop length"><button type="button" data-v="4">4 beats</button><button type="button" data-v="8">8 beats</button><button type="button" data-v="16">16 beats</button></div>
+      <div class="m-set" id="m-breath">
       <div class="ctl"><label>Speed</label><output id="m-speed-o"></output></div>
       <div class="opts" id="m-speed" role="group" aria-label="Beats per cycle"><button type="button" data-v="1">1</button><button type="button" data-v="2">2</button><button type="button" data-v="4">4</button><button type="button" data-v="8">8</button><button type="button" data-v="16">16</button></div>
       <div class="ctl"><label for="m-range">Range</label><output id="m-range-o"></output><input type="range" id="m-range" min="1" max="4" step="1"></div>
       <div class="ctl"><label for="m-stagger">Stagger</label><output id="m-stagger-o"></output><input type="range" id="m-stagger" min="0" max="14" step="1"></div>
       <div class="ctl"><label>Direction</label><output></output></div>
       <div class="opts" id="m-dir" role="group" aria-label="Direction"><button type="button" data-v="ltr">Left to right</button><button type="button" data-v="rtl">Right to left</button><button type="button" data-v="random">Random</button></div>
+      </div>
+      <div class="m-set" id="m-jitter">
+      <div class="ctl"><label>Rate</label><output id="m-rate-o"></output></div>
+      <div class="opts" id="m-rate" role="group" aria-label="Hops per beat"><button type="button" data-v="1">1</button><button type="button" data-v="2">2</button><button type="button" data-v="7">7</button><button type="button" data-v="14">14</button></div>
+      <div class="ctl"><label for="m-amt">Amount</label><output id="m-amt-o"></output><input type="range" id="m-amt" min="0" max="100" step="1"></div>
+      <div class="ctl"><label>Properties</label><output id="m-props-o"></output></div>
+      <div class="opts" id="m-props" role="group" aria-label="Properties that hop"><button type="button" data-v="b">Baseline</button><button type="button" data-v="r">Rotation</button><button type="button" data-v="s">Size</button></div>
+      </div>
       <div class="ctl"><label>Hold</label><output id="m-hold-o"></output></div>
       <div class="opts" id="m-hold" role="group" aria-label="Hold, frames"><button type="button" data-v="1">1</button><button type="button" data-v="2">2</button><button type="button" data-v="7">7</button><button type="button" data-v="14">14</button></div>
       <div class="row"><span class="lab">Seed <span class="numin"><input type="number" id="m-seed" min="1" max="99999" step="1" aria-label="Motion seed"></span></span><button class="btn sm" type="button" id="m-seed-re">Reroll</button></div>
       <div class="m-play"><button class="btn solid" type="button" id="m-play">Play</button><span id="m-frame" class="lab"></span></div>
-      <p class="hint">Each letter steps through the named styles of its own family that are on in the font pool, light to heavy, never in between: Range is how many styles up and down from its own. Speed is beats per cycle; one beat is 14 frames at 30 fps, so loops land on the music and always join up. Stagger delays each letter by that many frames; Hold keeps each state for that many frames. The seed only orders Random. Motion is a video: the text, the .jsx and PNG exports stay as set.</p>
+      <p class="hint">One beat is 14 frames at 30 fps, so loops land on the music and always join up. Weight breathing: each letter steps through the named styles of its own family that are on in the font pool, light to heavy, never in between; Range is how many styles up and down from its own, Speed is beats per cycle, Stagger delays each letter by that many frames, and the seed orders Random. Jitter loop: each letter hops to a new offset, picked by the seed, Rate times per beat; Amount scales the hops (at 100%: a quarter of the letter's size on the baseline, 30° of rotation, 40% of size), and Properties picks which of them hop. Hold keeps each state for that many frames. Motion is a video: the text, the .jsx and PNG exports stay as set.</p>
     </section>
 
     <section class="cell" data-tab="motion">
@@ -898,7 +908,7 @@ button.beta-mark:hover { background: var(--g4); }
       <section><h4>Base style</h4><p>The base style is the one letters keep at 0% mix. Pick it from the Base menu, or right-click any style in the pool: Set as base style, or Add to mix + set as base for a style that is off. It must be switched on in the pool: styles that are off are greyed out in the list, and switching off the base moves it to the nearest weight that is on.</p></section>
       <section><h4>Look</h4><p>The <b>Look</b> group, at the top of the left panel's Style tab, sets a whole look in one click, from settings that already exist: the palette, the paragraph band, random letter boxes, the pattern and registration marks. Riso Block, Stacked Bands, Tone on Tone and Dark Glow. A look only sets colors and decoration: your text, seed, fonts, mix, type settings, jitter, outline and letter edits stay as they are; random letter boxes from before are replaced, boxes you added or colored by hand stay. It is a starting point: change anything afterwards, and ⌘Z goes back.</p></section>
       <section><h4>Specimen</h4><p><b>Specimen</b> in the top bar keeps a whole look as settings: the text, every setting, your letter edits, the pool and base style, and the names of the fonts (family, style and PostScript name), not the fonts themselves. <b>Copy specimen</b> puts it on the clipboard; <b>Download specimen</b> saves a .json; give it a title and author if you like. To load one, paste it and press Load pasted, or Choose file. Loading is one step, so ⌘Z goes back. With the same fonts it gives exactly the same result. If some fonts aren't loaded, Mixweight lists them, lets the base style or your other fonts stand in, and the layout will differ because their widths differ. Everything works offline; nothing is uploaded.</p></section>
-      <section><h4>Motion</h4><p>The left panel's <b>Motion</b> tab turns the text into a short video loop. <b>Weight breathing</b>: each letter steps through the named styles of its own family that are on in the font pool, up and down from its own style, never in between, so every frame is real type. Loop, Speed (beats per cycle) and Stagger are counted in beats and frames: one beat is 14 frames at 30 fps, so loops land on the music, and a loop always joins up with its start. Hold keeps each state for that many frames. Direction sets the order the letters start in; the seed orders Random. <b>Play</b> shows it on the canvas (selection and hover info stay out of the way); <b>Export video</b> draws it frame by frame, as the PNG, and saves an MP4 (H.264, opaque) or a WebM (VP9, which keeps a background with no color transparent), at 1× or 2×. Motion never changes your text or settings, and the .jsx and PNG exports always show the type as set. Chrome or Edge.</p></section>
+      <section><h4>Motion</h4><p>The left panel's <b>Motion</b> tab turns the text into a short video loop. <b>Weight breathing</b>: each letter steps through the named styles of its own family that are on in the font pool, up and down from its own style, never in between, so every frame is real type. Loop, Speed (beats per cycle) and Stagger are counted in beats and frames: one beat is 14 frames at 30 fps, so loops land on the music, and a loop always joins up with its start. Direction sets the order the letters start in; the seed orders Random. <b>Jitter loop</b>: each letter hops to a new offset, picked by the seed, Rate times per beat; Amount scales the hops (at 100%: a quarter of the letter's size on the baseline, 30° of rotation, 40% of size) and Properties picks which of baseline, rotation and size hop. Hold keeps each state for that many frames, for both templates. <b>Play</b> shows it on the canvas (selection and hover info stay out of the way); <b>Export video</b> draws it frame by frame, as the PNG, and saves an MP4 (H.264, opaque) or a WebM (VP9, which keeps a background with no color transparent), at 1× or 2×. Motion never changes your text or settings, and the .jsx and PNG exports always show the type as set. Chrome or Edge.</p></section>
       <section><h4>My specimens</h4><p>In the <b>Specimen</b> window: give the current look a title and press <b>Save to My specimens</b> to keep it in a list under that title, with the date and a small picture. Click an entry to load it (one step, so ⌘Z goes back); Download saves it as a specimen file; Rename and Delete do what they say. The list lives in this browser only, for this address: the beta and the stable page, or a copy opened from disk, each keep their own, and clearing the browser's site data erases it. So use <b>Export all</b> to keep a backup in one .json file, and <b>Import…</b> to bring it back or move it to another browser. Import also takes a single specimen file, adds to the list and never replaces an entry without asking when a name is already there.</p></section>
       <section><h4>Seed</h4><p>Every random choice comes from the seed, so the same seed and settings always give the same result. Click Seed in the toolbar to type one, Enter to apply, Esc to cancel. Note a seed to get a layout back later.</p></section>
       <section><h4>Fonts</h4><p>Fonts are matched by family and style name, then by PostScript name. Variable fonts use their named instances (Light, Bold…), so the app shows what the preview shows. Fonts the app can't find are listed and swapped for its default; the text stays editable.</p></section>
@@ -1749,6 +1759,7 @@ const DEFAULTS = {
   // Motion (video only, never in the .jsx): template, loop and cycle in beats (one beat = 14 frames at 30 fps),
   // Range in styles, Stagger and Hold in frames, Direction and its seed; video format and size.
   mTpl: 'breath', mLoop: '8', mSpeed: '2', mRange: 2, mStagger: 2, mDir: 'ltr', mHold: '1', mSeed: 1, mFmt: 'mp4', mScale: '1',
+  mRate: '2', mAmt: 30, mProps: 'br', // Jitter loop: hops per beat, Amount %, which properties hop (b baseline, r rotation, s size)
   hover: 'basic', // hover tag: 'off', 'basic' (family, style, size, shift, track) or 'full' (plus what applies to the letter)
   expAsk: '', // export: '' asks each time; 'howto' or 'script' once Stop asking is ticked
   png: { scale: 2, transparent: false, guides: false }, // the PNG dialog's last choices
@@ -2232,10 +2243,16 @@ function compute() {
     // From palette: a randomly placed box whose fill wasn't set by hand takes a block or extra color.
     if (box && box.auto && !box.hand && boxInks) box = Object.assign({}, box, { fill: boxInks[Math.floor(rnd(S.boxSeed, i, 10) * boxInks.length)] });
     const col = ov && ov.col || null;
-    lines[lines.length - 1].push({ i, ch, st, size, jit, tr, va, bs: 0, sw, rot, box, col, ov: !ovEmpty(ov) });
+    const mj = MOTION && !space ? motionJitter(MOTION.f, i) : null; // a video frame: this letter's hop
+    lines[lines.length - 1].push(mj ? { i, ch, st, size: r1(size * mj.s), jit, tr, va, bs: 0, sw, rot: r1(rot + mj.r), box, col, ov: !ovEmpty(ov), mbs: mj.b * size }
+      : { i, ch, st, size, jit, tr, va, bs: 0, sw, rot, box, col, ov: !ovEmpty(ov) });
     pos++; linePos++;
   });
-  for (const line of lines) { if (S.gaps) evenGaps(line); alignLine(line); }
+  for (const line of lines) {
+    if (S.gaps) evenGaps(line);
+    alignLine(line);
+    if (MOTION) for (const g of line) if (g.mbs) g.bs = r1(g.bs + g.mbs);
+  }
   return lines;
 }
 
@@ -2293,6 +2310,7 @@ function motionSteps(st) {
 // frames after the one before it in the chosen order. Stepped: a letter is always one named style. Hold divides
 // 14 and the cycle divides the loop, so frame L is frame 0 again.
 function motionStyle(f, i, n, st) {
+  if (S.mTpl !== 'breath') return st;
   const ids = motionSteps(st), c = ids.indexOf(st.id);
   if (c < 0 || ids.length < 2) return st;
   const hold = +S.mHold, ff = Math.floor(f / hold) * hold;
@@ -2302,6 +2320,16 @@ function motionStyle(f, i, n, st) {
   const tri = t < 0.25 ? t * 4 : t < 0.75 ? 2 - t * 4 : t * 4 - 4; // 0 → 1 → 0 → −1 → 0
   const k = clamp(c + Math.round(tri * S.mRange), 0, ids.length - 1);
   return S.styles.get(ids[k]) || st;
+}
+// Jitter loop: every letter hops to a new seeded offset Rate times per beat (rnd channels 14, 15, 16 for baseline,
+// rotation and size, from the motion seed). The hop count wraps with the loop, so frame L is frame 0 again.
+// → { b: baseline shift in em, r: degrees, s: size factor }, or null for other templates.
+function motionJitter(f, i) {
+  if (S.mTpl !== 'jitter') return null;
+  const hold = +S.mHold, ff = Math.floor(f / hold) * hold, len = BEAT / +S.mRate, hops = motionLen() / len;
+  const h = Math.floor(ff / len) % hops, u = i * 4096 + h, a = S.mAmt / 100, p = S.mProps;
+  const v = ch => 2 * rnd(S.mSeed, u, ch) - 1;
+  return { b: p.includes('b') ? v(14) * a * 0.25 : 0, r: p.includes('r') ? v(15) * a * 30 : 0, s: p.includes('s') ? 1 + v(16) * a * 0.4 : 1 };
 }
 // The text block's width while a loop shows: the widest frame, so the frame, the pattern and the marks stay put.
 const motionWidth = () => Math.ceil(S.W || 0);
@@ -4244,7 +4272,7 @@ async function pngOut(copy) {
 // A specimen is a whole look as parameters: every saved setting, the per-letter edits, the pool and the base style,
 // with fonts named (family, style, PostScript name) rather than embedded. Loading it with the same fonts gives the
 // same result; loading checks every value, so a hand-edited or newer specimen never breaks anything.
-const SPEC_VERSION = 1, TOOL_VERSION = '4.1-beta.5';
+const SPEC_VERSION = 1, TOOL_VERSION = '4.1-beta.6';
 const LIMITS = {}; // allowed range or options per setting, filled by bindRange / bindOpts
 const fontRef = id => { const s = S.styles.get(id); return s ? { family: s.family, style: s.style, ps: s.ps } : null; };
 // A named font → the id of a loaded style: family and style first, then PostScript name; null when not loaded.
@@ -4532,13 +4560,13 @@ const LEFT_KEYS = ['caseMode', 'caseAmt', 'mix', 'dist', 'wavePeriod', 'gran', '
   'trackJit', 'rotJit', 'track', 'gaps', 'match', 'align', 'patOn', 'patType', 'patCell', 'patW', 'patCol', 'patDot',
   'regOn', 'regSize', 'regW', 'regInset', 'regCol', 'textCol', 'bgCol', 'palette', 'palSeed',
   'para', 'boxAmt', 'boxCol', 'boxSeed', 'outlineAmt', 'outlineSeed', 'strokeW',
-  'mTpl', 'mLoop', 'mSpeed', 'mRange', 'mStagger', 'mDir', 'mHold', 'mSeed', 'mFmt', 'mScale'];
+  'mTpl', 'mLoop', 'mSpeed', 'mRange', 'mStagger', 'mDir', 'mHold', 'mSeed', 'mFmt', 'mScale', 'mRate', 'mAmt', 'mProps'];
 // A letter box placed by Random letter boxes (left panel) and not colored by hand: left Clear removes it, Clear edits keeps it.
 const autoBox = v => !!(v && v.box && v.box.auto && !byHand(v.box));
 const SAVE_KEYS = ['text', 'caseMode', 'caseAmt', 'mix', 'dist', 'gran', 'valign', 'size', 'leading', 'sizeVar', 'baseJit', 'trackJit', 'rotJit', 'track', 'align', 'seed', 'match', 'wavePeriod', 'gaps',
   'outlineAmt', 'outlineSeed', 'strokeW', 'guides', 'boxAmt', 'boxSeed', 'boxStyle', 'bandFit', 'bands', 'para', 'textCol', 'bgCol', 'guideCol', 'palette', 'palSeed', 'boxCol',
   'patOn', 'patType', 'patCell', 'patW', 'patCol', 'patDot', 'regOn', 'regSize', 'regW', 'regInset', 'regCol',
-  'mTpl', 'mLoop', 'mSpeed', 'mRange', 'mStagger', 'mDir', 'mHold', 'mSeed', 'mFmt', 'mScale'];
+  'mTpl', 'mLoop', 'mSpeed', 'mRange', 'mStagger', 'mDir', 'mHold', 'mSeed', 'mFmt', 'mScale', 'mRate', 'mAmt', 'mProps'];
 // Saved state from older versions, or edited by hand: keep only well-formed decoration settings.
 function fixDeco() {
   const g = S.guides && typeof S.guides === 'object' ? S.guides : {};
@@ -4570,12 +4598,14 @@ function fixDeco() {
   S.regCol = hexOf(S.regCol) || DEFAULTS.regCol;
   // Motion, missing from sessions and specimens before the beta: the defaults.
   const pick = (k, opts) => { S[k] = opts.includes(String(S[k])) ? String(S[k]) : DEFAULTS[k]; };
-  pick('mTpl', ['breath']); pick('mLoop', ['4', '8', '16']); pick('mSpeed', ['1', '2', '4', '8', '16']); pick('mDir', ['ltr', 'rtl', 'random']);
+  pick('mTpl', ['breath', 'jitter']); pick('mRate', ['1', '2', '7', '14']); pick('mLoop', ['4', '8', '16']); pick('mSpeed', ['1', '2', '4', '8', '16']); pick('mDir', ['ltr', 'rtl', 'random']);
   pick('mHold', ['1', '2', '7', '14']); pick('mFmt', ['mp4', 'webm']); pick('mScale', ['1', '2']);
   if (+S.mSpeed > +S.mLoop) S.mSpeed = S.mLoop;
   S.mRange = Number.isFinite(S.mRange) ? clamp(Math.round(S.mRange), 1, 4) : DEFAULTS.mRange;
   S.mStagger = Number.isFinite(S.mStagger) ? clamp(Math.round(S.mStagger), 0, 14) : DEFAULTS.mStagger;
   S.mSeed = Number.isFinite(S.mSeed) ? clamp(Math.round(S.mSeed), 1, 99999) : DEFAULTS.mSeed;
+  S.mAmt = Number.isFinite(S.mAmt) ? clamp(Math.round(S.mAmt), 0, 100) : DEFAULTS.mAmt;
+  S.mProps = typeof S.mProps === 'string' ? ['b', 'r', 's'].filter(c => S.mProps.includes(c)).join('') : DEFAULTS.mProps;
 }
 function save() {
   try {
@@ -5094,14 +5124,28 @@ async function boot() {
     $('#m-speed-o').textContent = `${S.mSpeed} beat${S.mSpeed === '1' ? '' : 's'} per cycle`;
     $('#m-hold-o').textContent = S.mHold === '1' ? 'Smooth' : `${S.mHold} frames`;
     $('#m-seed').value = S.mSeed;
-    $('#m-seed').disabled = $('#m-seed-re').disabled = S.mDir !== 'random';
-    summary('sum-motion', `Weight breathing · ${loopTxt()}`);
+    const jit = S.mTpl === 'jitter';
+    $('#m-breath').hidden = jit; $('#m-jitter').hidden = !jit;
+    $('#m-seed').disabled = $('#m-seed-re').disabled = !jit && S.mDir !== 'random';
+    $('#m-rate-o').textContent = `${S.mRate} hop${S.mRate === '1' ? '' : 's'} per beat`;
+    $$('#m-props button').forEach(b => b.setAttribute('aria-pressed', S.mProps.includes(b.dataset.v)));
+    $('#m-props-o').textContent = S.mProps ? '' : 'None: nothing hops';
+    summary('sum-motion', `${jit ? 'Jitter loop' : 'Weight breathing'} · ${loopTxt()}`);
     summary('sum-video', `${S.mFmt === 'mp4' ? 'MP4' : 'WebM'} · ${S.mScale}×`);
   };
   bindOpts('m-tpl', 'mTpl', syncMotion);
   bindOpts('m-loop', 'mLoop', () => { if (+S.mSpeed > +S.mLoop) S.mSpeed = S.mLoop; syncMotion(); });
   bindOpts('m-speed', 'mSpeed', syncMotion);
   bindOpts('m-dir', 'mDir', syncMotion);
+  bindOpts('m-rate', 'mRate', syncMotion);
+  bindRange('m-amt', 'mAmt', v => v + '%');
+  // Properties: each one switches on and off by itself.
+  $('#m-props').addEventListener('click', e => {
+    const b = e.target.closest('button'); if (!b) return;
+    record(); const v = b.dataset.v;
+    S.mProps = ['b', 'r', 's'].filter(c => c === v ? !S.mProps.includes(c) : S.mProps.includes(c)).join('');
+    syncMotion(); render(); save();
+  });
   bindOpts('m-hold', 'mHold', syncMotion);
   bindOpts('m-fmt', 'mFmt', syncMotion);
   bindOpts('m-scale', 'mScale', syncMotion);
