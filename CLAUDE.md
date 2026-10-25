@@ -1,19 +1,19 @@
 # Mixweight — notes for Claude Code
 
-Mixweight mixes the named styles of installed (or dropped) fonts letter by letter, and exports the result as a `.jsx` script that rebuilds it as **live, editable text** in Illustrator, InDesign and Photoshop. Live at https://mixweight.pages.dev (Cloudflare Pages). The tool is currently at v3.2; the next release is **V4**.
+Mixweight mixes the named styles of installed (or dropped) fonts letter by letter, and exports the result as a `.jsx` script that rebuilds it as **live, editable text** in Illustrator, InDesign and Photoshop. Live at https://mixweight.pages.dev (Cloudflare Pages). The tool is at **V4** (released October 2026 from PR Z-tfs/Mixweight#8); the previous release was v3.2.
 
 The owner is a graphic designer, and Mixweight is a visual tool for designers, not an engineering project. Judge every change by how the type looks and whether it survives export, not only by whether the code runs.
 
 ## Hard rules
 
-1. **The `.jsx` export must stay editable.** Nothing in it gets outlined or rasterised. Each letter run is `[text, fontIndex, size, baselineShift, tracking, rotation, strokeWidth]` (see `buildData()`); boxes, guidelines and Photoshop's separate letter layers travel as `shapes`, `guides` and `sp`. Export is built by `buildData()` / `buildScript()` and the three templates (`<script type="text/plain" id="jsx-ai">`, `jsx-id`, `jsx-ps`).
+1. **The `.jsx` export must stay editable.** Nothing in it gets outlined or rasterised. Each letter run is `[text, fontIndex, size, baselineShift, tracking, rotation, strokeWidth, colour?]` (see `buildData()`; colour only when not black); boxes, guidelines, Photoshop's separate letter layers and the background travel as `shapes`, `guides`, `sp` and `bg`. Export is built by `buildData()` / `buildScript()` and the three templates (`<script type="text/plain" id="jsx-ai">`, `jsx-id`, `jsx-ps`).
    - A feature that can be expressed through the existing fields needs **no** change to the templates. Prefer this.
    - Anything that adds a field or changes what a template does must update **all three** templates, and must be flagged to the owner **before you start**, because she tests each Adobe app by hand. Do it as its own commit so it can be reviewed and reverted on its own.
    - Other output formats (PNG, and anything added later) are separate code paths. They must never change what `buildData()` returns for the existing features.
 2. **Variable fonts are used only as their named instances** (Light, Bold, Condensed Bold…), never as arbitrary axis values. This is what lets the Adobe apps find the same font by name. Do not add continuous `wght` / `wdth` / `opsz` sliders. **Never distort the letterforms**: no stretching, squashing or warping of glyphs; the font itself stays untouched (size, rotation and the named styles are the only ways a letter changes).
 3. **No build step, no frameworks, no dependencies.** Plain HTML/CSS/JS. The tool must keep working when someone downloads it and opens it from disk in Chrome (`file://`), so no `fetch()` of local files; use `<script src>` for anything split out (like `demo-fonts.js`).
 4. **UI language is English.** Keep the existing visual language: black on white, ruled grid, greys only for state, Helvetica stack, the existing `--s-*` sizes, the V3.1 title levels, option states and unit style. New controls reuse existing patterns (`.ctl` + range + `<output>`, `.opts` button groups, `bindRange` / `bindOpts`). Selection marks stay the corner-tick (crop-mark) style, in a neutral colour that never follows the user's colours.
-5. **Determinism.** Layout randomness goes through `rnd(seed, unit, channel)`. Channels 0–6, 8 (outline) and 9 (boxes) are taken; **use 10 and up** for new random decisions. `Math.random()` may only be used to draw a new seed number when the user presses a reroll button, never inside layout or rendering. The same seed and settings must always give the same result.
+5. **Determinism.** Layout randomness goes through `rnd(seed, unit, channel)`. Channels 0–6, 8 (outline), 9 (boxes), 10 (box colours from the palette) and 11 (rotation jitter) are taken; **use 12 and up** for new random decisions. `Math.random()` may only be used to draw a new seed number when the user presses a reroll button, never inside layout or rendering. The same seed and settings must always give the same result.
 6. **New settings** go into `DEFAULTS` and `SAVE_KEYS`. That makes them persist in localStorage *and* join undo/redo (`snapshot()` reads `SAVE_KEYS`). Anything with structure (objects, arrays) must also be normalised in `fixDeco()` so saved sessions from older versions, which lack the new keys or hold the old shape, still load. Call `record()` before changing state; pass a key for slider drags so a drag is one undo step. View-only state (panel widths, folds) stays out of `SAVE_KEYS`.
 7. Update the **Help dialog** (`<dialog id="help">`) and **README.md** whenever behaviour the user sees changes.
 8. **Never read or print `demo-fonts.js`.** It is ~600 KB of base64 on one line.
@@ -22,12 +22,12 @@ The owner is a graphic designer, and Mixweight is a visual tool for designers, n
 
 Everything is in `index.html` (~3300 lines) plus `demo-fonts.js`. Line numbers drift, so find sections by their banners: `/* ---------------- name ---------------- */`.
 
-- CSS at the top; app markup next (top bar, left panel, `#sheet` with `#deco` SVG under `#out` and `#selmarks` SVG over it, right panel `#side`); dialogs `picker`, `help`, `exp-ask`, `exp-help`; then the three `jsx-*` template blocks.
+- CSS at the top; app markup next (top bar, left panel, `#sheet` with `#deco` SVG under `#out` and `#selmarks` SVG over it, right panel `#side`); dialogs `picker`, `help`, `exp-ask`, `png-ask` (PNG options), `spec` (Specimen), `exp-help`; then the three `jsx-*` template blocks.
 - Script banners, in order: state (`DEFAULTS`, `S`) → sfnt parsing → glyph ink measurement (`ink()`) → pool → **engine** (`rnd`, `applyCase`, `pickFrom`, `compute`, `evenGaps`, `alignLine`) → render (`render`, `layout`) → boxes and guides geometry (`decoShapes`, `guideLines`, `drawDeco`) → selection → hover info / selection info → right panel → panel UI (`bindRange`, `bindOpts`) → font sources → **export** (`buildData`, `buildScript`, `exportFor`) → persistence (`SAVE_KEYS`, `fixDeco`, `save`) → undo / redo (`snapshot`, `record`, `restore`) → zoom → panel widths → boot.
 - `compute()` builds `S.lines`: one object per character (`st`, `size`, `jit`, `tr`, `va`, `bs`, plus rotation and stroke). Per-letter size, baseline or tracking changes belong there or in a pass right after it.
 - `render()` draws the text as one HTML `<span>` per letter (family from `g.st.css`, variable instance from `g.st.fvs`) inside `#out`, then `layout()` measures every letter into `S.gmap` (`g.x`, `g.adv`, `g.y`, `S.lb[k]` baselines). Boxes, guidelines and all exports work from those numbers, in block coordinates (x from the text block's left edge, y down from the line's baseline). Rotation turns about the centre of the em box (`ROT_PIVOT`).
-- `S.overrides` holds the user's manual per-letter edits (`style`, `va`, `fill`, `sw`, `rot`, `ra`, `ru`, `box`). Manual edits always win over automatic choices.
-- Box style colours are currently grey ink percentages (0 white, 100 black) via `greyHex()` / `greyRGB()`.
+- `S.overrides` holds the user's manual per-letter edits (`style`, `va`, `fill`, `sw`, `rot`, `ra`, `ru`, `box`, `col`). Manual edits always win over automatic choices. A letter box placed by Random letter boxes carries `box.auto`; one whose fill was set by hand carries `box.hand`; one styled in the selection's Box style editor carries `box.own`.
+- Colours are RGB hex in state (box style `fill` / `stroke`, `textCol`, `bgCol`, `guideCol`, letter override `col`); `normStyle()` migrates v3.x grey ink percentages. The export writes them through `xcol()`: a neutral grey as ink % (0 white, 100 black), any other colour as `'rrggbb'`.
 - Terminology: "Seed" in the UI is the random-number seed (`S.seed`, typeable). Do not reuse that word for anything new without checking with the owner.
 
 ## How to work
@@ -35,11 +35,55 @@ Everything is in `index.html` (~3300 lines) plus `demo-fonts.js`. Line numbers d
 - Work on a branch (e.g. `feature/png-export`), push it, and open a pull request. **Never push to `main`**: it is the live site, and the owner merges the PR herself after checking the feature.
 - One roadmap step per commit (or a few small commits). Don't bundle features. **Do the steps one by one: finish a step, self-test, commit, then stop and report. Do not start the next step until the owner says so.**
 - Commit messages, branch names, PR titles/bodies and code comments are in English.
+- Every step report starts with its **preview links**. Cloudflare Pages deploys each pushed branch: after the push, read the "Cloudflare Pages" check run on the PR and give both the branch preview (`https://<branch-name-with-dashes>.mixweight.pages.dev`, always the latest push) and the per-commit preview (`https://<id>.mixweight.pages.dev`, fixed to that step). Wait for the deploy to finish; don't guess the URL.
 - Test locally in Chrome: `python3 -m http.server 8000` and open http://localhost:8000 (localhost counts as a secure context, so installed-font access works). Check with the sample fonts and with at least two different installed families, and check from `file://` too.
 - If a step touches the `.jsx` export, export AI and ID once yourself, open the `.jsx` in a text editor and check the data. Then **tell the owner to run the export in Illustrator, InDesign and Photoshop**: you can't run Adobe apps, she can. Say exactly what to look for.
 - Existing saved sessions must keep loading: after a step, load a session saved with the previous version and confirm nothing breaks or moves.
 - When a step's approach isn't clean, stop and discuss it with the owner before implementing.
 - Keep comments short, matching the existing style.
+
+### Briefs (how the owner's briefs are written, and how to read them)
+
+- A brief points to the relevant file and section by name (for example CLAUDE.md "Roadmap: V4 › 3. Pattern"). It never copies the whole spec.
+- Every step in a brief names the part of the tool being changed (for example "the Box style group in the left panel") and what to grep for (ids, banners, function names). Grep for those and read only that range of `index.html` (`Read` with offset / limit or `sed -n`), never the whole file.
+- Don't open images in `reference/` unless the brief names a specific file.
+- When you write or revise a brief, follow these three rules.
+
+## V4 status (keep this section up to date)
+
+**V4 is merged and live.** It was built on branch `claude/lucid-ride-wf1xim` in PR Z-tfs/Mixweight#8; that branch and PR are finished, so all new work starts from `main` on a new branch. The owner tested every `.jsx` change in Illustrator, InDesign and Photoshop and approved V4 for release; then, before merging, she asked for the panel layout rework in `mixweight-v4-panel-layout-brief.md` (UI only, steps 1–7 done; no export or template change). She checked the new layout and approved the merge. The PR description keeps a table of every V4 commit with its fixed preview link.
+
+Built, one commit per step: step 1 PNG export; step 2 colour system plus colour in all three `.jsx` templates; Box style Expand X / Y and Move X / Y; step 2b random box colours from the palette; step 2c letter-box Height (Glyph / Line) and Width (Glyph / Advance); letter boxes and bands on the same letters, styled separately (Letter boxes / Band switch); step 3 pattern (Dots sized as a % of the cell); step 4 registration marks; step 5 Specimen; global Rotation jitter; paragraph band colour per line from the palette; a 12th palette, "Dark glow"; step 6 looks (`LOOKS`: Riso Block, Stacked Bands, Tone on Tone, Dark Glow). Step 6 was built before steps 1–5 were merged, at the owner's request. Then the panel layout rework: Type | Style tabs, whole-text groups in the Style tab, two Box style editors, a selection-only right panel with a closed strip, Guides and Hover info in the toolbar, first-visit folds.
+
+Decisions already made (don't revisit unless the owner asks):
+- UI text says **color** (American spelling, owner's request); comments inside the three `.jsx` templates still say colour so exported scripts stay byte-identical.
+- Panel layout (owner's V4 rework; replaces the earlier Decoration / Layout aids / "Look and Color below Jitter" placements):
+  - **Left panel = the whole text**, in two tabs (`S.leftTab`, view state, saved, not in `SAVE_KEYS`): **Type** (Font pool, Text, Mix, Type with Letter align as its last row, Jitter) and **Style** (Look, Color, Paragraph band, Random letter boxes with the whole-text Box style folded under it, Pattern, Registration marks, Random outline). Groups carry `data-tab`.
+  - **Right panel = the selected letters only** (Reroll / Reset / Deselect, Letter, Rotate, Fill, Box with the selection's Box style). With nothing selected it is a 36px strip (`#side-strip`, vertical "Selection", ‹). A new selection (from none, or sharing no letter with the last) opens it; deselecting closes it; Close › while letters are selected keeps it closed until the next new selection (`side.shut`). Its title is a black block with white text like the active tab; the strip turns black too while letters are selected but the panel is closed.
+  - **Toolbar:** Guides (a button reading On / Off that opens a popover with the four lines, Color and Include in export; `#guides-pop`) and Hover info (On / Off), then Zoom.
+  - **Two Box style editors, one markup:** `cloneBoxEditor()` copies `#bx-ed` with `gbx-` ids into Random letter boxes (folded, `S.gbxOpen` view state). `BX.sel` edits the selection's boxes and bands, `BX.all` the paragraph band or every letter box. A letter box styled in the selection editor gets `box.own` (kept by `normStyle()`, ignored by the export) and, like `box.hand`, wins over the whole-text editor, Reroll boxes, looks and the left Clear (`byHand()`).
+  - **Clear** (next to the tabs) resets everything in the left panel, both tabs (`LEFT_KEYS`), the font pool's mix (upright styles on, equal shares, base nearest Regular), the style new boxes get (`boxStyle`, so a look's Screen boxes don't make new boxes invisible on white) and the boxes Random letter boxes placed (`autoBox()`); text, loaded fonts, seed, guides and right-panel edits stay. **Clear edits** removes the selection's edits and bands and keeps the randomly placed boxes.
+  - **Folds:** a folded family (its title or Collapse all) folds to its title row and shows its share there. First visit: Jitter folded (`FOLDED_FIRST`) and the palette list as chips; Font pool families and Text open (owner). A fold the user sets by hand is recorded in `S.foldsSet` (view state) and always wins. Paragraph band, Pattern and Registration marks show only Off / On until switched on.
+  - Each corner's position icon is a grey box with that corner drawn heavy, so it reads unlike the Round / Bevel / Inverse shapes.
+- Clicking the active palette again rolls a new color match from its colors: `S.palSeed` (in `SAVE_KEYS`; 0 = the preset as written) through `palRoles()` on `rnd` channel 12; Math.random() only draws the seed. Text/background pairs keep a contrast of at least 3 (or near the palette's best); the block must stand apart from the background. Everything that reads palette roles goes through `activeRoles()`. Looks always apply seed 0.
+- With a palette active, every color control shows the palette's colors (current match) in a row above its recent colors. The Color group (text, background, palettes) lives in the Style tab, after Look (`renderColor()`). The palette list folds to a row of chips (`S.palsOpen`, view state; `.pals.compact`). The swatch of the current color is outlined.
+- No color ('none') exists for box fill, box stroke and `bgCol` only (`colorCtl(…, none)`). `hasBg()` treats 'none' like white for the frame and the `.jsx`; the PNG is then transparent. In `buildData()` a box with no fill and no visible stroke is dropped, a 'none' stroke exports as sw 0. A box with no fill but a stroke exports with `nf: 1` (and `f` set to the stroke color): Illustrator `filled = false`, InDesign the None swatch, Photoshop `fillEnabled` off in the shape stroke style (fallback: layer-style stroke with fill opacity 0). Owner approved the template change; it needs her Adobe test.
+- Selected letters can take their own case: override `cs` ('upper' / 'lower'), applied in `compute()` only when the result stays one character.
+- Each corner radius uses a 2 × 2 grid (`#bx-cgrid`, TL TR / BL BR) with number fields and a draggable corner icon; All keeps its slider.
+- Box style Expand X / Y and Move X / Y snap to 0 (`.snap0`, `setupSnap()`, within 2.5% of the range) and show a tick at 0.
+- The PNG draws the letters through an SVG `foreignObject` with the used fonts embedded as data URLs (`faceBytes`), not on a 2D canvas, so variable named instances stay exact. The background, pattern, boxes, marks and guides come from the shared `decoMarkup()`, so canvas and PNG match.
+- The frame (text block plus the export margin `exportMargin()`, see `frame()`) holds the background, pattern and marks and is the PNG crop. It shows on the canvas when the background isn't white or the pattern or marks are on.
+- Width "Glyph" keeps the v3.2 box (advance minus tracking), so Glyph + Glyph looks exactly like v3.2. Width "Advance" reaches the next letter, so boxes touch.
+- A box coloured by hand keeps its colour and Random letter boxes never removes it. Applying a palette sets every box's fill and clears the hand mark; applying a look never touches letter edits.
+- Looks set only colors and decoration (palette, paragraph band, random boxes, pattern, marks), all of them, so switching looks leaves nothing behind. They never change the type: text, seed, fonts, mix, type settings, jitter (rotation included), outline or manual letter edits (owner's decision after V4 testing).
+- With no colour or new feature in use, the `.jsx` export data stays byte-identical to v3.2 (colours go through `xcol()`; `bm`, `gc`, `bg` and the 8th run field are written only when needed). Pattern and marks export (owner's request) as `D.pat` / `D.marks` only when on: segments `s`, dots `d` (filled), circles `o` (stroked), hung on the first letter like `bg`; one compound path / polygon / shape layer each; a pattern over `PAT_MAX` (4000) pieces is left out with a toast. The `.jsx` puts every part on its own layer: background, pattern, boxes, marks, text, guidelines (PS: shape layers, text in a group).
+- Specimen loading checks every value (`LIMITS`, filled by `bindRange` / `bindOpts`; `specValue()`), resets keys a specimen lacks to their defaults, matches fonts by family + style then PostScript name, and never throws.
+
+Open items: none for V4. Possible later tuning the owner accepted as is: Riso Block draws from all 11 inks of its palette, not 3; in Dark Glow the off-white text is hard to read on the yellow and aqua boxes.
+
+Testing that has worked in the cloud container: Playwright with the preinstalled Chromium (`NODE_PATH=$(npm root -g) node script.js`), opening `file:///…/index.html` (the local http server tends to stop). After each change check: a session saved by `main` (v3.2) renders pixel-identical on the canvas; the `var D = …` export data for AI / ID / PS is unchanged when the new feature is off; PNG and canvas still match; the Specimen round trip is still exact. Variable test fonts aren't in the repo: get them from npm (`@fontsource-variable/roboto-flex`, `@fontsource-variable/archivo`) and convert woff2 to ttf with Python fontTools.
+
+The owner writes in Chinese or English; answer in her language. Code, commits and PR text stay in English.
 
 ## Roadmap: V4
 
@@ -106,7 +150,7 @@ Crosshair marks at the four corners of the frame, as on the `POGO ALL NIGHT LONG
 - Canvas and PNG only; not exported to the `.jsx` in V4 (say so in Help).
 - Check: on/off, resize, a coloured background, PNG export shows all four marks and nothing is cropped.
 
-**Layout aids group.** To keep the left panel from growing, put the pattern and the marks in one group with the existing Guidelines (title: **Layout aids**), folded by default, each aid with its own switch. Keep the Guidelines wording and its Include in export checkbox exactly as they are.
+**Layout aids group.** (Superseded by the V4 panel layout: Guidelines moved to Guides in the toolbar, and Pattern and Registration marks are their own groups in the Style tab.) To keep the left panel from growing, put the pattern and the marks in one group with the existing Guidelines (title: **Layout aids**), folded by default, each aid with its own switch. Keep the Guidelines wording and its Include in export checkbox exactly as they are.
 
 ### 5. Specimen (seed archive)
 Save and share the whole look of a result as parameters only, with no font files. The UI word is **Specimen** ("Seed" stays the random number).
@@ -135,7 +179,6 @@ One click sets a whole look from the settings that already exist, so it needs no
 - Static labels and the personal gallery (specs parked below); labels in the `.jsx` export (first as plain text lines without the grey highlight boxes, whose widths would not match in the Adobe apps).
 - Grain / noise texture over the canvas (V4.x); auto-contrast text colour for selected letters (V4.x, black or white chosen from the box or band behind).
 - SVG export; CMYK; palette extraction from images; random text colour from the palette (random box colours are step 2b); palette editing.
-- Pattern and registration marks in the `.jsx` export.
 - Type animation templates (its own release); a floating panel, only if the sidebars stop being enough (to be discussed with the owner first).
 - A public gallery with user uploads (needs a backend; start with a hand-curated static gallery that opens specimens). A share link that packs a specimen into the URL.
 

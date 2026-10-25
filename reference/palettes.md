@@ -51,6 +51,14 @@ These are a **style reference, not an exact spec**. Copy them into one `PALETTES
 - background: `#847CC0`
 - block: `#8EAEA9`
 
+### Dark glow (added in V4, approved by the owner)
+- text: `#F2F0E8`
+- background: `#151515`
+- block: `#3E5BFF`
+- extras: `#FF5FA2` `#19D3C5` `#F5FC77`
+
+Not sampled from a poster: a dark preset for the Dark Glow look, with blocks bright enough to glow on Screen.
+
 ## Two-colour presets
 
 ### Mustard and blue
