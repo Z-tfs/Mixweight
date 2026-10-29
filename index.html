@@ -73,12 +73,12 @@ button { background: none; border: 0; padding: 0; cursor: pointer; }
 .sub .grp.tools { gap: 34px; } /* separate functions (Hover info, Zoom) sit further apart than the parts of one */
 /* Left panel tabs: Type | Style, the active one inverted. View state, not in undo. */
 .sub > .ltabs { padding: 0 14px 0 0; align-items: stretch; flex-wrap: nowrap; }
-.tabs { display: grid; grid-template-columns: 1fr 1fr; flex: 1 1 auto; border-right: var(--rule); }
+.tabs { display: grid; grid-template-columns: 1fr 1fr 1fr; flex: 1 1 auto; border-right: var(--rule); }
 .tabs button { text-transform: uppercase; padding: 5px 0; }
 .tabs button + button { border-left: var(--rule); }
 .tabs button:hover { background: var(--g1); }
 .tabs button[aria-selected="true"] { background: var(--ink); color: var(--paper); }
-.rail[data-tab="type"] > .cell[data-tab="style"], .rail[data-tab="style"] > .cell[data-tab="type"] { display: none; }
+.rail[data-tab="type"] > .cell:not([data-tab="type"]), .rail[data-tab="style"] > .cell:not([data-tab="style"]), .rail[data-tab="motion"] > .cell:not([data-tab="motion"]) { display: none; }
 .sub .muted { color: var(--g4); }
 #seed-lbl:hover { color: var(--ink); }
 #seed-in { font: inherit; width: 9ch; padding: 0 3px; border: 0; border-bottom: var(--rule); background: var(--g1); color: var(--ink); outline: 0; }
@@ -221,6 +221,18 @@ textarea:focus { background: var(--g2); outline: none; }
 .fam .ctl input:disabled { opacity: .35; cursor: default; }
 .pool .empty { padding: 14px; color: var(--g4); text-transform: uppercase; }
 
+/* motion: while a loop plays, the selection and the hover tag stay out of the way */
+#sheet.playing .selmarks { display: none; }
+.m-play { display: flex; align-items: baseline; gap: 14px; }
+#m-prog { color: var(--g4); font-variant-numeric: tabular-nums; }
+.m-set { display: grid; gap: 10px; }
+
+/* right-click panel on selected letters */
+.ctxp { position: fixed; z-index: 65; width: 250px; max-height: calc(100vh - 8px); overflow-y: auto; background: var(--paper); border: var(--rule); font-size: var(--s-sm); }
+.ctxp-h { display: flex; justify-content: space-between; align-items: baseline; padding: 6px 10px 5px; border-bottom: var(--rule); text-transform: uppercase; }
+.ctxp-b { padding: 10px; display: grid; gap: 10px; }
+.ctxp-b > .lab { margin-bottom: -6px; }
+
 /* right side */
 .main { position: relative; display: grid; grid-template-rows: auto minmax(0, 1fr); min-width: 0; min-height: 0; }
 .insp { border-bottom: var(--rule); padding: 7px 14px; display: flex; flex-wrap: wrap; align-items: center; gap: 6px 22px; min-height: var(--bar); text-transform: uppercase; }
@@ -261,13 +273,15 @@ textarea:focus { background: var(--g2); outline: none; }
 
 /* Right panel: the selected letters only. With nothing selected (or closed by hand) it folds to a 36px strip. */
 .side { border-left: var(--rule); overflow-y: auto; min-width: 0; min-height: 0; width: var(--rw); }
-.side-h { display: flex; justify-content: space-between; align-items: stretch; gap: 10px; min-height: var(--bar); padding: 0 14px 0 0; border-bottom: var(--rule); text-transform: uppercase; }
-.side-h .grp { display: flex; align-items: center; gap: 18px; }
+.side-h { display: flex; justify-content: space-between; align-items: stretch; gap: 0; min-height: var(--bar); padding: 0; border-bottom: var(--rule); text-transform: uppercase; }
+.side-h .grp { display: flex; align-items: stretch; gap: 0; }
+/* Clear edits | Close › as cells divided by rules, like Type | Style | Clear in the left panel */
+.side-h .grp .tbtn { margin: 0; padding: 0 14px; display: flex; align-items: center; border-left: var(--rule); }
 /* The panel's title is inverted like the active left-panel tab: it holds the selection. */
-#side-title { display: flex; align-items: center; padding: 0 14px; background: var(--ink); color: var(--paper); }
-.side #sel-styles button { text-transform: none; font-size: var(--s-md); }
-.side .row { display: grid; grid-template-columns: 1fr auto; gap: 6px 10px; align-items: baseline; }
-.side .lab, .rail .lab { color: var(--g4); text-transform: uppercase; }
+#side-title { flex: 1 1 auto; display: flex; align-items: center; justify-content: center; padding: 0 14px; background: var(--ink); color: var(--paper); } /* fills up to Clear edits, like the active tab */
+.side #sel-styles button, .ctxp #ctx-sel-styles button { text-transform: none; font-size: var(--s-md); }
+.side .row, .ctxp .row { display: grid; grid-template-columns: 1fr auto; gap: 6px 10px; align-items: baseline; }
+.side .lab, .rail .lab, .ctxp .lab { color: var(--g4); text-transform: uppercase; }
 .side .sub-h, .rail .sub-h { text-transform: uppercase; color: var(--g4); }
 .on-only { display: grid; grid-template-columns: minmax(0, 1fr); gap: 10px; } /* a group's controls, shown while it is On */
 .numin { display: inline-flex; align-items: baseline; gap: 0; color: var(--g4); }
@@ -333,7 +347,21 @@ dialog::backdrop { background: rgba(255, 255, 255, .7); }
 .spec-b input[type=text] { width: 100%; min-width: 0; border: 0; border-bottom: var(--rule); background: transparent; padding: 3px 1px; border-radius: 0; }
 .spec-b input[type=text]:focus { outline: 0; background: var(--g1); }
 .spec-b textarea { min-height: 90px; font: var(--s-sm)/1.4 ui-monospace, Menlo, monospace; }
-#spec-msg:empty { display: none; }
+#spec-msg:empty, #my-msg:empty { display: none; }
+#my-msg { color: var(--ink); }
+#spec .spec-b { overflow-y: auto; max-height: calc(100vh - 110px); }
+.my-list { display: grid; border-top: 1px solid var(--g2); max-height: 300px; overflow-y: auto; }
+.my-list:empty { display: none; }
+.my-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 10px; border-bottom: 1px solid var(--g2); padding: 6px 0; }
+.my-open { display: grid; grid-template-columns: 72px minmax(0, 1fr); grid-template-rows: auto auto; column-gap: 10px; align-items: center; text-align: left; padding: 0; }
+.my-open:hover .my-nm { text-decoration: underline; text-underline-offset: 3px; }
+.my-th { grid-row: 1 / 3; width: 72px; height: 48px; object-fit: contain; background: var(--g1); display: block; }
+.my-nm { font-size: var(--s-md); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.my-dt { color: var(--g4); text-transform: uppercase; }
+.my-acts { display: flex; gap: 12px; }
+.my-row input[type=text] { width: 100%; }
+.my-ask { border: var(--rule); padding: 10px; display: grid; gap: 8px; }
+.my-ask p { margin: 0; }
 #spec-msg { color: var(--ink); }
 .png-set { display: grid; gap: 10px; }
 .png-row { display: flex; justify-content: space-between; align-items: baseline; gap: 14px; text-transform: uppercase; }
@@ -373,11 +401,28 @@ body.resizing, body.resizing * { cursor: col-resize !important; user-select: non
 .pop { position: absolute; top: calc(100% + 9px); right: -6px; z-index: 40; width: 280px; background: var(--paper); border: var(--rule); padding: 12px 14px 14px; display: grid; gap: 10px; text-transform: none; }
 .pop .sub-h, .pop .chk { text-transform: uppercase; }
 .pop .sub-h { color: var(--g4); }
-#hov-btn { text-decoration: none; display: inline-flex; align-items: center; gap: 6px; }
-#hov-btn .hv { display: inline-flex; align-items: center; gap: 5px; }
-#hov-btn[aria-pressed="true"] .hv::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--ink); }
-#hov-btn[aria-pressed="false"] { color: var(--g4); }
+#hov-w { display: inline-flex; align-items: baseline; gap: 10px; }
+#hov-w .opts { gap: 4px 10px; }
+#hov-w.off > span:first-child { color: var(--g4); }
 
+/* backstage: the entry to the beta, and the beta's own mark; outside #sheet, so never exported */
+.bs-btn { position: absolute; right: 14px; bottom: 8px; z-index: 3; font-size: var(--s-sm); padding: 3px 7px; text-decoration: none; color: var(--ink); }
+.bs-on .corner.br { right: 112px; }
+.bs-card { position: absolute; right: 14px; bottom: 40px; z-index: 30; width: 250px; background: var(--paper); border: var(--rule); padding: 11px 13px 13px; display: grid; gap: 10px; font-size: var(--s-sm); }
+.bs-card h4 { margin: 0; font-size: var(--s-sm); text-transform: uppercase; letter-spacing: .02em; }
+.bs-card p { margin: 0; color: var(--g4); }
+.bs-card .acts { display: flex; gap: 8px; }
+.bs-card .acts a { text-decoration: none; }
+.fb-fields { display: grid; gap: 14px; }
+.fb-q { display: grid; gap: 6px; }
+.fb-many { display: grid; gap: 5px; }
+.fb-b textarea { min-height: 80px; font: inherit; }
+#fb-msg:empty { display: none; }
+#fb-msg { color: var(--ink); }
+#fb { width: min(460px, calc(100% - 32px)); }
+.brand .beta-mark { align-self: flex-start; margin: -5px 0 0 -9px; font: var(--s-xs)/1 var(--ui); letter-spacing: .04em; text-transform: uppercase; background: var(--ink); color: var(--paper); padding: 3px 5px 2px; }
+button.beta-mark:hover { background: var(--g4); }
+.sub a.tbtn { color: var(--ink); text-decoration: none; }
 @media (max-width: 900px) {
   .split { display: none; }
   .app { grid-template-columns: 1fr; grid-template-rows: auto; height: auto; }
@@ -413,7 +458,7 @@ body.resizing, body.resizing * { cursor: col-resize !important; user-select: non
   </header>
 
   <div class="sub">
-    <div class="ltabs"><span class="tabs" role="tablist" aria-label="Left panel"><button type="button" role="tab" id="tab-type" data-tab="type" aria-controls="rail">Type</button><button type="button" role="tab" id="tab-style" data-tab="style" aria-controls="rail">Style</button></span><span class="grp"><button class="tbtn" type="button" id="clear-left" title="Reset everything you can set in the left panel, on both tabs, to its default: styles in the mix, share of mix and base, case, mix, type, letter align, jitter, colors and palette, paragraph band, random letter boxes (the boxes they placed go too) and the style new boxes get, random outline, decoration. Your text, the loaded fonts and edits in the right panel stay. ⌘Z brings them back.">Clear</button></span></div>
+    <div class="ltabs"><span class="tabs" role="tablist" aria-label="Left panel"><button type="button" role="tab" id="tab-type" data-tab="type" aria-controls="rail">Type</button><button type="button" role="tab" id="tab-style" data-tab="style" aria-controls="rail">Style</button><button type="button" role="tab" id="tab-motion" data-tab="motion" aria-controls="rail">Motion</button></span><span class="grp"><button class="tbtn" type="button" id="clear-left" title="Reset everything you can set in the left panel, on both tabs, to its default: styles in the mix, share of mix and base, case, mix, type, letter align, jitter, colors and palette, paragraph band, random letter boxes (the boxes they placed go too) and the style new boxes get, random outline, decoration. Your text, the loaded fonts and edits in the right panel stay. ⌘Z brings them back.">Clear</button></span></div>
     <div>
       <span class="grp">
         <button class="tbtn" type="button" id="undo" title="⌘Z" disabled>Undo</button>
@@ -438,7 +483,7 @@ body.resizing, body.resizing * { cursor: col-resize !important; user-select: non
             <p class="hint-on">Lines at the base style's metrics: baseline, x-height, cap height and ascender, at the set size.</p>
           </div>
         </span>
-        <button class="tbtn" type="button" id="hov-btn" aria-pressed="true" title="Point at a letter to see its family, style, size, shift and tracking. Canvas only, not exported.">Hover info <span class="hv">On</span></button>
+        <span id="hov-w" title="Point at a letter to see its family, style, size, shift and tracking. Full adds its box, band, blend, rotation and fill. Canvas only, not exported."><span>Hover info</span><span class="opts" id="hov-opts" role="group" aria-label="Hover info"><button type="button" data-v="off">Off</button><button type="button" data-v="basic">Basic</button><button type="button" data-v="full">Full</button></span></span>
         <span class="grp">
         <span class="muted">Zoom</span>
         <button class="tbtn" type="button" id="zoom-out" aria-label="Zoom out">−</button>
@@ -648,6 +693,53 @@ body.resizing, body.resizing * { cursor: col-resize !important; user-select: non
       <div class="btns"><button class="btn sm" type="button" id="outline-re">Reroll outlines</button></div>
       <p class="hint">Solid ↔ outline. Random outline picks a share of the letters to set as outline only: no fill, a stroke in the text color. It exports as live text with a stroke. Select letters to set them by hand.</p>
     </section>
+
+    <section class="cell" data-tab="motion">
+      <div class="cell-h"><span>Motion</span><span class="r" id="sum-motion"></span></div>
+      <div class="ctl"><label>Template</label><output></output></div>
+      <div class="opts" id="m-tpl" role="group" aria-label="Template"><button type="button" data-v="breath">Weight breathing</button><button type="button" data-v="jitter">Jitter loop</button><button type="button" data-v="type">Typing in</button></div>
+      <div class="ctl"><label>Loop</label><output id="m-loop-o"></output></div>
+      <div class="opts" id="m-loop" role="group" aria-label="Loop length"><button type="button" data-v="4">4 beats</button><button type="button" data-v="8">8 beats</button><button type="button" data-v="16">16 beats</button></div>
+      <div class="m-set" id="m-breath">
+      <div class="ctl"><label>Speed</label><output id="m-speed-o"></output></div>
+      <div class="opts" id="m-speed" role="group" aria-label="Beats per cycle"><button type="button" data-v="1">1</button><button type="button" data-v="2">2</button><button type="button" data-v="4">4</button><button type="button" data-v="8">8</button><button type="button" data-v="16">16</button></div>
+      <div class="ctl"><label for="m-range">Range</label><output id="m-range-o"></output><input type="range" id="m-range" min="1" max="4" step="1"></div>
+      <div class="ctl"><label for="m-stagger">Stagger</label><output id="m-stagger-o"></output><input type="range" id="m-stagger" min="0" max="14" step="1"></div>
+      <div class="ctl"><label>Direction</label><output></output></div>
+      <div class="opts" id="m-dir" role="group" aria-label="Direction"><button type="button" data-v="ltr">Left to right</button><button type="button" data-v="rtl">Right to left</button><button type="button" data-v="random">Random</button></div>
+      </div>
+      <div class="m-set" id="m-jitter">
+      <div class="ctl"><label>Rate</label><output id="m-rate-o"></output></div>
+      <div class="opts" id="m-rate" role="group" aria-label="Hops per beat"><button type="button" data-v="1">1</button><button type="button" data-v="2">2</button><button type="button" data-v="7">7</button><button type="button" data-v="14">14</button></div>
+      <div class="ctl"><label for="m-amt">Amount</label><output id="m-amt-o"></output><input type="range" id="m-amt" min="0" max="100" step="1"></div>
+      <div class="ctl"><label>Properties</label><output id="m-props-o"></output></div>
+      <div class="opts" id="m-props" role="group" aria-label="Properties that hop"><button type="button" data-v="b">Baseline</button><button type="button" data-v="r">Rotation</button><button type="button" data-v="s">Size</button></div>
+      </div>
+      <div class="m-set" id="m-type">
+      <div class="ctl"><label>Speed</label><output id="m-tspeed-o"></output></div>
+      <div class="opts" id="m-tspeed" role="group" aria-label="Letters per beat"><button type="button" data-v="1">1</button><button type="button" data-v="2">2</button><button type="button" data-v="4">4</button><button type="button" data-v="7">7</button><button type="button" data-v="14">14</button></div>
+      <div class="ctl"><label for="m-tdelay">Start delay</label><output id="m-tdelay-o"></output><input type="range" id="m-tdelay" min="0" max="8" step="0.5"></div>
+      <div class="ctl"><label>Order</label><output></output></div>
+      <div class="opts" id="m-torder" role="group" aria-label="Order"><button type="button" data-v="ltr">Left to right</button><button type="button" data-v="random">Random</button></div>
+      <div class="ctl"><label>End hold</label><output id="m-thold-o"></output></div>
+      <div class="opts" id="m-thold" role="group" aria-label="End hold, beats"><button type="button" data-v="1">1</button><button type="button" data-v="2">2</button><button type="button" data-v="4">4</button><button type="button" data-v="end">Loop end</button></div>
+      </div>
+      <div class="ctl"><label>Hold</label><output id="m-hold-o"></output></div>
+      <div class="opts" id="m-hold" role="group" aria-label="Hold, frames"><button type="button" data-v="1">1</button><button type="button" data-v="2">2</button><button type="button" data-v="7">7</button><button type="button" data-v="14">14</button></div>
+      <div class="row"><span class="lab">Seed <span class="numin"><input type="number" id="m-seed" min="1" max="99999" step="1" aria-label="Motion seed"></span></span><button class="btn sm" type="button" id="m-seed-re">Reroll</button></div>
+      <div class="m-play"><button class="btn solid" type="button" id="m-play">Play</button><span id="m-frame" class="lab"></span></div>
+      <p class="hint">One beat is 14 frames at 30 fps, so loops land on the music and always join up. Weight breathing: each letter steps through the named styles of its own family that are on in the font pool, light to heavy, never in between; Range is how many styles up and down from its own, Speed is beats per cycle, Stagger delays each letter by that many frames, and the seed orders Random. Jitter loop: each letter hops to a new offset, picked by the seed, Rate times per beat; Amount scales the hops (at 100%: a quarter of the letter's size on the baseline, 30° of rotation, 40% of size), and Properties picks which of them hop. Typing in: the letters appear one by one, Speed letters per beat, after Start delay, left to right or in an order picked by the seed; End hold keeps the whole text that many beats, then the text clears until the loop starts again (Loop end: it stays to the end). Hidden letters keep their place, and a letter box appears with its letter. Hold keeps each state for that many frames. Motion is a video: the text, the .jsx and PNG exports stay as set.</p>
+    </section>
+
+    <section class="cell" data-tab="motion">
+      <div class="cell-h"><span>Export video</span><span class="r" id="sum-video"></span></div>
+      <div class="ctl"><label>Format</label><output></output></div>
+      <div class="opts" id="m-fmt" role="group" aria-label="Video format"><button type="button" data-v="mp4">MP4</button><button type="button" data-v="webm">WebM</button></div>
+      <div class="ctl"><label>Size</label><output></output></div>
+      <div class="opts" id="m-scale" role="group" aria-label="Video size"><button type="button" data-v="1">1×</button><button type="button" data-v="2">2×</button></div>
+      <div class="m-play"><button class="btn solid" type="button" id="m-export">Export video</button><span id="m-prog" role="status"></span></div>
+      <p class="hint-on">The text block plus a margin, as the PNG, at 30 fps, drawn frame by frame. MP4 (H.264) is opaque: a background with no color becomes white. WebM (VP9) keeps a background with no color transparent. Chrome or Edge.</p>
+    </section>
   </aside>
 
   <main class="main">
@@ -825,6 +917,8 @@ body.resizing, body.resizing * { cursor: col-resize !important; user-select: non
       <section><h4>Base style</h4><p>The base style is the one letters keep at 0% mix. Pick it from the Base menu, or right-click any style in the pool: Set as base style, or Add to mix + set as base for a style that is off. It must be switched on in the pool: styles that are off are greyed out in the list, and switching off the base moves it to the nearest weight that is on.</p></section>
       <section><h4>Look</h4><p>The <b>Look</b> group, at the top of the left panel's Style tab, sets a whole look in one click, from settings that already exist: the palette, the paragraph band, random letter boxes, the pattern and registration marks. Riso Block, Stacked Bands, Tone on Tone and Dark Glow. A look only sets colors and decoration: your text, seed, fonts, mix, type settings, jitter, outline and letter edits stay as they are; random letter boxes from before are replaced, boxes you added or colored by hand stay. It is a starting point: change anything afterwards, and ⌘Z goes back.</p></section>
       <section><h4>Specimen</h4><p><b>Specimen</b> in the top bar keeps a whole look as settings: the text, every setting, your letter edits, the pool and base style, and the names of the fonts (family, style and PostScript name), not the fonts themselves. <b>Copy specimen</b> puts it on the clipboard; <b>Download specimen</b> saves a .json; give it a title and author if you like. To load one, paste it and press Load pasted, or Choose file. Loading is one step, so ⌘Z goes back. With the same fonts it gives exactly the same result. If some fonts aren't loaded, Mixweight lists them, lets the base style or your other fonts stand in, and the layout will differ because their widths differ. Everything works offline; nothing is uploaded.</p></section>
+      <section><h4>Motion</h4><p>The left panel's <b>Motion</b> tab turns the text into a short video loop. <b>Weight breathing</b>: each letter steps through the named styles of its own family that are on in the font pool, up and down from its own style, never in between, so every frame is real type. Loop, Speed (beats per cycle) and Stagger are counted in beats and frames: one beat is 14 frames at 30 fps, so loops land on the music, and a loop always joins up with its start. Direction sets the order the letters start in; the seed orders Random. <b>Jitter loop</b>: each letter hops to a new offset, picked by the seed, Rate times per beat; Amount scales the hops (at 100%: a quarter of the letter's size on the baseline, 30° of rotation, 40% of size) and Properties picks which of baseline, rotation and size hop. <b>Typing in</b>: the letters appear one by one, Speed letters per beat, after Start delay, left to right or in an order picked by the seed; End hold keeps the whole text that many beats before it clears (Loop end: until the loop starts again), and a letter keeps its place while hidden, so nothing shifts. Hold keeps each state for that many frames, for every template. <b>Play</b> shows it on the canvas (selection and hover info stay out of the way); <b>Export video</b> draws it frame by frame, as the PNG, and saves an MP4 (H.264, opaque) or a WebM (VP9, which keeps a background with no color transparent), at 1× or 2×. Motion never changes your text or settings, and the .jsx and PNG exports always show the type as set. Chrome or Edge.</p></section>
+      <section><h4>My specimens</h4><p>In the <b>Specimen</b> window: give the current look a title and press <b>Save to My specimens</b> to keep it in a list under that title, with the date and a small picture. Click an entry to load it (one step, so ⌘Z goes back); Download saves it as a specimen file; Rename and Delete do what they say. The list lives in this browser only, for this address: the beta and the stable page, or a copy opened from disk, each keep their own, and clearing the browser's site data erases it. So use <b>Export all</b> to keep a backup in one .json file, and <b>Import…</b> to bring it back or move it to another browser. Import also takes a single specimen file, adds to the list and never replaces an entry without asking when a name is already there.</p></section>
       <section><h4>Seed</h4><p>Every random choice comes from the seed, so the same seed and settings always give the same result. Click Seed in the toolbar to type one, Enter to apply, Esc to cancel. Note a seed to get a layout back later.</p></section>
       <section><h4>Fonts</h4><p>Fonts are matched by family and style name, then by PostScript name. Variable fonts use their named instances (Light, Bold…), so the app shows what the preview shows. Fonts the app can't find are listed and swapped for its default; the text stays editable.</p></section>
       <section><h4>Family share</h4><p>Share of mix is each family's part of the letters that leave the base style. At first it follows the number of styles switched on. Drag one family and the others make room, keeping their proportions, so the total stays 100%. Styles keep their place in the light → heavy range.</p></section>
@@ -833,7 +927,7 @@ body.resizing, body.resizing * { cursor: col-resize !important; user-select: non
       <section><h4>Match size</h4><p>Different families at the same point size look different sizes. x-height or Cap height scales each letter's font so its lowercase x or capital H is as tall as in the base style (limited to 60–160%). It is written as the letter's point size, so it stays editable; leading follows the nominal size.</p></section>
       <section><h4>Letter align</h4><p>Top, middle and bottom alignment are written as baseline shift values. If you change a letter or its font afterwards, export again to re-align.</p></section>
       <section><h4>Group titles</h4><p>Click a group title in the left panel to fold the group to its title row (▸) or open it again (▾); each group remembers its own state. Folding Font pool hides every family; a family's name folds that family to one row, which still shows its share of mix. The left panel has two tabs: <b>Type</b> (font pool, text, mix, type with letter align, jitter) and <b>Style</b> (look, color, paragraph band, random letter boxes, pattern, registration marks, random outline). On a first visit Jitter and the palette list start folded; once you fold or open them yourself, your choice stays. Paragraph band, Pattern and Registration marks show only Off / On until you switch them on. The right side of each title row sums up what the group is set to, and follows every change; hover it for the full text if it is cut short. Groups with a short note have a <b>?</b> next to their title: click it to show the note, again to hide it. <b>Clear</b>, next to the tabs, sets everything in the left panel (both tabs) back to its default, including the style new boxes and bands get, and removes the boxes Random letter boxes placed; your text, fonts, seed, guides and right-panel edits stay.</p></section>
-      <section><h4>Right panel</h4><p>Selecting letters opens it with their font, size, shift and tracking at the top, then weight, align, <b>rotation</b>, <b>fill</b> and <b>boxes</b>. With nothing selected it folds to a narrow <b>Selection</b> strip on the right edge, and the canvas takes the room; deselecting folds it again. Close › folds it while letters stay selected, until you select other letters; the strip's ‹ opens it. Settings for the whole text are in the left panel's <b>Style</b> tab: Random outline (with Stroke), the Paragraph band and Random letter boxes. Clear edits removes what you set on selected letters, and bands; the left panel's Clear resets the left panel's settings and removes the boxes Random letter boxes placed. A drag that starts on empty canvas selects the letters it sweeps over. The panel keeps its place: selecting other letters, or deselecting and reselecting, brings back the group you were using. <b>Hover info</b> in the bar above the canvas switches the hover tag on and off.</p></section>
+      <section><h4>Right panel</h4><p>Selecting letters opens it with their font, size, shift and tracking at the top, then weight, align, <b>rotation</b>, <b>fill</b> and <b>boxes</b>. With nothing selected it folds to a narrow <b>Selection</b> strip on the right edge, and the canvas takes the room; deselecting folds it again. Close › folds it while letters stay selected, until you select other letters; the strip's ‹ opens it. Settings for the whole text are in the left panel's <b>Style</b> tab: Random outline (with Stroke), the Paragraph band and Random letter boxes. Clear edits removes what you set on selected letters, and bands; the left panel's Clear resets the left panel's settings and removes the boxes Random letter boxes placed. A drag that starts on empty canvas selects the letters it sweeps over. The panel keeps its place: selecting other letters, or deselecting and reselecting, brings back the group you were using. <b>Right-click</b> a letter (Ctrl+click on a Mac) for a small panel beside the selection with the controls used most: weight, angle, fill, letter color (outline letters stroke in it) with Use text color, letter boxes, box fill, band, Reroll, Reset and Deselect. They are the right panel's own controls, so a change in one shows in the other. Esc or a click elsewhere closes it; right-click on empty canvas keeps the browser's menu. <b>Hover info</b> in the bar above the canvas sets the hover tag: Off, Basic (family, style, size, shift and tracking) or Full, which adds a line for each thing that applies to the letter: its box fit and fill, bands, blend mode, rotation and fill (solid or outline). Canvas only, never exported.</p></section>
       <section><h4>Boxes</h4><p>Letter boxes follow each letter's ink, size and shift, and turn with it. A band runs under the selection, as tall as its tallest letter or stepping with each one; the paragraph band does the same for every line. There are two <b>Box style</b> editors. The one in the left panel, folded under Random letter boxes, styles the whole text: the paragraph band, or every letter box (Paragraph band / Letter boxes). The one in the right panel styles the boxes and bands on the selected letters. A letter box you styled in the right panel, or whose fill you set by hand, keeps its style: the left editor and Reroll boxes leave it alone; Clear edits removes it. In Box style, Expand X and Y make a box wider or taller than the ink (negative values make it smaller), and Move X and Y shift it right and up (all four snap to 0 when you drag close to the tick at 0); a rotated letter's box moves along the letter's own axes. Letter boxes also have <b>Height</b> (Glyph: the letter's own ink; Line: as tall as the line's tallest letter) and <b>Width</b> (Glyph: the letter as set, without tracking; Advance: up to the next letter, so neighbouring boxes touch). Line + Advance makes a grid of columns. A letter can have a letter box and a band at once: when the selection has both, Box style shows <b>Letter boxes / Band</b> to pick which one its controls change (Add letter boxes and Add band switch to what they just added). With <b>Each corner</b>, the four corners sit in a grid laid out like the box: type a radius, or drag the small corner icon sideways, and pick Round, Bevel or Inverse under it. They export under the text as vector shapes: InDesign rectangles keep live corner options, Illustrator and Photoshop get the exact path.</p></section>
       <section><h4>Color</h4><p>Box fill, box stroke and the background also take <b>No color</b>: the crossed-out swatch after the hex field (or type none). A box with no fill shows only its stroke; a background with no color leaves the PNG transparent. In the .jsx export a box with no fill keeps just its stroke (no fill in Illustrator and InDesign, a shape layer with its fill switched off in Photoshop); a box with neither fill nor stroke is left out. The <b>Color</b> group in the left panel's Style tab sets the <b>text</b> and <b>background</b> colors for the whole design, as RGB hex: click the big swatch for the system picker, type a hex value and press Enter, or click a small swatch (the current color's swatch is outlined). The row under each color holds the last eight colors used; with a palette active, a row of the palette's colors sits above it, under every color control. A <b>palette</b> sets text and background in one click, and the box and band fill too when it has a block color. Click the active palette again to roll a new color match from its colors (text that stays readable on the background, and a block color that shows on it); ⌘Z goes back. The palette list starts as a row of chips; open it with the arrow next to Palettes to see the names, and Mixweight remembers your choice. Black on white goes back to the start. Selected letters get their own color under Fill in the right panel (Use text color removes it); outline letters stroke in their color. Box style has Fill and Stroke colors and a <b>blend</b> mode (Normal, Multiply, Screen, Overlay, Difference), which mixes a box with the background and the boxes under it, never with the text. The background fills the text block plus a margin, the same area the PNG crops to. The guidelines' color is under <b>Guides</b> in the bar above the canvas. Random letter boxes have a <b>Box color</b>: Single gives every box its own fill; From palette gives each randomly placed box a color from the active palette's block and extra colors, picked by the seed, so Reroll boxes changes placement and colors together. A box whose fill you set by hand keeps it, and Reroll leaves it in place. From palette needs a palette with a block color. Everything exports: text color per letter, RGB fills and strokes (neutral greys stay greys, a Black tint in InDesign), blend modes, and the guideline color. A background that isn't white becomes a rectangle at the very back, named Mixweight background, on its own layer (Illustrator, InDesign) or as the bottom shape layer (Photoshop). InDesign adds each RGB color as a swatch named Mixweight #RRGGBB.</p></section>
       <section><h4>Outline and rotation</h4><p>Outline letters export as live text with no fill and a stroke in the letter's color; rotation as character rotation, about the centre of the em box. Photoshop can do neither per letter inside one type layer, so those letters become their own type layers (outline as a layer-style stroke) and the main layer keeps a space of the same width.</p></section>
@@ -885,13 +979,25 @@ body.resizing, body.resizing * { cursor: col-resize !important; user-select: non
     <div class="ask-b spec-b">
       <div class="sub-h">Keep this look</div>
       <div class="pair">
-        <input type="text" id="spec-title" placeholder="Title (optional)" autocomplete="off" aria-label="Title">
+        <input type="text" id="spec-title" placeholder="Title" maxlength="80" autocomplete="off" aria-label="Title">
         <input type="text" id="spec-author" placeholder="Author (optional)" autocomplete="off" aria-label="Author">
       </div>
       <div class="btns">
-        <button class="btn solid" type="button" id="spec-copy">Copy specimen</button>
+        <button class="btn solid" type="button" id="my-save" title="Keep it in My specimens below, under its title, with a small picture">Save to My specimens</button>
+        <button class="btn" type="button" id="spec-copy">Copy specimen</button>
         <button class="btn" type="button" id="spec-dl">Download specimen</button>
       </div>
+      <div class="sub-h aid">My specimens</div>
+      <div class="my-list" id="my-list" role="list" aria-label="My specimens"></div>
+      <p class="hint-on" id="my-empty">Nothing saved yet. Give the look a title and press Save to My specimens.</p>
+      <div class="my-ask" id="my-ask" hidden></div>
+      <div class="btns">
+        <button class="btn" type="button" id="my-export">Export all</button>
+        <button class="btn" type="button" id="my-import-b">Import…</button>
+        <input type="file" id="my-import" accept=".json,application/json,text/plain" hidden>
+      </div>
+      <p class="hint-on" id="my-msg" role="status"></p>
+      <p class="hint-on">Stored in this browser. Use Export all to keep a backup.</p>
       <div class="sub-h aid">Load a specimen</div>
       <textarea id="spec-in" placeholder="Paste a specimen here" spellcheck="false" aria-label="Specimen to load"></textarea>
       <div class="btns">
@@ -1659,7 +1765,12 @@ const DEFAULTS = {
   align: 'left', seed: 1952,
   outlineAmt: 0, outlineSeed: 7, strokeW: 1,
   guides: { base: false, x: false, cap: false, asc: false },
-  hoverInfo: true,
+  // Motion (video only, never in the .jsx): template, loop and cycle in beats (one beat = 14 frames at 30 fps),
+  // Range in styles, Stagger and Hold in frames, Direction and its seed; video format and size.
+  mTpl: 'breath', mLoop: '8', mSpeed: '2', mRange: 2, mStagger: 2, mDir: 'ltr', mHold: '1', mSeed: 1, mFmt: 'mp4', mScale: '1',
+  mRate: '2', mAmt: 30, mProps: 'br', // Jitter loop: hops per beat, Amount %, which properties hop (b baseline, r rotation, s size)
+  mTSpeed: '4', mTDelay: 0, mTOrder: 'ltr', mTHold: 'end', // Typing in: letters per beat, Start delay and End hold in beats ('end': to the loop's end)
+  hover: 'basic', // hover tag: 'off', 'basic' (family, style, size, shift, track) or 'full' (plus what applies to the letter)
   expAsk: '', // export: '' asks each time; 'howto' or 'script' once Stop asking is ticked
   png: { scale: 2, transparent: false, guides: false }, // the PNG dialog's last choices
   panelW: { l: 320, r: 300 }, // panel widths in px; view state, not in undo
@@ -2102,6 +2213,7 @@ function compute() {
   const lineLens = chars.join('').split('\n').map(l => Array.from(l).length);
   const total = lineLens.reduce((a, n) => a + n, 0);
   let ln = 0, linePos = 0, lastUnit = null, lastPicked = null, picks = 0;
+  const typed = MOTION ? motionHidden(MOTION.f, chars) : null;
   const at = { pos: 0, frac: 0, lineFrac: 0, alt: 0 };
   chars.forEach((ch, i) => {
     if (ch === '\n') { lines.push([]); prevSpace = true; segLeft = 0; ln++; linePos = 0; return; }
@@ -2127,6 +2239,8 @@ function compute() {
       at.alt = picks;
       st = pickFrom(pool, widths, rnd(seed, unit, 1), at);
     }
+    if (MOTION && !space) st = motionStyle(MOTION.f, i, chars.length, st); // a video frame: on top of the static choice
+    const hid = !!(typed && typed.has(i)); // Typing in: not yet typed in this frame, but it keeps its place
     const size = r1(Math.max(1, S.size * matchFactor(st, base) * (1 + S.sizeVar / 100 * (2 * rnd(seed, unit, 2) - 1))));
     const jit = r1(S.baseJit * (2 * rnd(seed, unit, 3) - 1));
     const tr = Math.round(S.track + S.trackJit * (2 * rnd(seed, unit, 4) - 1));
@@ -2141,10 +2255,17 @@ function compute() {
     // From palette: a randomly placed box whose fill wasn't set by hand takes a block or extra color.
     if (box && box.auto && !box.hand && boxInks) box = Object.assign({}, box, { fill: boxInks[Math.floor(rnd(S.boxSeed, i, 10) * boxInks.length)] });
     const col = ov && ov.col || null;
-    lines[lines.length - 1].push({ i, ch, st, size, jit, tr, va, bs: 0, sw, rot, box, col, ov: !ovEmpty(ov) });
+    const mj = MOTION && !space ? motionJitter(MOTION.f, i) : null; // a video frame: this letter's hop
+    lines[lines.length - 1].push(mj ? { i, ch, st, size: r1(size * mj.s), jit, tr, va, bs: 0, sw, rot: r1(rot + mj.r), box, col, ov: !ovEmpty(ov), mbs: mj.b * size }
+      : hid ? { i, ch, st, size, jit, tr, va, bs: 0, sw, rot, box, col, ov: !ovEmpty(ov), hid }
+      : { i, ch, st, size, jit, tr, va, bs: 0, sw, rot, box, col, ov: !ovEmpty(ov) });
     pos++; linePos++;
   });
-  for (const line of lines) { if (S.gaps) evenGaps(line); alignLine(line); }
+  for (const line of lines) {
+    if (S.gaps) evenGaps(line);
+    alignLine(line);
+    if (MOTION) for (const g of line) if (g.mbs) g.bs = r1(g.bs + g.mbs);
+  }
   return lines;
 }
 
@@ -2181,6 +2302,273 @@ function alignLine(line) {
     else if (g.va === 'middle') shift = (refTop + refBot) / 2 - (g.inkTop + g.inkBot) / 2;
     g.bs = r1(shift);
   }
+}
+
+/* ---------------- motion ---------------- */
+// A loop is a pure function of the frame index and the settings: motionStyle() swaps a letter's style for the
+// frame, on top of what compute() picked, and touches no state. While a frame shows, MOTION is { f }; the static
+// state, S.overrides and the .jsx never see it.
+const FPS = 30, BEAT = 14; // one beat is 14 frames at 30 fps
+let MOTION = null;
+const motionLen = () => +S.mLoop * BEAT;
+// The styles a letter steps through: its family's styles that are on in the pool, light to heavy as the family
+// lists them (all of them when fewer than two are on).
+function motionSteps(st) {
+  const fam = S.families.find(f => f.ids.includes(st.id));
+  if (!fam) return [st.id];
+  const on = fam.ids.filter(id => fam.on.has(id));
+  return on.length > 1 ? on : fam.ids;
+}
+// Weight breathing: up Range styles, back, down Range styles, back, once per cycle. Each letter starts Stagger
+// frames after the one before it in the chosen order. Stepped: a letter is always one named style. Hold divides
+// 14 and the cycle divides the loop, so frame L is frame 0 again.
+function motionStyle(f, i, n, st) {
+  if (S.mTpl !== 'breath') return st;
+  const ids = motionSteps(st), c = ids.indexOf(st.id);
+  if (c < 0 || ids.length < 2) return st;
+  const hold = +S.mHold, ff = Math.floor(f / hold) * hold;
+  const cyc = Math.min(+S.mSpeed, +S.mLoop) * BEAT;
+  const ord = S.mDir === 'rtl' ? n - 1 - i : S.mDir === 'random' ? Math.floor(rnd(S.mSeed, i, 13) * n) : i;
+  const t = (((ff - ord * S.mStagger) % cyc) + cyc) % cyc / cyc;
+  const tri = t < 0.25 ? t * 4 : t < 0.75 ? 2 - t * 4 : t * 4 - 4; // 0 → 1 → 0 → −1 → 0
+  const k = clamp(c + Math.round(tri * S.mRange), 0, ids.length - 1);
+  return S.styles.get(ids[k]) || st;
+}
+// Jitter loop: every letter hops to a new seeded offset Rate times per beat (rnd channels 14, 15, 16 for baseline,
+// rotation and size, from the motion seed). The hop count wraps with the loop, so frame L is frame 0 again.
+// → { b: baseline shift in em, r: degrees, s: size factor }, or null for other templates.
+function motionJitter(f, i) {
+  if (S.mTpl !== 'jitter') return null;
+  const hold = +S.mHold, ff = Math.floor(f / hold) * hold, len = BEAT / +S.mRate, hops = motionLen() / len;
+  const h = Math.floor(ff / len) % hops, u = i * 4096 + h, a = S.mAmt / 100, p = S.mProps;
+  const v = ch => 2 * rnd(S.mSeed, u, ch) - 1;
+  return { b: p.includes('b') ? v(14) * a * 0.25 : 0, r: p.includes('r') ? v(15) * a * 30 : 0, s: p.includes('s') ? 1 + v(16) * a * 0.4 : 1 };
+}
+// Typing in: the letters (spaces and line breaks aside) appear one by one, Speed per beat, after Start delay, in
+// reading order or in an order from the motion seed (rnd channel 17). The whole text holds End hold beats, then
+// clears until the loop starts again. → the set of indexes hidden in frame f, or null for other templates.
+function typingOrder(chars) {
+  const ids = [];
+  chars.forEach((ch, i) => { if (!/\s/.test(ch)) ids.push(i); });
+  if (S.mTOrder === 'random') ids.sort((a, b) => rnd(S.mSeed, a, 17) - rnd(S.mSeed, b, 17) || a - b);
+  return ids;
+}
+const typingLen = n => +S.mTDelay * BEAT + Math.max(0, n - 1) * BEAT / +S.mTSpeed; // frame the last letter appears
+function motionHidden(f, chars) {
+  if (S.mTpl !== 'type') return null;
+  const hold = +S.mHold, ff = Math.floor(f / hold) * hold % motionLen(), ids = typingOrder(chars);
+  const end = S.mTHold === 'end' ? Infinity : Math.floor(typingLen(ids.length)) + +S.mTHold * BEAT;
+  const hid = new Set();
+  ids.forEach((i, k) => { if (ff >= end || ff < Math.floor(+S.mTDelay * BEAT + k * BEAT / +S.mTSpeed)) hid.add(i); });
+  return hid;
+}
+// The text block's width while a loop shows: the widest frame, so the frame, the pattern and the marks stay put.
+const motionWidth = () => Math.ceil(S.W || 0);
+function showFrame(f, minW) {
+  MOTION = { f };
+  out.style.minWidth = minW ? minW + 'px' : '';
+  render();
+}
+function endMotion() {
+  MOTION = null;
+  out.style.minWidth = '';
+  $('#sheet').classList.remove('playing');
+}
+
+// Preview: real time on the canvas, one frame per 1/30 s. The block's width grows to the widest frame seen.
+const PLAY = { on: false, raf: 0, t0: 0, f: -1, w: 0 };
+function playStep(now) {
+  const L = motionLen(), f = Math.floor((now - PLAY.t0) / 1000 * FPS) % L;
+  if (f !== PLAY.f) {
+    PLAY.f = f;
+    showFrame(f, PLAY.w);
+    const w = motionWidth();
+    if (w > PLAY.w) { PLAY.w = w; out.style.minWidth = w + 'px'; }
+    $('#m-frame').textContent = `Frame ${f + 1} / ${L}`;
+  }
+  PLAY.raf = requestAnimationFrame(playStep);
+}
+function playMotion() {
+  if (!S.styles.size) { toast('Add fonts and some text first.'); return; }
+  PLAY.on = true; PLAY.f = -1; PLAY.w = 0; PLAY.t0 = performance.now();
+  hideTag();
+  $('#sheet').classList.add('playing');
+  $('#m-play').textContent = 'Pause';
+  PLAY.raf = requestAnimationFrame(playStep);
+}
+function stopMotion() {
+  if (!PLAY.on) return;
+  PLAY.on = false;
+  cancelAnimationFrame(PLAY.raf);
+  endMotion();
+  $('#m-play').textContent = 'Play';
+  $('#m-frame').textContent = '';
+  render();
+}
+
+// Video: rendered offline, frame by frame, through the PNG path (fonts embedded, named instances exact), encoded
+// with WebCodecs and written by the small muxers below. The same settings give the same frames.
+const MP4_CODECS = ['avc1.640034', 'avc1.4d0034', 'avc1.42e034', 'avc1.640028', 'avc1.42e01f'];
+async function pickCodec(webm, w, h) {
+  const list = webm ? ['vp09.00.10.08', 'vp8'] : MP4_CODECS;
+  for (const codec of list) {
+    const cfg = { codec, width: w, height: h, framerate: FPS, bitrate: Math.round(Math.max(2e6, w * h * FPS * 0.15)), latencyMode: 'quality' };
+    if (!webm) cfg.avc = { format: 'avc' };
+    try { if ((await VideoEncoder.isConfigSupported(cfg)).supported) return cfg; } catch (e) { /* try the next */ }
+  }
+  return null;
+}
+const evenUp = v => v + (v % 2);
+async function exportVideo() {
+  if (!S.styles.size || !S.lines.some(l => l.length)) { toast('Add fonts and some text first.'); return; }
+  if (typeof VideoEncoder === 'undefined') { toast('This browser cannot write video. Use Chrome or Edge.'); return; }
+  stopMotion();
+  const btn = $('#m-export'), prog = t => { $('#m-prog').textContent = t; };
+  const webm = S.mFmt === 'webm', sc = +S.mScale, L = motionLen();
+  const alpha = webm && S.bgCol === 'none'; // WebM keeps a background with no color transparent
+  btn.disabled = true;
+  try {
+    await document.fonts.ready;
+    // Pass 1: the widest frame, so every frame has the same size.
+    let wMax = 0;
+    for (let f = 0; f < L; f++) { showFrame(f, 0); wMax = Math.max(wMax, motionWidth()); }
+    showFrame(0, wMax);
+    const o = { scale: sc, transparent: alpha, guides: false };
+    const first = pngSVG(o), W = evenUp(first.w), H = evenUp(first.h);
+    const cfg = await pickCodec(webm, W, H);
+    if (!cfg) throw new Error(webm ? 'no VP9 or VP8 encoder' : 'no H.264 encoder (try WebM)');
+    // Transparent WebM as Matroska stores it: the color frames, and the alpha as a second stream of grey frames
+    // (white = opaque) that rides along with each color frame.
+    let desc = null, err = null;
+    const encoder = list => new VideoEncoder({
+      output: (chunk, meta) => {
+        const data = new Uint8Array(chunk.byteLength); chunk.copyTo(data);
+        if (list === chunks && meta && meta.decoderConfig && meta.decoderConfig.description && !desc) {
+          const d = meta.decoderConfig.description;
+          desc = d instanceof ArrayBuffer ? new Uint8Array(d.slice(0)) : new Uint8Array(d.buffer.slice(d.byteOffset, d.byteOffset + d.byteLength));
+        }
+        list.push({ data, ts: chunk.timestamp, key: chunk.type === 'key' });
+      },
+      error: e => { err = e; },
+    });
+    const chunks = [], alphas = [];
+    const enc = encoder(chunks), aenc = alpha ? encoder(alphas) : null;
+    enc.configure(cfg); if (aenc) aenc.configure(cfg);
+    const cv = document.createElement('canvas'); cv.width = W; cv.height = H;
+    const ctx = cv.getContext('2d', { willReadFrequently: alpha });
+    const acv = alpha ? document.createElement('canvas') : null, actx = acv && (acv.width = W, acv.height = H, acv.getContext('2d'));
+    for (let f = 0; f < L; f++) {
+      if (err) throw err;
+      showFrame(f, wMax);
+      const { svg, w, h } = pngSVG(o);
+      const img = new Image();
+      img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+      await img.decode();
+      ctx.clearRect(0, 0, W, H);
+      if (!o.transparent) { ctx.fillStyle = S.bgCol === 'none' ? '#ffffff' : S.bgCol; ctx.fillRect(0, 0, W, H); }
+      ctx.drawImage(img, 0, 0, w, h);
+      const at = { timestamp: Math.round(f * 1e6 / FPS), duration: Math.round(1e6 / FPS) }, key = { keyFrame: f % FPS === 0 };
+      if (aenc) {
+        const px = ctx.getImageData(0, 0, W, H), a = px.data;
+        for (let q = 0; q < a.length; q += 4) { a[q] = a[q + 1] = a[q + 2] = a[q + 3]; a[q + 3] = 255; }
+        actx.putImageData(px, 0, 0);
+        const af = new VideoFrame(acv, at); aenc.encode(af, key); af.close();
+      }
+      const vf = new VideoFrame(cv, at);
+      enc.encode(vf, key);
+      vf.close();
+      while (enc.encodeQueueSize > 6 || (aenc && aenc.encodeQueueSize > 6)) await new Promise(r => setTimeout(r, 5));
+      if (f % 5 === 0) prog(`Frame ${f + 1} / ${L}`);
+    }
+    await enc.flush(); enc.close();
+    if (aenc) { await aenc.flush(); aenc.close(); }
+    if (err) throw err;
+    if (aenc) chunks.forEach((c, k) => { c.alpha = alphas[k] ? alphas[k].data : null; });
+    const bytes = webm ? webmMux(chunks, cfg.codec.startsWith('vp09') ? 'V_VP9' : 'V_VP8', W, H, alpha) : mp4Mux(chunks, desc, W, H);
+    const name = `mixweight-motion.${webm ? 'webm' : 'mp4'}`;
+    download(name, new Blob([bytes], { type: webm ? 'video/webm' : 'video/mp4' }));
+    prog('');
+    toast(`Saved ${name}: ${L} frames, ${r1(L / FPS)} s, ${W} × ${H}${alpha ? ', transparent' : ''}.`, 7000);
+  } catch (e) {
+    prog('');
+    toast('Could not write the video: ' + (e && e.message || e));
+  } finally {
+    endMotion(); render();
+    btn.disabled = false;
+  }
+}
+
+// Byte writers for the two muxers.
+function bytesOf(parts) {
+  let n = 0;
+  for (const p of parts) n += p.length;
+  const u = new Uint8Array(n);
+  let o = 0;
+  for (const p of parts) { u.set(p, o); o += p.length; }
+  return u;
+}
+const u8 = (...a) => Uint8Array.from(a);
+const u16 = n => u8(n >> 8 & 255, n & 255);
+const u32 = n => u8(n >>> 24 & 255, n >>> 16 & 255, n >>> 8 & 255, n & 255);
+const ascii = t => Uint8Array.from(t, c => c.charCodeAt(0));
+// MP4 (ISO BMFF), one H.264 track, moov before mdat so it plays while it loads.
+function mp4Mux(chunks, avcC, w, h) {
+  if (!avcC) throw new Error('the encoder gave no H.264 setup');
+  const box = (type, ...p) => { const b = bytesOf(p); return bytesOf([u32(b.length + 8), ascii(type), b]); };
+  const full = (type, v, flags, ...p) => box(type, u8(v, flags >> 16 & 255, flags >> 8 & 255, flags & 255), ...p);
+  const ts = FPS * 1000, n = chunks.length, dur = n * 1000, z = k => new Uint8Array(k);
+  const matrix = bytesOf([0x10000, 0, 0, 0, 0x10000, 0, 0, 0, 0x40000000].map(u32));
+  const sizes = chunks.map(c => c.data.length);
+  const moov = off => box('moov',
+    full('mvhd', 0, 0, u32(0), u32(0), u32(ts), u32(dur), u32(0x10000), u16(0x100), z(10), matrix, z(24), u32(2)),
+    box('trak',
+      full('tkhd', 0, 3, u32(0), u32(0), u32(1), z(4), u32(dur), z(8), u16(0), u16(0), u16(0), z(2), matrix, u32(w * 65536), u32(h * 65536)),
+      box('mdia',
+        full('mdhd', 0, 0, u32(0), u32(0), u32(ts), u32(dur), u16(0x55c4), u16(0)),
+        full('hdlr', 0, 0, u32(0), ascii('vide'), z(12), ascii('VideoHandler'), z(1)),
+        box('minf',
+          full('vmhd', 0, 1, z(8)),
+          box('dinf', full('dref', 0, 0, u32(1), full('url ', 0, 1))),
+          box('stbl',
+            full('stsd', 0, 0, u32(1), box('avc1', z(6), u16(1), z(16), u16(w), u16(h), u32(0x480000), u32(0x480000), z(4), u16(1), z(32), u16(0x18), u16(0xffff), box('avcC', avcC))),
+            full('stts', 0, 0, u32(1), u32(n), u32(1000)),
+            full('stss', 0, 0, u32(chunks.filter(c => c.key).length), ...chunks.map((c, k) => c.key ? u32(k + 1) : z(0))),
+            full('stsc', 0, 0, u32(1), u32(1), u32(n), u32(1)),
+            full('stsz', 0, 0, u32(0), u32(n), ...sizes.map(u32)),
+            full('stco', 0, 0, u32(1), u32(off)))))));
+  const ftyp = box('ftyp', ascii('isom'), u32(0x200), ascii('isomiso2avc1mp41'));
+  const head = ftyp.length + moov(0).length + 8;
+  const data = bytesOf(chunks.map(c => c.data));
+  return bytesOf([ftyp, moov(head), u32(data.length + 8), ascii('mdat'), data]);
+}
+// WebM (Matroska), one VP9 or VP8 track; with alpha, each frame's alpha travels as BlockAdditional 1.
+function webmMux(chunks, codecId, w, h, alpha) {
+  const id = hex => Uint8Array.from(hex.match(/../g), x => parseInt(x, 16));
+  const size = n => { const b = new Uint8Array(8); b[0] = 1; for (let k = 7, v = n; k > 0; k--) { b[k] = v % 256; v = Math.floor(v / 256); } return b; };
+  const el = (hex, ...p) => { const b = bytesOf(p); return bytesOf([id(hex), size(b.length), b]); };
+  const uint = (hex, v) => { const b = []; do { b.unshift(v & 255); v = Math.floor(v / 256); } while (v > 0); return el(hex, Uint8Array.from(b)); };
+  const f64 = (hex, v) => { const b = new Uint8Array(8); new DataView(b.buffer).setFloat64(0, v); return el(hex, b); };
+  const str = (hex, t) => el(hex, ascii(t));
+  const ms = c => Math.round(c.ts / 1000);
+  const header = el('1a45dfa3', uint('4286', 1), uint('42f7', 1), uint('42f2', 4), uint('42f3', 8), str('4282', 'webm'), uint('4287', 4), uint('4285', 2));
+  const info = el('1549a966', uint('2ad7b1', 1000000), f64('4489', chunks.length * 1000 / FPS), str('4d80', 'Mixweight'), str('5741', 'Mixweight'));
+  const video = el('e0', uint('b0', w), uint('ba', h), ...(alpha ? [uint('53c0', 1)] : []));
+  const tracks = el('1654ae6b', el('ae', uint('d7', 1), uint('73c5', 1), uint('83', 1), str('86', codecId), uint('9c', 0), ...(alpha ? [uint('55ee', 1)] : []), video));
+  const clusters = [];
+  let cur = null, base = 0, prev = 0;
+  for (const c of chunks) {
+    const t = ms(c);
+    if (c.key || !cur) { if (cur) clusters.push(el('1f43b675', ...cur)); cur = [uint('e7', t)]; base = t; }
+    const rel = t - base, head = bytesOf([u8(0x81), u16(rel & 0xffff)]);
+    if (alpha && c.alpha) {
+      const parts = [el('a1', head, u8(0), c.data), el('75a1', el('a6', uint('ee', 1), el('a5', c.alpha)))];
+      if (!c.key) parts.push(el('fb', u16((prev - t) & 0xffff)));
+      cur.push(el('a0', ...parts));
+    } else cur.push(el('a3', head, u8(c.key ? 0x80 : 0), c.data));
+    prev = t;
+  }
+  if (cur) clusters.push(el('1f43b675', ...cur));
+  return bytesOf([header, el('18538067', info, tracks, ...clusters)]);
 }
 
 /* ---------------- render ---------------- */
@@ -2221,6 +2609,7 @@ function render() {
       st.fontSize = g.size + 'px';
       st.letterSpacing = (g.tr / 1000) + 'em';
       if (g.bs) st.top = (-g.bs) + 'px';
+      if (g.hid) st.visibility = 'hidden'; // Typing in: not typed yet, still holding its width
       if (g.sw) { st.webkitTextStrokeWidth = g.sw + 'px'; st.webkitTextStrokeColor = g.col || S.textCol; } // outline: no fill
       else if (g.col) st.color = g.col;
       div.appendChild(sp);
@@ -2380,7 +2769,7 @@ function decoShapes() {
     const gs = line.filter(g => g.i >= b.a && g.i <= b.b);
     if (gs.length) add(bandShape(gs, b.fit, b.dh, b.st, 'Band'));
   }
-  for (const line of S.lines) for (const g of line) if (g.box) add(letterShape(g, g.box));
+  for (const line of S.lines) for (const g of line) if (g.box && !g.hid) add(letterShape(g, g.box)); // a box shows with its letter
   return res;
 }
 const GUIDES = [
@@ -2652,7 +3041,8 @@ function syncGuidesBtn() {
   b.querySelector('.hv').textContent = gl.length ? 'On' : 'Off';
   b.title = 'Guidelines: ' + (gl.length ? gl.join(', ') + ($('#exp-guides').checked ? '; included in export' : '') : 'off');
 }
-function syncHov() { const b = $('#hov-btn'); b.setAttribute('aria-pressed', S.hoverInfo); b.querySelector('.hv').textContent = S.hoverInfo ? 'On' : 'Off'; }
+const HOVER_MODES = ['off', 'basic', 'full'];
+function syncHov() { press('#hov-opts', S.hover); $('#hov-w').classList.toggle('off', S.hover === 'off'); }
 function renderInspector() {
   const gs = selectedGlyphs();
   const on = gs.length > 0;
@@ -2664,8 +3054,10 @@ function renderInspector() {
   renderStyleGroups();
   renderBoxEditor(BX.all);
   $('#bx-ed').hidden = !on; // the selection editor; the left panel's edits the whole text
-  if (!side.open) return;
+  if (CTX.open && !on) closeCtx();
+  if (!side.open) { if (CTX.open) { renderSelPanel(gs); syncCtx(gs); } return; } // the right-click panel reads the right panel's controls
   if (on) { renderSelPanel(gs); renderBoxEditor(BX.sel); }
+  if (CTX.open) syncCtx(gs);
   restoreSideScroll();
 }
 
@@ -2721,6 +3113,30 @@ function tagRows(gs) {
 function fillTag(el, rows) {
   el.replaceChildren(...rows.map(t => { const s = document.createElement('span'); unitText(s, t); return s; }));
 }
+// Full: the Basic rows, then a line for each thing that applies to this letter, never an empty one.
+const capName = v => v[0].toUpperCase() + v.slice(1);
+const fillName = v => v === 'none' ? 'None' : v.toUpperCase();
+function hoverRows(g) {
+  const rows = tagRows([g]);
+  if (S.hover !== 'full') return rows;
+  const blends = new Set();
+  if (g.box) {
+    rows.push(`Box ${capName(g.box.h)} × ${capName(g.box.w)}`, 'Box fill ' + fillName(g.box.fill));
+    blends.add(g.box.blend);
+  }
+  const line = S.lines[g.k] || [], inked = line.filter(q => q.inkTop != null);
+  const inRun = gs => { const a = gs.filter(q => q.inkTop != null); return a.length && g.i >= a[0].i && g.i <= a[a.length - 1].i; };
+  if (S.para.on && inked.length && inRun(line)) {
+    const inks = S.para.col === 'palette' ? paletteColors() : null;
+    rows.push('Paragraph band ' + fillName(inks ? inks[g.k % inks.length] : S.para.st.fill));
+    blends.add(S.para.st.blend);
+  }
+  for (const b of S.bands) if (inRun(line.filter(q => q.i >= b.a && q.i <= b.b))) { rows.push('Band ' + fillName(b.st.fill)); blends.add(b.st.blend); }
+  if (blends.size) rows.push('Blend ' + [...blends].map(capName).join(', '));
+  if (g.rot) rows.push('Rotate ' + sgn(g.rot) + '°');
+  rows.push(g.sw ? 'Fill outline ' + num(g.sw) + ' pt' : 'Fill solid');
+  return rows;
+}
 const hovtag = $('#hovtag');
 let hovI = null, hovPt = null;
 function hideTag() {
@@ -2738,13 +3154,13 @@ function placeTag() {
 }
 function hoverAt(sp, e) {
   const g = sp && S.gmap && S.gmap.get(+sp.dataset.i);
-  if (!S.hoverInfo || !g || /\s/.test(g.ch)) { hideTag(); return; }
+  if (S.hover === 'off' || PLAY.on || !g || /\s/.test(g.ch)) { hideTag(); return; }
   hovPt = [e.clientX, e.clientY];
   if (hovI !== g.i) {
     hideTag();
     hovI = g.i;
     sp.classList.add('hov');
-    fillTag(hovtag, tagRows([g]));
+    fillTag(hovtag, hoverRows(g));
     hovtag.hidden = false;
   }
   placeTag();
@@ -2753,9 +3169,9 @@ function hoverAt(sp, e) {
 function refreshHover() {
   if (hovI == null) return;
   const g = S.gmap.get(hovI), sp = out.querySelector(`.g[data-i="${hovI}"]`);
-  if (!S.hoverInfo || !g || !sp) { hovI = null; hovtag.hidden = true; return; }
+  if (S.hover === 'off' || !g || !sp) { hovI = null; hovtag.hidden = true; return; }
   sp.classList.add('hov');
-  fillTag(hovtag, tagRows([g]));
+  fillTag(hovtag, hoverRows(g));
   placeTag();
 }
 
@@ -3206,6 +3622,102 @@ function rerollGlyphs(gs) {
   }
   render(); save();
 }
+
+/* ---------------- right-click panel ---------------- */
+// Right-click (or Ctrl+click on a Mac) on a letter: a small panel with the most-used selection controls. They are
+// copies of the right panel's (ids prefixed ctx-, as cloneBoxEditor() does) that hand every click and value to the
+// original control, so both places run on the same bindings and the same state; syncCtx() copies the originals'
+// state back after every redraw. Canvas UI only, never exported.
+const IS_MAC = /Mac/.test(navigator.platform);
+const CTX = { el: null, parts: [], open: false };
+// [label, source element, rebuilt when its buttons change (weights follow the family)]
+const CTX_PARTS = [
+  ['Weight', () => $('#sel-styles'), true],
+  [null, () => $('#rot').closest('.ctl')],
+  ['Fill', () => $('#sel-fill')],
+  [null, () => $('#col-sel-auto').parentElement],
+  [null, () => $('#lb-add').closest('.row')],
+  [null, () => $('#band-add').closest('.row')],
+  [null, () => $('#sel-reset').parentElement],
+];
+const ctxKey = el => [...el.children].map(c => c.textContent).join('|');
+// The right panel redraws the weight buttons on every change, so a live part's copies match by position.
+const ctxOrig = (part, c) => part.live && c.parentElement === part.node ? part.src().children[[...part.node.children].indexOf(c)] : part.map.get(c);
+function ctxClone(part) {
+  const src = part.src(), c = src.cloneNode(true), map = new Map();
+  const a = [src, ...src.querySelectorAll('*')], b = [c, ...c.querySelectorAll('*')];
+  b.forEach((el, n) => {
+    for (const k of ['id', 'for', 'aria-controls']) { const v = el.getAttribute(k); if (v) el.setAttribute(k, 'ctx-' + v); }
+    map.set(el, a[n]);
+  });
+  if (part.node) part.node.replaceWith(c);
+  Object.assign(part, { node: c, map, key: ctxKey(src) });
+}
+function setupCtx() {
+  const el = document.createElement('div');
+  el.className = 'ctxp'; el.id = 'ctxp'; el.hidden = true;
+  el.setAttribute('role', 'dialog'); el.setAttribute('aria-label', 'Selected letters');
+  el.innerHTML = '<div class="ctxp-h"><span id="ctx-count"></span><button type="button" class="x-close" aria-label="Close" title="Close (Esc)">×</button></div><div class="ctxp-b"></div>';
+  const body = el.lastElementChild;
+  CTX.parts = CTX_PARTS.map(([label, src, live]) => ({ label, src, live }));
+  for (const part of CTX.parts) {
+    if (part.label) body.insertAdjacentHTML('beforeend', `<span class="lab">${part.label}</span>`);
+    ctxClone(part); body.appendChild(part.node);
+    if (part.src() === $('#sel-fill')) body.insertAdjacentHTML('beforeend', '<div class="colc" id="col-ctx-sel" data-label="Letter color" title="The letters\' color; outline letters stroke in it"></div>');
+    if (part.src() === $('#lb-add').closest('.row')) body.insertAdjacentHTML('beforeend', '<div class="colc" id="col-ctx-fill" data-label="Box fill"></div>');
+  }
+  document.body.appendChild(el);
+  CTX.el = el;
+  const orig = t => { for (const p of CTX.parts) if (p.map.has(t)) return ctxOrig(p, t); return null; };
+  el.querySelector('.x-close').onclick = closeCtx;
+  el.addEventListener('click', e => {
+    const b = e.target.closest('button'); if (!b || !body.contains(b) || b.closest('.colc')) return;
+    const o = orig(b); if (o && !o.disabled) o.click();
+  });
+  el.addEventListener('input', e => {
+    const o = orig(e.target); if (!o) return;
+    o.value = e.target.value; o.dispatchEvent(new Event('input', { bubbles: true }));
+  });
+  el.addEventListener('keydown', e => { if (e.target.matches('input[type=number]') && e.key === 'Enter') e.target.blur(); });
+}
+function syncCtx(gs) {
+  const n = gs.length;
+  $('#ctx-count').textContent = `${n} letter${n === 1 ? '' : 's'} selected`;
+  for (const part of CTX.parts) {
+    if (part.live && ctxKey(part.src()) !== part.key) ctxClone(part);
+    for (const [c, o0] of part.map) {
+      const o = ctxOrig(part, c) || o0;
+      c.hidden = o.hidden;
+      if (o.hasAttribute('aria-pressed')) c.setAttribute('aria-pressed', o.getAttribute('aria-pressed'));
+      if ('disabled' in o) c.disabled = o.disabled;
+      if (o.tagName === 'OUTPUT') c.innerHTML = o.innerHTML;
+      if (o.tagName === 'INPUT' && document.activeElement !== c) { c.value = o.value; c.placeholder = o.placeholder; }
+    }
+  }
+  $('#col-ctx-fill').hidden = !(gs.some(g => g.box) || selBands().length);
+  colCtl.ctxFill?.sync(); colCtl.ctxSel?.sync();
+}
+// Beside the selected letters when there is room (right, left, below, above), else at the pointer.
+function placeCtx(x, y) {
+  const el = CTX.el, w = el.offsetWidth, h = el.offsetHeight, m = 4, gap = 14;
+  const rs = $$('#out .g.sel').map(sp => sp.getBoundingClientRect());
+  const fits = (l, t) => l >= m && t >= m && l + w <= innerWidth - m && t + h <= innerHeight - m;
+  const cy = t => clamp(t, m, innerHeight - m - h), cx = l => clamp(l, m, innerWidth - m - w);
+  let pos = [cx(x + 8), cy(y + 8)];
+  if (rs.length) {
+    const U = { l: Math.min(...rs.map(r => r.left)), r: Math.max(...rs.map(r => r.right)), t: Math.min(...rs.map(r => r.top)), b: Math.max(...rs.map(r => r.bottom)) };
+    const tries = [[U.r + gap, cy(y - 20)], [U.l - gap - w, cy(y - 20)], [cx(x - 20), U.b + gap], [cx(x - 20), U.t - gap - h]];
+    pos = tries.find(([l, t]) => fits(l, t)) || pos;
+  }
+  el.style.left = pos[0] + 'px'; el.style.top = pos[1] + 'px';
+}
+function openCtx(x, y) {
+  CTX.open = true; CTX.el.hidden = false;
+  hideTag();
+  renderInspector();
+  requestAnimationFrame(() => { if (CTX.open) placeCtx(x, y); }); // after the right panel has opened and the letters settled
+}
+function closeCtx() { if (!CTX.open) return; CTX.open = false; CTX.el.hidden = true; }
 
 /* ---------------- panel UI ---------------- */
 function renderPool() {
@@ -3792,7 +4304,7 @@ async function pngOut(copy) {
 // A specimen is a whole look as parameters: every saved setting, the per-letter edits, the pool and the base style,
 // with fonts named (family, style, PostScript name) rather than embedded. Loading it with the same fonts gives the
 // same result; loading checks every value, so a hand-edited or newer specimen never breaks anything.
-const SPEC_VERSION = 1, TOOL_VERSION = '4.0';
+const SPEC_VERSION = 1, TOOL_VERSION = '4.1-beta.7';
 const LIMITS = {}; // allowed range or options per setting, filled by bindRange / bindOpts
 const fontRef = id => { const s = S.styles.get(id); return s ? { family: s.family, style: s.style, ps: s.ps } : null; };
 // A named font → the id of a loaded style: family and style first, then PostScript name; null when not loaded.
@@ -3887,17 +4399,208 @@ function loadSpecimen(src) {
   }
 }
 
+/* ---------------- my specimens ---------------- */
+// A personal list of specimens in this browser, in IndexedDB (localStorage is too small for thumbnails). An entry is
+// { id, name, saved, spec, thumb }: spec exactly as Download specimen writes it, thumb a small PNG from the PNG
+// export. Per browser and per origin, so Export all and Import keep and move them. Not settings: never in SAVE_KEYS.
+const MY_DB = 'mixweight-specimens', MY_STORE = 'specimens', MY_THUMB = 360, MY_FILE = 'mixweight-specimens';
+let myDB = null;
+function myOpen() {
+  if (!myDB) myDB = new Promise(res => {
+    try {
+      const rq = indexedDB.open(MY_DB, 1);
+      rq.onupgradeneeded = () => rq.result.createObjectStore(MY_STORE, { keyPath: 'id', autoIncrement: true });
+      rq.onsuccess = () => res(rq.result);
+      rq.onerror = rq.onblocked = () => res(null);
+    } catch (e) { res(null); }
+  });
+  return myDB;
+}
+async function myTx(mode, fn) {
+  const db = await myOpen();
+  if (!db) throw new Error('storage');
+  return new Promise((res, rej) => {
+    let out;
+    try {
+      const tx = db.transaction(MY_STORE, mode), rq = fn(tx.objectStore(MY_STORE));
+      rq.onsuccess = () => { out = rq.result; };
+      tx.oncomplete = () => res(out);
+      tx.onerror = tx.onabort = () => rej(tx.error || new Error('storage'));
+    } catch (e) { rej(e); }
+  });
+}
+const myAll = () => myTx('readonly', st => st.getAll());
+const myPut = e => myTx('readwrite', st => st.put(e));
+const myDel = id => myTx('readwrite', st => st.delete(id));
+// The thumbnail is the PNG export, small, with the background and without guidelines.
+async function myThumb() {
+  try { const { w, h } = frame(); return await pngBlob({ scale: Math.min(2, MY_THUMB / Math.max(w, h, 1)), transparent: false, guides: false }); }
+  catch (e) { return null; }
+}
+const blobToData = b => new Promise(res => { if (!b) return res(null); const r = new FileReader(); r.onload = () => res(r.result); r.onerror = () => res(null); r.readAsDataURL(b); });
+function dataToBlob(d) {
+  const m = typeof d === 'string' && /^data:(image\/png);base64,([A-Za-z0-9+/=]+)$/.exec(d);
+  if (!m) return null;
+  try { return new Blob([Uint8Array.from(atob(m[2]), c => c.charCodeAt(0))], { type: m[1] }); } catch (e) { return null; }
+}
+const isSpecimen = o => !!(o && typeof o === 'object' && o.mixweight === 'specimen' && o.settings && typeof o.settings === 'object');
+const specSlug = t => String(t || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+const myDate = iso => { const d = new Date(iso); return isNaN(d) ? '' : d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }); };
+// "Name", "Name (2)", "Name (3)"… so a kept-both copy never shares a name.
+function myUnique(name, items) {
+  const names = new Set(items.map(e => e.name));
+  if (!names.has(name)) return name;
+  let n = 2; while (names.has(`${name} (${n})`)) n++;
+  return `${name} (${n})`;
+}
+
+// specLoad: the Specimen dialog's loader (one undo step, reports missing fonts).
+function setupMySpecimens(specLoad) {
+  const list = $('#my-list'), msg = t => { $('#my-msg').textContent = t; };
+  let urls = [], blocked = false;
+  // A question inside the dialog, in its own style: resolves with the value of the button pressed.
+  const ask = (text, opts) => new Promise(res => {
+    const box = $('#my-ask');
+    box.replaceChildren(Object.assign(document.createElement('p'), { textContent: text }));
+    const bs = document.createElement('div'); bs.className = 'btns';
+    opts.forEach(([label, v], n) => {
+      const b = document.createElement('button');
+      b.type = 'button'; b.className = 'btn sm' + (n ? '' : ' solid'); b.textContent = label;
+      b.onclick = () => { box.hidden = true; box.replaceChildren(); res(v); };
+      bs.append(b);
+    });
+    box.append(bs); box.hidden = false; bs.firstChild.focus();
+  });
+  const block = () => {
+    blocked = true;
+    for (const id of ['#my-save', '#my-export', '#my-import-b']) $(id).disabled = true;
+    $('#my-empty').hidden = true;
+    msg('This browser won’t let Mixweight keep data here (a private window, or site data blocked), so My specimens can’t be saved. Copy and Download specimen still work.');
+  };
+  function row(e) {
+    const r = document.createElement('div'); r.className = 'my-row'; r.setAttribute('role', 'listitem');
+    const open = document.createElement('button'); open.type = 'button'; open.className = 'my-open'; open.title = 'Load this specimen';
+    const img = document.createElement('img'); img.className = 'my-th'; img.alt = '';
+    if (e.thumb instanceof Blob) { const u = URL.createObjectURL(e.thumb); urls.push(u); img.src = u; }
+    const nm = Object.assign(document.createElement('span'), { className: 'my-nm', textContent: e.name });
+    const dt = Object.assign(document.createElement('span'), { className: 'my-dt', textContent: myDate(e.saved) });
+    open.append(img, nm, dt);
+    open.onclick = () => specLoad(e.spec);
+    const acts = document.createElement('span'); acts.className = 'my-acts';
+    const act = (label, fn) => { const b = document.createElement('button'); b.type = 'button'; b.className = 'tbtn'; b.textContent = label; b.onclick = fn; acts.append(b); };
+    act('Download', () => { const n = `mixweight-specimen${specSlug(e.name) ? '-' + specSlug(e.name) : ''}.json`; download(n, JSON.stringify(e.spec, null, 1)); toast('Saved ' + n); });
+    act('Rename', () => {
+      const inp = Object.assign(document.createElement('input'), { type: 'text', value: e.name, maxLength: 80 });
+      inp.setAttribute('aria-label', 'New name');
+      nm.replaceWith(inp); inp.focus(); inp.select();
+      let done = false;
+      const end = async keep => {
+        if (done) return; done = true;
+        const v = inp.value.trim();
+        if (keep && v && v !== e.name) { e.name = v; e.spec.title = v; try { await myPut(e); } catch (err) { msg('Could not rename it: storage refused.'); } }
+        refresh();
+      };
+      inp.addEventListener('keydown', ev => {
+        if (ev.key === 'Enter') { ev.preventDefault(); end(true); }
+        if (ev.key === 'Escape') { ev.preventDefault(); ev.stopPropagation(); end(false); } // Esc cancels the rename, not the dialog
+      });
+      inp.addEventListener('blur', () => end(true));
+    });
+    act('Delete', async () => {
+      if (!await ask(`Delete “${e.name}” from My specimens? This can’t be undone.`, [['Delete', true], ['Cancel', false]])) return;
+      try { await myDel(e.id); msg(`Deleted “${e.name}”.`); } catch (err) { msg('Could not delete it: storage refused.'); }
+      refresh();
+    });
+    r.append(open, acts);
+    return r;
+  }
+  async function refresh() {
+    let items;
+    try { items = await myAll(); } catch (e) { block(); return []; }
+    urls.forEach(u => URL.revokeObjectURL(u)); urls = [];
+    items.sort((a, b) => String(b.saved).localeCompare(String(a.saved)));
+    list.replaceChildren(...items.map(row));
+    $('#my-empty').hidden = items.length > 0;
+    $('#my-export').disabled = !items.length;
+    return items;
+  }
+  // A new entry, asking first when its name is taken: Keep both (numbered), Replace or Skip.
+  async function add(entry, items, verb) {
+    const same = items.find(x => x.name === entry.name);
+    const v = same ? await ask(`“${entry.name}” is already in My specimens.`, [['Keep both', 'both'], ['Replace', 'replace'], [verb === 'save' ? 'Cancel' : 'Skip', 'skip']]) : 'new';
+    if (v === 'skip') return false;
+    if (v === 'replace') entry.id = same.id;
+    if (v === 'both') { entry.name = myUnique(entry.name, items); entry.spec.title = entry.name; }
+    await myPut(entry);
+    if (v === 'replace') items[items.indexOf(same)] = entry; else items.push(entry);
+    return true;
+  }
+  $('#btn-spec').addEventListener('click', () => { if (!blocked) { msg(''); refresh(); } });
+  $('#spec').addEventListener('close', () => { $('#my-ask').hidden = true; });
+  $('#my-save').onclick = async () => {
+    if (!S.styles.size || !S.lines.some(l => l.length)) { msg('Add fonts and some text first.'); return; }
+    const name = $('#spec-title').value.trim().slice(0, 80);
+    if (!name) { msg('Give it a title first: it is the name in the list.'); $('#spec-title').focus(); return; }
+    $('#my-save').disabled = true; msg('Saving…');
+    try {
+      const items = await myAll();
+      const spec = buildSpecimen({ title: name, author: $('#spec-author').value.trim() });
+      const entry = { name, saved: new Date().toISOString(), spec, thumb: await myThumb() };
+      if (await add(entry, items, 'save')) msg(`Saved “${entry.name}”.`); else msg('');
+    } catch (e) { msg('Could not save it: this browser’s storage refused.'); }
+    $('#my-save').disabled = false;
+    refresh();
+  };
+  $('#my-export').onclick = async () => {
+    let items;
+    try { items = await myAll(); } catch (e) { block(); return; }
+    if (!items.length) return;
+    const out = { mixweight: 'specimens', version: 1, tool: TOOL_VERSION, exported: new Date().toISOString(), items: [] };
+    for (const e of items) out.items.push({ name: e.name, saved: e.saved, spec: e.spec, thumb: await blobToData(e.thumb) });
+    const n = `${MY_FILE}-${new Date().toISOString().slice(0, 10)}.json`;
+    download(n, JSON.stringify(out));
+    msg(`Exported ${items.length} specimen${items.length === 1 ? '' : 's'} to ${n}.`);
+  };
+  $('#my-import-b').onclick = () => $('#my-import').click();
+  // Import merges: a file from Export all, or one specimen from Download specimen. Never overwrites without asking.
+  $('#my-import').onchange = async ev => {
+    const f = ev.target.files[0]; ev.target.value = '';
+    if (!f) return;
+    let o;
+    try { o = JSON.parse(await f.text()); } catch (e) { msg('That file is not a specimen file: it is not valid JSON.'); return; }
+    const raw = o && o.mixweight === 'specimens' && Array.isArray(o.items) ? o.items
+      : isSpecimen(o) ? [{ name: o.title || f.name.replace(/\.json$/i, ''), saved: o.created, spec: o }] : null;
+    if (!raw) { msg('That file holds no Mixweight specimens.'); return; }
+    const entries = raw.filter(x => x && isSpecimen(x.spec)).map(x => ({
+      name: (typeof x.name === 'string' && x.name.trim() ? x.name.trim() : x.spec.title || 'Untitled').slice(0, 80),
+      saved: typeof x.saved === 'string' && !isNaN(new Date(x.saved)) ? x.saved : new Date().toISOString(),
+      spec: x.spec, thumb: dataToBlob(x.thumb),
+    }));
+    let items, n = 0;
+    try { items = await myAll(); } catch (e) { block(); return; }
+    try { for (const e of entries) if (await add(e, items, 'import')) n++; }
+    catch (e) { msg(`Imported ${n}, then this browser’s storage refused the rest.`); refresh(); return; }
+    const skipped = raw.length - n;
+    msg(`Imported ${n} specimen${n === 1 ? '' : 's'}` + (skipped ? `; ${skipped} skipped.` : '.'));
+    refresh();
+  };
+}
+
 /* ---------------- persistence ---------------- */
 // Settings that live in the left panel, both tabs (Clear there resets these, plus the font pool's mix).
 const LEFT_KEYS = ['caseMode', 'caseAmt', 'mix', 'dist', 'wavePeriod', 'gran', 'valign', 'size', 'leading', 'sizeVar', 'baseJit',
   'trackJit', 'rotJit', 'track', 'gaps', 'match', 'align', 'patOn', 'patType', 'patCell', 'patW', 'patCol', 'patDot',
   'regOn', 'regSize', 'regW', 'regInset', 'regCol', 'textCol', 'bgCol', 'palette', 'palSeed',
-  'para', 'boxAmt', 'boxCol', 'boxSeed', 'boxStyle', 'outlineAmt', 'outlineSeed', 'strokeW']; // boxStyle: the style new boxes get
+  'para', 'boxAmt', 'boxCol', 'boxSeed', 'boxStyle', 'outlineAmt', 'outlineSeed', 'strokeW', // boxStyle: the style new boxes get
+  'mTpl', 'mLoop', 'mSpeed', 'mRange', 'mStagger', 'mDir', 'mHold', 'mSeed', 'mFmt', 'mScale', 'mRate', 'mAmt', 'mProps',
+  'mTSpeed', 'mTDelay', 'mTOrder', 'mTHold'];
 // A letter box placed by Random letter boxes (left panel) and not colored by hand: left Clear removes it, Clear edits keeps it.
 const autoBox = v => !!(v && v.box && v.box.auto && !byHand(v.box));
 const SAVE_KEYS = ['text', 'caseMode', 'caseAmt', 'mix', 'dist', 'gran', 'valign', 'size', 'leading', 'sizeVar', 'baseJit', 'trackJit', 'rotJit', 'track', 'align', 'seed', 'match', 'wavePeriod', 'gaps',
   'outlineAmt', 'outlineSeed', 'strokeW', 'guides', 'boxAmt', 'boxSeed', 'boxStyle', 'bandFit', 'bands', 'para', 'textCol', 'bgCol', 'guideCol', 'palette', 'palSeed', 'boxCol',
-  'patOn', 'patType', 'patCell', 'patW', 'patCol', 'patDot', 'regOn', 'regSize', 'regW', 'regInset', 'regCol'];
+  'patOn', 'patType', 'patCell', 'patW', 'patCol', 'patDot', 'regOn', 'regSize', 'regW', 'regInset', 'regCol',
+  'mTpl', 'mLoop', 'mSpeed', 'mRange', 'mStagger', 'mDir', 'mHold', 'mSeed', 'mFmt', 'mScale', 'mRate', 'mAmt', 'mProps',
+  'mTSpeed', 'mTDelay', 'mTOrder', 'mTHold'];
 // Saved state from older versions, or edited by hand: keep only well-formed decoration settings.
 function fixDeco() {
   const g = S.guides && typeof S.guides === 'object' ? S.guides : {};
@@ -3927,6 +4630,18 @@ function fixDeco() {
   S.regOn = S.regOn === 'on' ? 'on' : 'off';
   for (const [k, a, b] of [['regSize', 4, 60], ['regW', 0.25, 4], ['regInset', 0, 60]]) S[k] = Number.isFinite(S[k]) ? clamp(S[k], a, b) : DEFAULTS[k];
   S.regCol = hexOf(S.regCol) || DEFAULTS.regCol;
+  // Motion, missing from sessions and specimens before the beta: the defaults.
+  const pick = (k, opts) => { S[k] = opts.includes(String(S[k])) ? String(S[k]) : DEFAULTS[k]; };
+  pick('mTpl', ['breath', 'jitter', 'type']); pick('mRate', ['1', '2', '7', '14']); pick('mLoop', ['4', '8', '16']); pick('mSpeed', ['1', '2', '4', '8', '16']); pick('mDir', ['ltr', 'rtl', 'random']);
+  pick('mHold', ['1', '2', '7', '14']); pick('mFmt', ['mp4', 'webm']); pick('mScale', ['1', '2']);
+  pick('mTSpeed', ['1', '2', '4', '7', '14']); pick('mTOrder', ['ltr', 'random']); pick('mTHold', ['1', '2', '4', 'end']);
+  S.mTDelay = Number.isFinite(S.mTDelay) ? clamp(Math.round(S.mTDelay * 2) / 2, 0, 8) : DEFAULTS.mTDelay;
+  if (+S.mSpeed > +S.mLoop) S.mSpeed = S.mLoop;
+  S.mRange = Number.isFinite(S.mRange) ? clamp(Math.round(S.mRange), 1, 4) : DEFAULTS.mRange;
+  S.mStagger = Number.isFinite(S.mStagger) ? clamp(Math.round(S.mStagger), 0, 14) : DEFAULTS.mStagger;
+  S.mSeed = Number.isFinite(S.mSeed) ? clamp(Math.round(S.mSeed), 1, 99999) : DEFAULTS.mSeed;
+  S.mAmt = Number.isFinite(S.mAmt) ? clamp(Math.round(S.mAmt), 0, 100) : DEFAULTS.mAmt;
+  S.mProps = typeof S.mProps === 'string' ? ['b', 'r', 's'].filter(c => S.mProps.includes(c)).join('') : DEFAULTS.mProps;
 }
 function save() {
   try {
@@ -3939,7 +4654,8 @@ function save() {
     for (const fam of S.families) for (const id of fam.ids) if (!fam.on.has(id)) o.off.push(id);
     o.shares = Object.fromEntries(S.families.filter(f => f.share !== 100).map(f => [f.name, f.share]));
     o.overrides = [...S.overrides.entries()];
-    o.hoverInfo = S.hoverInfo;
+    o.hover = S.hover;
+    o.hoverInfo = S.hover !== 'off'; // what V4 and older read
     o.expAsk = S.expAsk;
     o.png = S.png;
     o.recent = S.recent;
@@ -4080,6 +4796,160 @@ function bindSplit(k) {
   el.addEventListener('dblclick', () => { S.panelW[k] = PANEL[k].def; applyPanelWidths(); save(); });
 }
 
+/* ---------------- backstage ---------------- */
+// The way from the stable page to the beta, and the beta's own mark. BETA_URL '' hides all of it.
+const BETA_URL = 'https://beta.mixweight.pages.dev';
+const FEEDBACK_URL = 'https://docs.google.com/forms/d/e/1FAIpQLScZv_zCPDJIXGyQhfqrusm61mm9zhhCZmLuKcFzvh32UM82iA/viewform';
+const BETA_NOTE = 'Experimental. Exports and saved files may change.';
+const BS_KEY = 'mixweight-backstage', BS_WAIT = 60; // seconds of visible time before the one-time question
+const isBetaHost = (h = location.hostname) => h.startsWith('beta.');
+function backstage() {
+  if (!BETA_URL) return;
+  const el = (tag, cls, html) => { const e = document.createElement(tag); if (cls) e.className = cls; if (html) e.innerHTML = html; return e; };
+  const link = (url, cls, txt) => { const a = el('a', cls, txt); a.href = url; a.target = '_blank'; a.rel = 'noopener'; return a; };
+  const help = $('#help .help');
+  if (isBetaHost()) {
+    // The feedback dialog once the form's questions are in FEEDBACK_FIELDS; until then a plain link to the form.
+    const fb = FEEDBACK_FIELDS.length ? feedbackDialog() : null;
+    // Beta badge on the title, like the BASE badge on the base style; the feedback link in the toolbar.
+    const mark = el(fb ? 'button' : 'span', 'beta-mark', 'Beta'); mark.title = BETA_NOTE + (fb ? ' Click to send feedback.' : '');
+    const send = fb ? el('button', 'tbtn', 'Send feedback') : link(FEEDBACK_URL, 'tbtn', 'Feedback ↗');
+    if (fb) { mark.type = send.type = 'button'; mark.onclick = send.onclick = fb; }
+    $('.brand').classList.add('has-beta');
+    $('.brand').append(mark);
+    const bar = $('.sub .grp.tools') || $('.sub > div:last-child');
+    bar.prepend(send);
+    const sec = el('section', '', `<h4>Beta</h4><p>${BETA_NOTE} This is the Mixweight beta, where new features are tried out before they reach the stable page. </p>`);
+    if (fb) {
+      const b = el('button', 'btn sm', 'Send feedback'); b.type = 'button';
+      b.onclick = () => { $('#help').close(); fb(); };
+      sec.querySelector('p').append('Tell us what works and what doesn\'t: ', b);
+    } else sec.querySelector('p').append(link(FEEDBACK_URL, '', 'Send feedback'), ' (opens a form in a new tab).');
+    help.prepend(sec);
+    return;
+  }
+  // Stable page: a Backstage button at the canvas's bottom-right, and after a minute of visible time a one-time
+  // question. Remembered per browser (view state, not a setting).
+  const store = v => { try { localStorage.setItem(BS_KEY, v); } catch (e) { /* storage blocked */ } };
+  const done = () => { try { return !!localStorage.getItem(BS_KEY); } catch (e) { return true; } };
+  const main = $('.main');
+  let card = null;
+  const btn = link(BETA_URL, 'btn bs-btn', 'Backstage');
+  btn.title = 'Open the Mixweight beta in a new tab: new features, still being tried out.';
+  btn.onclick = () => { store('used'); close(); };
+  main.append(btn);
+  document.body.classList.add('bs-on');
+  const sec = el('section', '', '<h4>Backstage</h4><p><b>Backstage</b>, at the bottom right of the canvas, opens the Mixweight beta in a new tab, where new features are tried out first. Exports and saved files there may change.</p>');
+  help.append(sec);
+  if (done()) return;
+  card = el('div', 'bs-card', '<h4 id="bs-h">Backstage</h4><p>Try the beta features? New tools, still rough, in a separate page. Your work here stays as it is.</p><div class="acts"></div>');
+  card.setAttribute('role', 'dialog'); card.setAttribute('aria-labelledby', 'bs-h'); card.hidden = true;
+  const go = link(BETA_URL, 'btn solid sm', 'Open the beta ↗'), no = el('button', 'btn sm', 'Not now');
+  no.type = 'button';
+  card.querySelector('.acts').append(go, no);
+  main.append(card);
+  function close() { if (card && !card.hidden) { card.hidden = true; document.removeEventListener('keydown', esc, true); } }
+  function esc(e) { if (e.key === 'Escape') { e.stopPropagation(); store('dismissed'); close(); } }
+  go.onclick = () => { store('used'); close(); };
+  no.onclick = () => { store('dismissed'); close(); btn.focus(); };
+  // Only visible time counts; never while dragging, typing in a field, or with a dialog or popover open.
+  let shown = 0, down = false, dropAt = 0;
+  window.addEventListener('pointerdown', () => { down = true; }, true);
+  window.addEventListener('pointerup', () => { down = false; }, true);
+  window.addEventListener('pointercancel', () => { down = false; }, true);
+  window.addEventListener('dragover', () => { dropAt = Date.now(); }, true);
+  const busy = () => down || Date.now() - dropAt < 1500 || !!document.querySelector('dialog[open], .pop:not([hidden]), .ctxmenu:not([hidden]), .ctxp:not([hidden])')
+    || !!(document.activeElement && document.activeElement.matches('input:not([type=range]):not([type=checkbox]):not([type=radio]):not([type=button]), textarea, select, [contenteditable]'));
+  const tick = setInterval(() => {
+    if (document.visibilityState !== 'visible') return;
+    if (shown < BS_WAIT) { shown++; return; }
+    if (busy()) return;
+    clearInterval(tick);
+    if (done()) return; // answered in another tab meanwhile
+    card.hidden = false;
+    document.addEventListener('keydown', esc, true);
+  }, 1000);
+}
+
+// Beta only: the owner's Google Form, in the tool's own dialog. Only the answers are sent: no session, no cookies,
+// no referrer. The response is opaque (no-cors), so "Sent" means the request left without a network error.
+// Field: name (the form's entry.<id>), title, type ('text' | 'para' | 'one' | 'many' | 'scale'), options, required.
+const FEEDBACK_FIELDS = [];
+const FB_MAX = { text: 300, para: 3000 };
+function feedbackDialog() {
+  const dlg = document.createElement('dialog');
+  dlg.id = 'fb';
+  dlg.innerHTML = `<form method="dialog" class="dlg ask" novalidate>
+    <header><span>Send feedback</span><span class="hd-r"><span>Beta</span><button class="x-close" value="cancel" aria-label="Close" title="Close">×</button></span></header>
+    <div class="ask-b spec-b fb-b"><div class="fb-fields"></div>
+      <div class="btns"><button class="btn solid" type="submit" id="fb-send">Send</button></div>
+      <p class="hint-on">Only what you type here is sent.</p>
+      <p class="hint-on" id="fb-msg" role="status"></p>
+    </div></form>`;
+  document.body.append(dlg);
+  const form = dlg.querySelector('form'), box = dlg.querySelector('.fb-fields'), sendB = dlg.querySelector('#fb-send'), msg = dlg.querySelector('#fb-msg');
+  const vals = {};
+  const say = (t, fallback) => {
+    msg.textContent = t;
+    if (fallback) { const a = document.createElement('a'); a.href = FEEDBACK_URL; a.target = '_blank'; a.rel = 'noopener'; a.textContent = 'Open the form in a new tab'; msg.append(' ', a); }
+  };
+  FEEDBACK_FIELDS.forEach((f, n) => {
+    const wrap = document.createElement('div'); wrap.className = 'fb-q';
+    const id = 'fb-' + n, h = document.createElement('div');
+    h.className = 'sub-h'; h.id = id + '-h'; h.textContent = f.title + (f.required ? ' *' : '');
+    wrap.append(h);
+    if (f.type === 'text' || f.type === 'para') {
+      const i = document.createElement(f.type === 'para' ? 'textarea' : 'input');
+      if (f.type === 'text') i.type = 'text';
+      i.id = id; i.maxLength = FB_MAX[f.type]; i.autocomplete = 'off'; i.setAttribute('aria-labelledby', h.id);
+      i.oninput = () => { vals[f.name] = i.value; };
+      wrap.append(i);
+    } else if (f.type === 'many') {
+      const g = document.createElement('div'); g.className = 'fb-many'; g.setAttribute('role', 'group'); g.setAttribute('aria-labelledby', h.id);
+      vals[f.name] = [];
+      for (const o of f.options) {
+        const l = document.createElement('label'); l.className = 'chk';
+        const c = document.createElement('input'); c.type = 'checkbox';
+        c.onchange = () => { vals[f.name] = c.checked ? [...vals[f.name], o] : vals[f.name].filter(x => x !== o); };
+        l.append(c, ' ' + o); g.append(l);
+      }
+      wrap.append(g);
+    } else { // one of several, or a scale: the option-button pattern
+      const g = document.createElement('div'); g.className = 'opts'; g.setAttribute('role', 'group'); g.setAttribute('aria-labelledby', h.id);
+      for (const o of f.options) {
+        const b = document.createElement('button'); b.type = 'button'; b.textContent = o; b.setAttribute('aria-pressed', 'false');
+        b.onclick = () => { const on = vals[f.name] !== o; vals[f.name] = on ? o : ''; for (const x of g.children) x.setAttribute('aria-pressed', on && x === b); };
+        g.append(b);
+      }
+      wrap.append(g);
+    }
+    box.append(wrap);
+  });
+  let sending = false;
+  form.addEventListener('submit', async e => {
+    e.preventDefault();
+    if (sending) return;
+    const miss = FEEDBACK_FIELDS.find(f => f.required && !(Array.isArray(vals[f.name]) ? vals[f.name].length : (vals[f.name] || '').trim()));
+    if (miss) { say('Please answer: ' + miss.title); box.children[FEEDBACK_FIELDS.indexOf(miss)].querySelector('input, textarea, button').focus(); return; }
+    const body = new URLSearchParams();
+    for (const f of FEEDBACK_FIELDS) {
+      const v = vals[f.name];
+      if (Array.isArray(v)) v.forEach(x => body.append(f.name, x));
+      else if (v && v.trim()) body.append(f.name, v.slice(0, FB_MAX.para));
+    }
+    if (![...body.keys()].length) { say('Nothing to send yet.'); return; }
+    sending = true; sendB.disabled = true; say('Sending…');
+    try {
+      await fetch(FEEDBACK_URL.replace(/\/viewform.*$/, '/formResponse'), { method: 'POST', mode: 'no-cors', credentials: 'omit', referrerPolicy: 'no-referrer', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body });
+      form.reset(); for (const k in vals) vals[k] = Array.isArray(vals[k]) ? [] : '';
+      for (const b of box.querySelectorAll('.opts button')) b.setAttribute('aria-pressed', 'false');
+      say('Sent. Thank you.');
+    } catch (err) { say('Could not send.', true); }
+    sending = false; sendB.disabled = false;
+  });
+  return () => { if (!sending) say(''); dlg.showModal(); };
+}
+
 /* ---------------- boot ---------------- */
 async function loadDemo() {
   if (typeof DEMO_FONTS === 'undefined') return;
@@ -4153,7 +5023,7 @@ function setupTabs() {
   for (const b of $$('.tabs [role="tab"]')) b.onclick = () => { setTab(b.dataset.tab); save(); };
   $('.tabs').addEventListener('keydown', e => {
     if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
-    const t = S.leftTab === 'type' ? 'style' : 'type';
+    const tabs = ['type', 'style', 'motion'], t = tabs[(tabs.indexOf(S.leftTab) + (e.key === 'ArrowRight' ? 1 : 2)) % 3];
     setTab(t); save(); $('#tab-' + t).focus(); e.preventDefault();
   });
   setTab(S.leftTab);
@@ -4166,7 +5036,9 @@ async function boot() {
     S.restoredOff = new Set(saved.off || []);
     if (saved.shares && typeof saved.shares === 'object') S.restoredShares = saved.shares;
     if (Array.isArray(saved.overrides)) S.overrides = new Map(saved.overrides.filter(e => e && e[1] && typeof e[1] === 'object'));
-    if (typeof saved.hoverInfo === 'boolean') S.hoverInfo = saved.hoverInfo;
+    // Sessions before the three modes saved On / Off: On is Basic.
+    if (HOVER_MODES.includes(saved.hover)) S.hover = saved.hover;
+    else if (typeof saved.hoverInfo === 'boolean') S.hover = saved.hoverInfo ? 'basic' : 'off';
     if (saved.expAsk === 'howto' || saved.expAsk === 'script') S.expAsk = saved.expAsk;
     if (Array.isArray(saved.recent)) S.recent = saved.recent.map(hexOf).filter(Boolean).slice(0, RECENT_MAX);
     if (saved.png && typeof saved.png === 'object') S.png = {
@@ -4176,7 +5048,7 @@ async function boot() {
     if (Array.isArray(saved.groupsClosed)) S.groupsClosed = new Set(saved.groupsClosed.filter(n => typeof n === 'string'));
     if (saved.palsOpen === false) S.palsOpen = false;
     if (Array.isArray(saved.foldsSet)) S.foldsSet = new Set(saved.foldsSet.filter(n => typeof n === 'string'));
-    if (saved.leftTab === 'style') S.leftTab = 'style';
+    if (saved.leftTab === 'style' || saved.leftTab === 'motion') S.leftTab = saved.leftTab;
     if (saved.gbxOpen === true) S.gbxOpen = true;
   }
   // Your own text stays; a built-in sample is swapped for a different one on each open.
@@ -4276,8 +5148,61 @@ async function boot() {
   $('#btn-files').onclick = () => $('#file-in').click();
   $('#file-in').onchange = e => { addFiles(e.target.files); e.target.value = ''; };
   $('#btn-help').onclick = () => $('#help').showModal();
-  $$('[data-exp]').forEach(b => { b.onclick = () => exportFor(b.dataset.exp); });
-  $('#exp-png').onclick = exportPNG;
+  // Exports, the Specimen window and its thumbnails always see the static state, never a video frame.
+  $$('[data-exp]').forEach(b => { b.onclick = () => { stopMotion(); exportFor(b.dataset.exp); }; });
+  $('#exp-png').onclick = () => { stopMotion(); exportPNG(); };
+  $('#btn-spec').addEventListener('click', stopMotion, true);
+  // motion
+  const loopTxt = () => `${S.mLoop} beats · ${r1(motionLen() / FPS)} s`;
+  const syncMotion = () => {
+    $('#m-loop-o').textContent = loopTxt();
+    $$('#m-speed button').forEach(b => { b.disabled = +b.dataset.v > +S.mLoop; });
+    $('#m-speed-o').textContent = `${S.mSpeed} beat${S.mSpeed === '1' ? '' : 's'} per cycle`;
+    $('#m-hold-o').textContent = S.mHold === '1' ? 'Smooth' : `${S.mHold} frames`;
+    $('#m-seed').value = S.mSeed;
+    const jit = S.mTpl === 'jitter', type = S.mTpl === 'type';
+    $('#m-breath').hidden = jit || type; $('#m-jitter').hidden = !jit; $('#m-type').hidden = !type;
+    $('#m-seed').disabled = $('#m-seed-re').disabled = type ? S.mTOrder !== 'random' : !jit && S.mDir !== 'random';
+    $('#m-rate-o').textContent = `${S.mRate} hop${S.mRate === '1' ? '' : 's'} per beat`;
+    $$('#m-props button').forEach(b => b.setAttribute('aria-pressed', S.mProps.includes(b.dataset.v)));
+    $('#m-props-o').textContent = S.mProps ? '' : 'None: nothing hops';
+    // Typing in: how long the text takes to type, and whether it fits in the loop.
+    const n = typingOrder(Array.from(S.text)).length, L = motionLen();
+    let fit = 0; while (fit < n && Math.floor(+S.mTDelay * BEAT + fit * BEAT / +S.mTSpeed) < L) fit++;
+    $('#m-tspeed-o').textContent = `${S.mTSpeed} per beat · ` + (fit < n ? `${fit} of ${n} letters fit the loop` : `${n} letters, ${r1(n / +S.mTSpeed)} beats`);
+    $('#m-thold-o').textContent = S.mTHold === 'end' ? 'To the loop end' : `${S.mTHold} beat${S.mTHold === '1' ? '' : 's'}, then clear`;
+    summary('sum-motion', `${jit ? 'Jitter loop' : type ? 'Typing in' : 'Weight breathing'} · ${loopTxt()}`);
+    summary('sum-video', `${S.mFmt === 'mp4' ? 'MP4' : 'WebM'} · ${S.mScale}×`);
+  };
+  bindOpts('m-tpl', 'mTpl', syncMotion);
+  bindOpts('m-loop', 'mLoop', () => { if (+S.mSpeed > +S.mLoop) S.mSpeed = S.mLoop; syncMotion(); });
+  bindOpts('m-speed', 'mSpeed', syncMotion);
+  bindOpts('m-dir', 'mDir', syncMotion);
+  bindOpts('m-rate', 'mRate', syncMotion);
+  bindOpts('m-tspeed', 'mTSpeed', syncMotion);
+  bindOpts('m-torder', 'mTOrder', syncMotion);
+  bindOpts('m-thold', 'mTHold', syncMotion);
+  bindRange('m-tdelay', 'mTDelay', v => `${v} beat${v === 1 ? '' : 's'}`);
+  $('#m-tdelay').addEventListener('input', syncMotion); $('#text').addEventListener('input', syncMotion); // the fit in Speed's line
+  bindRange('m-amt', 'mAmt', v => v + '%');
+  // Properties: each one switches on and off by itself.
+  $('#m-props').addEventListener('click', e => {
+    const b = e.target.closest('button'); if (!b) return;
+    record(); const v = b.dataset.v;
+    S.mProps = ['b', 'r', 's'].filter(c => c === v ? !S.mProps.includes(c) : S.mProps.includes(c)).join('');
+    syncMotion(); render(); save();
+  });
+  bindOpts('m-hold', 'mHold', syncMotion);
+  bindOpts('m-fmt', 'mFmt', syncMotion);
+  bindOpts('m-scale', 'mScale', syncMotion);
+  bindRange('m-range', 'mRange', v => `±${v} style${v === 1 ? '' : 's'}`);
+  bindRange('m-stagger', 'mStagger', v => `${v} frame${v === 1 ? '' : 's'}`);
+  LIMITS.mSeed = { min: 1, max: 99999 };
+  $('#m-seed').addEventListener('change', e => { const v = Math.round(+e.target.value); if (!Number.isFinite(v)) return syncMotion(); record(); S.mSeed = clamp(v, 1, 99999); syncMotion(); save(); });
+  $('#m-seed-re').onclick = () => { record(); S.mSeed = 1 + Math.floor(Math.random() * 99999); syncMotion(); save(); };
+  syncers.push(syncMotion); syncMotion();
+  $('#m-play').onclick = () => PLAY.on ? stopMotion() : playMotion();
+  $('#m-export').onclick = exportVideo;
   const syncAsk = () => {
     $('#ask-state').textContent = S.expAsk
       ? `You asked not to be asked: every export gives ${S.expAsk === 'howto' ? 'the script and a how-to .txt' : 'just the script'}. Ask me again brings the question back.`
@@ -4390,6 +5315,7 @@ async function boot() {
       toast(`Loaded ${what}. ⌘Z goes back.${newer}`, 6000);
     }
   };
+  setupMySpecimens(specLoad);
   $('#spec-load').onclick = () => { const t = $('#spec-in').value.trim(); if (t) specLoad(t); else specMsg('Paste a specimen into the box first.'); };
   $('#spec-file-b').onclick = () => $('#spec-file').click();
   $('#spec-file').onchange = async e => {
@@ -4445,7 +5371,7 @@ async function boot() {
   $('#lb-rm-all').onclick = () => { record(); for (const g of glyphList()) if (g.box) { delete ovFor(g.i).box; cleanOv(g.i); } render(); save(); };
   // paragraph
   $('#fold-all').onclick = () => { const close = S.families.some(f => !S.collapsed.has(f.name)); for (const f of S.families) foldFamily(f.name, close); };
-  $('#hov-btn').onclick = () => { S.hoverInfo = !S.hoverInfo; if (!S.hoverInfo) hideTag(); syncHov(); save(); };
+  $$('#hov-opts button').forEach(b => b.onclick = () => { S.hover = b.dataset.v; hideTag(); syncHov(); save(); });
   syncHov();
   optClick('#para-on', v => { record(); S.para.on = v === 'on'; render(); save(); });
   optClick('#para-fit', v => { record(); S.para.fit = v; render(); save(); });
@@ -4457,11 +5383,14 @@ async function boot() {
   colCtl.bg = colorCtl('col-bg', () => S.bgCol, setState('bgCol', () => { if (zoomFit) requestAnimationFrame(fitZoom); }), true);
   colCtl.guide = colorCtl('col-guide', () => S.guideCol, setState('guideCol'));
   syncers.push(() => colCtl.guide.sync());
-  colCtl.sel = colorCtl('col-sel', () => { const cs = new Set(selectedGlyphs().map(g => g.col || S.textCol)); return cs.size === 1 ? [...cs][0] : null; },
-    (v, key) => { record(key); eachSel(o => { o.col = v; }); });
+  const selColGet = () => { const cs = new Set(selectedGlyphs().map(g => g.col || S.textCol)); return cs.size === 1 ? [...cs][0] : null; };
+  const selColSet = (v, key) => { record(key); eachSel(o => { o.col = v; }); };
+  colCtl.sel = colorCtl('col-sel', selColGet, selColSet);
   $('#col-sel-auto').onclick = () => { record(); eachSel(o => { delete o.col; }); };
   $('#col-reset').onclick = () => { record(); S.textCol = DEFAULTS.textCol; S.bgCol = DEFAULTS.bgCol; S.palette = ''; S.palSeed = 0; render(); save(); };
   $('#pals-fold').onclick = e => { e.stopPropagation(); S.palsOpen = !S.palsOpen; S.foldsSet.add('Palettes'); renderColor(); save(); };
+  setupCtx();
+  colCtl.ctxSel = colorCtl('col-ctx-sel', selColGet, selColSet); // the right-click panel's Letter color
   // box style: the same wiring for both editors
   optClick('#gbx-tgt', v => { bxTarget = v; renderInspector(); });
   optClick('#bx-tgt-sel', v => { bxSelTarget = v; renderInspector(); });
@@ -4474,12 +5403,11 @@ async function boot() {
     optClick('#' + p + '-h', v => editBox(E, 'h', st => { st.h = v; }));
     optClick('#' + p + '-w', v => editBox(E, 'w', st => { st.w = v; }));
     for (const key of ['fill', 'stroke']) {
-      E[key] = colorCtl(`col-${p}-${key === 'fill' ? 'fill' : 'stroke'}`, () => {
-        // A box colored from the palette shows the color it is drawn in.
-        const gs = E.gs(), st = E.targets().list[0], g = (gs.length ? gs : glyphList()).find(g => g.box && ovOf(g).box === st);
-        return g ? g.box[key] : st[key];
-      },
-        (v, k) => editBox(E, key + (k ? ':' + k : ''), st => { st[key] = v; if (key === 'fill') st.hand = true; }), true);
+      // A box colored from the palette shows the color it is drawn in.
+      const get = () => { const gs = E.gs(), st = E.targets().list[0], g = (gs.length ? gs : glyphList()).find(g => g.box && ovOf(g).box === st); return g ? g.box[key] : st[key]; };
+      const set = (v, k) => editBox(E, key + (k ? ':' + k : ''), st => { st[key] = v; if (key === 'fill') st.hand = true; });
+      E[key] = colorCtl(`col-${p}-${key === 'fill' ? 'fill' : 'stroke'}`, get, set, true);
+      if (E === BX.sel && key === 'fill') colCtl.ctxFill = colorCtl('col-ctx-fill', get, set, true); // the right-click panel's Box fill
     }
     optClick('#' + p + '-lock', v => {
       const lock = v === 'all';
@@ -4573,7 +5501,7 @@ async function boot() {
 
   // click / drag selection on the proof
   out.addEventListener('pointerdown', e => {
-    const sp = e.target.closest('.g'); if (!sp || e.button !== 0) return;
+    const sp = e.target.closest('.g'); if (!sp || e.button !== 0 || (IS_MAC && e.ctrlKey)) return; // Ctrl+click on a Mac is a right-click
     const i = +sp.dataset.i;
     if (e.shiftKey && S.anchor != null) selectRange(S.anchor, i);
     else if (e.metaKey || e.ctrlKey) { S.sel.has(i) ? S.sel.delete(i) : S.sel.add(i); S.anchor = i; }
@@ -4589,6 +5517,19 @@ async function boot() {
     paintSelection();
   });
   window.addEventListener('pointerup', () => { if (dragging) { dragging = false; paintSelection(); } });
+  // Right-click on a letter: select it if it isn't, and open the right-click panel. Anywhere else the system menu stays.
+  out.addEventListener('contextmenu', e => {
+    const sp = e.target.closest('.g'), g = sp && S.gmap && S.gmap.get(+sp.dataset.i);
+    if (!g || /\s/.test(g.ch)) return;
+    e.preventDefault();
+    if (!S.sel.has(g.i)) { S.anchor = g.i; S.sel = new Set([g.i]); paintSelection(); }
+    openCtx(e.clientX, e.clientY);
+  });
+  // A click away closes it; the right panel doesn't count, so both can be used side by side.
+  window.addEventListener('pointerdown', e => { if (CTX.open && !CTX.el.contains(e.target) && !e.target.closest('#side')) closeCtx(); }, true);
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && CTX.open) { e.preventDefault(); e.stopImmediatePropagation(); closeCtx(); } }, true);
+  window.addEventListener('resize', closeCtx);
+  $('#stage').addEventListener('scroll', closeCtx, { passive: true });
   // Empty canvas: a click deselects; a drag selects the letters it sweeps over.
   $('#stage').addEventListener('pointerdown', e => {
     if (e.target.closest('.g') || e.button !== 0) return;
@@ -4641,6 +5582,7 @@ async function boot() {
   if ($('#sheet').getBoundingClientRect().width > $('#stage').clientWidth - 96) fitZoom();
 }
 boot();
+backstage();
 </script>
 </body>
 </html>
