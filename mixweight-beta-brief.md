@@ -140,7 +140,7 @@ After Effects export, SVG export, accounts, payments, analytics, public gallery,
 - [x] 4 My specimens
 - [x] 5 Motion engine, Weight breathing, WebM and MP4
 - [x] 6a Jitter loop
-- [ ] 6b Typing in
+- [x] 6b Typing in
 - [ ] 6c Baseline wave
 - [ ] 6d Sway
 - [ ] 7 GIF export
