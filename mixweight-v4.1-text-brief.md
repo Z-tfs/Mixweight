@@ -29,12 +29,15 @@ What to build:
 - **No feedback loop.** A letter's style, size, shift and tracking must not depend on where the line wraps; otherwise wrapping changes widths and the wrap changes again. Keep the position ramps (`at.frac`, `at.lineFrac`) on the hard lines (the text's own paragraphs), so wrapping only regroups letters that were already chosen. Wrap once per render; never iterate.
 - Overrides, bands and selection are keyed by character index, so they keep their letters; check that a band across a wrap point still draws on both lines.
 
-Decisions to confirm with the owner **before building** (stop and ask after reading the code):
-- Default for new visitors: Canvas (the owner's wish: text never wider than the canvas). Sessions and specimens saved before load as **Off**, so they look exactly as before. Confirm this split.
-- A Specimen saved with Width Canvas: store the resolved width in pt next to the mode, and on load use it as Fixed, so the result is exact on another screen. Confirm.
-- Rotated letters and large jitter can still reach slightly past the width (wrapping uses advance widths). Confirm that is acceptable.
+Decisions the owner has made (November 2026):
+- Default for new visitors: **Canvas** (text never wider than the canvas). Sessions and specimens saved before load as **Off**, so they look exactly as before.
+- A Specimen saved with Width Canvas stores the resolved width in pt next to the mode, and on load uses it as Fixed, so the result is exact on another screen.
+- Rotated letters and large jitter may still reach slightly past the width (wrapping uses advance widths). That is accepted, but the user must see it:
+  - **Overflow mark**: when any letter's ink (rotation and shift included) reaches past the wrap width, draw the wrap edge as a thin line over the height of the text block and mark the part that sticks out, in the neutral selection color (never the user's colors), on the canvas only, never in the PNG or the `.jsx`.
+  - With it, a short one-line note in the existing hint / toast style, for example "Some letters reach past the width (rotation or jitter).", with a **Don't show again** action. That choice turns off both the note and the mark. It is view state in `localStorage` (not in `SAVE_KEYS`, not in specimens). The Help dialog's Width section has a button to show the overflow reminder again.
+  - Measure the overflow from the numbers `layout()` already has (`S.gmap`, ink boxes, rotation about `ROT_PIVOT`); no extra rendering.
 
-Check: a long paragraph in two families wraps at Canvas and follows window and panel resizes but not zoom; Fixed by slider and by the handle; undo / redo; reload; a v3.2 and a V4 session look identical (pixel compare); Specimen round trip with Canvas and Fixed; bands, letter boxes with Height Line, paragraph band per line and Stacked Bands on wrapped text; PNG matches the canvas; export AI and ID once, open the `.jsx` and check each wrapped line is its own line and `var D` with Width Off is byte-identical to `main`. No Adobe test needed (no template change), but tell the owner to export one wrapped paragraph to each app and compare line breaks with the canvas.
+Check: a long paragraph in two families wraps at Canvas and follows window and panel resizes but not zoom; turn Rotation jitter up until letters reach past the width: the mark and the note show, Don't show again hides both and survives a reload, Help brings them back, and neither appears in the PNG; Fixed by slider and by the handle; undo / redo; reload; a v3.2 and a V4 session look identical (pixel compare); Specimen round trip with Canvas and Fixed; bands, letter boxes with Height Line, paragraph band per line and Stacked Bands on wrapped text; PNG matches the canvas; export AI and ID once, open the `.jsx` and check each wrapped line is its own line and `var D` with Width Off is byte-identical to `main`. No Adobe test needed (no template change), but tell the owner to export one wrapped paragraph to each app and compare line breaks with the canvas.
 
 ## 2. Typing on the canvas
 
