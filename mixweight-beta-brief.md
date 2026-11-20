@@ -1,15 +1,21 @@
 # Mixweight beta ("Backstage"): brief
 
-The owner is not ready to take V4 live (merging PR #8 deploys to main), so V4 stays unmerged. The beta is built **on top of the V4 branch** and gets its own fixed preview link through Cloudflare Pages.
+V4 is merged and live on `main` (PR #8, October 2026). The beta was built on the V4 branch before that merge; since then `main` has been merged into `beta`, so the beta now sits **on top of `main`** and gets its own fixed preview link through Cloudflare Pages.
 
 Beta holds the bigger, rougher additions: motion templates, My specimens, a right-click panel on selected letters, and a fuller hover info. A small entry called **Backstage** leads from the stable page to the beta.
 
 ## Start condition
 
-The V4 panel rework (`mixweight-v4-panel-layout-brief.md`) is finished, and branch `beta` already exists. It was created from the V4 branch (`claude/lucid-ride-wf1xim`) and contains this brief.
+Branch `beta` exists and contains this brief. It was created from the V4 branch (`claude/lucid-ride-wf1xim`, finished) and has since had `main` merged in (`df264a7`, no content change: `main` is the squash of that branch).
 
 - Check out `beta` and work there. Cloudflare Pages serves the branch at `https://beta.mixweight.pages.dev`; confirm it from the deploy and report it.
-- Open one **draft** PR `beta` into `claude/lucid-ride-wf1xim` titled "Mixweight Backstage (beta)". Never merge it, never push to `main`. The owner decides what merges where.
+- The beta lives in one **draft** PR, `beta` into `main`, titled "Mixweight Backstage (beta)" (PR #9). Never merge it, never push to `main`. The owner decides what merges where.
+
+## Keeping beta in step with main
+
+- Fixes and small changes to the released tool are made on `main` only: a new branch from `main`, its own PR, merged by the owner. Never make the same change by hand on both branches.
+- After the owner merges such a PR, merge `main` into `beta` (a normal merge, never a rebase or force push), resolve conflicts, check the beta preview (motion, My specimens, right-click panel, hover info) and push.
+- Areas the beta rewrote conflict with changes on `main`: the Specimen dialog, Hover info, the right panel and its header, the left-panel tabs. When a fix touches one of them, tell the owner before merging and agree how the beta version should take it.
 - `TOOL_VERSION` becomes `'4.1-beta.1'` in step 1; bump the last number once per step.
 
 ## Rules for this brief
@@ -133,6 +139,8 @@ Run the checks CLAUDE.md lists under "Testing that has worked in the cloud conta
 After Effects export, SVG export, accounts, payments, analytics, public gallery, share link, new Looks, mobile layout, changing panel widths. Park ideas in your report under "Beta ideas"; do not build them.
 
 ## Progress (update after each step)
+
+On hold since November 2026: the owner wants to discuss the direction of Motion and My specimens before more steps are built. Do not start 6c or later until she says so.
 
 - [x] 1 Skeleton and Backstage entry
 - [x] 2 Hover info: Off / Basic / Full
