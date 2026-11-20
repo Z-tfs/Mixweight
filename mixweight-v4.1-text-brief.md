@@ -59,5 +59,5 @@ Check: double-click in the middle of a word and type, delete, Return; Shift-sele
 
 ## Progress (update after each step)
 
-- [ ] 1 Line wrapping and paragraph width
+- [x] 1 Line wrapping and paragraph width (branch `feature/line-wrap`; Width sits in the Type group, after Line align)
 - [ ] 2 Typing on the canvas
