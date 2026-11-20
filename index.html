@@ -115,6 +115,8 @@ button { background: none; border: 0; padding: 0; cursor: pointer; }
 .ctl label { text-transform: uppercase; }
 .ctl output { color: var(--g4); font-variant-numeric: tabular-nums; text-align: right; text-transform: uppercase; }
 .ctl input[type=range] { grid-column: 1 / -1; }
+.ctl.off label { color: var(--g3); }
+.ctl.off input[type=range] { opacity: .35; cursor: default; }
 .pair { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 18px; }
 /* Color control: label, then swatch (the system picker) and hex; recent colors under it. */
 .colc { display: grid; gap: 5px; min-width: 0; }
@@ -715,11 +717,11 @@ body.resizing, body.resizing * { cursor: col-resize !important; user-select: non
       <section class="cell">
         <div class="cell-h"><span>Fill</span><span class="r" id="sel-fill-r"></span></div>
         <div class="opts" id="sel-fill" role="group" aria-label="Fill for selection">
-          <button type="button" data-v="">Auto</button>
+          <button type="button" data-v="" id="sel-fill-rnd" title="Back to Random outline (left panel, Style tab)">Random</button>
           <button type="button" data-v="solid">Solid</button>
           <button type="button" data-v="outline">Outline</button>
         </div>
-        <div class="ctl"><label for="sel-sw">Stroke</label><output id="sel-sw-o"></output><input type="range" id="sel-sw" min="0.25" max="8" step="0.25"></div>
+        <div class="ctl" id="sel-sw-wrap"><label for="sel-sw">Stroke</label><output id="sel-sw-o"></output><input type="range" id="sel-sw" min="0.25" max="8" step="0.25"></div>
         <div class="colc" id="col-sel" data-label="Color"></div>
         <div class="btns"><button class="btn sm" type="button" id="col-sel-auto">Use text color</button></div>
       </section>
@@ -833,7 +835,7 @@ body.resizing, body.resizing * { cursor: col-resize !important; user-select: non
       <section><h4>Match size</h4><p>Different families at the same point size look different sizes. x-height or Cap height scales each letter's font so its lowercase x or capital H is as tall as in the base style (limited to 60–160%). It is written as the letter's point size, so it stays editable; leading follows the nominal size.</p></section>
       <section><h4>Letter align</h4><p>Top, middle and bottom alignment are written as baseline shift values. If you change a letter or its font afterwards, export again to re-align.</p></section>
       <section><h4>Group titles</h4><p>Click a group title in the left panel to fold the group to its title row (▸) or open it again (▾); each group remembers its own state. Folding Font pool hides every family; a family's name folds that family to one row, which still shows its share of mix. The left panel has two tabs: <b>Type</b> (font pool, text, mix, type with letter align, jitter) and <b>Style</b> (look, color, paragraph band, random letter boxes, pattern, registration marks, random outline). On a first visit Jitter and the palette list start folded; once you fold or open them yourself, your choice stays. Paragraph band, Pattern and Registration marks show only Off / On until you switch them on. The right side of each title row sums up what the group is set to, and follows every change; hover it for the full text if it is cut short. Groups with a short note have a <b>?</b> next to their title: click it to show the note, again to hide it. <b>Clear</b>, next to the tabs, sets everything in the left panel (both tabs) back to its default, including the style new boxes and bands get, and removes the boxes Random letter boxes placed; your text, fonts, seed, guides and right-panel edits stay.</p></section>
-      <section><h4>Right panel</h4><p>Selecting letters opens it with their font, size, shift and tracking at the top, then weight, align, <b>rotation</b>, <b>fill</b> and <b>boxes</b>. With nothing selected it folds to a narrow <b>Selection</b> strip on the right edge, and the canvas takes the room; deselecting folds it again. Close › folds it while letters stay selected, until you select other letters; the strip's ‹ opens it. Settings for the whole text are in the left panel's <b>Style</b> tab: Random outline (with Stroke), the Paragraph band and Random letter boxes. Clear edits removes what you set on selected letters, and bands; the left panel's Clear resets the left panel's settings and removes the boxes Random letter boxes placed. A drag that starts on empty canvas selects the letters it sweeps over. The panel keeps its place: selecting other letters, or deselecting and reselecting, brings back the group you were using. <b>Hover info</b> in the bar above the canvas switches the hover tag on and off.</p></section>
+      <section><h4>Right panel</h4><p>Selecting letters opens it with their font, size, shift and tracking at the top, then weight, align, <b>rotation</b>, <b>fill</b> and <b>boxes</b>. With nothing selected it folds to a narrow <b>Selection</b> strip on the right edge, and the canvas takes the room; deselecting folds it again. Close › folds it while letters stay selected, until you select other letters; the strip's ‹ opens it. <b>Fill</b> sets selected letters Solid or Outline; Stroke sets the weight of the selected outline letters and is greyed while none is selected. While Random outline is on, a third choice, Random, hands the letters back to it. Settings for the whole text are in the left panel's <b>Style</b> tab: Random outline (with Stroke), the Paragraph band and Random letter boxes. Clear edits removes what you set on selected letters, and bands; the left panel's Clear resets the left panel's settings and removes the boxes Random letter boxes placed. A drag that starts on empty canvas selects the letters it sweeps over. The panel keeps its place: selecting other letters, or deselecting and reselecting, brings back the group you were using. <b>Hover info</b> in the bar above the canvas switches the hover tag on and off.</p></section>
       <section><h4>Boxes</h4><p>Letter boxes follow each letter's ink, size and shift, and turn with it. A band runs under the selection, as tall as its tallest letter or stepping with each one; the paragraph band does the same for every line. There are two <b>Box style</b> editors. The one in the left panel, folded under Random letter boxes, styles the whole text: the paragraph band, or every letter box (Paragraph band / Letter boxes). The one in the right panel styles the boxes and bands on the selected letters. A letter box you styled in the right panel, or whose fill you set by hand, keeps its style: the left editor and Reroll boxes leave it alone; Clear edits removes it. In Box style, Expand X and Y make a box wider or taller than the ink (negative values make it smaller), and Move X and Y shift it right and up (all four snap to 0 when you drag close to the tick at 0); a rotated letter's box moves along the letter's own axes. Letter boxes also have <b>Height</b> (Glyph: the letter's own ink; Line: as tall as the line's tallest letter) and <b>Width</b> (Glyph: the letter as set, without tracking; Advance: up to the next letter, so neighbouring boxes touch). Line + Advance makes a grid of columns. A letter can have a letter box and a band at once: when the selection has both, Box style shows <b>Letter boxes / Band</b> to pick which one its controls change (Add letter boxes and Add band switch to what they just added). With <b>Each corner</b>, the four corners sit in a grid laid out like the box: type a radius, or drag the small corner icon sideways, and pick Round, Bevel or Inverse under it. They export under the text as vector shapes: InDesign rectangles keep live corner options, Illustrator and Photoshop get the exact path.</p></section>
       <section><h4>Color</h4><p>Box fill, box stroke and the background also take <b>No color</b>: the crossed-out swatch after the hex field (or type none). A box with no fill shows only its stroke; a background with no color leaves the PNG transparent. In the .jsx export a box with no fill keeps just its stroke (no fill in Illustrator and InDesign, a shape layer with its fill switched off in Photoshop); a box with neither fill nor stroke is left out. The <b>Color</b> group in the left panel's Style tab sets the <b>text</b> and <b>background</b> colors for the whole design, as RGB hex: click the big swatch for the system picker, type a hex value and press Enter, or click a small swatch (the current color's swatch is outlined). The row under each color holds the last eight colors used; with a palette active, a row of the palette's colors sits above it, under every color control. A <b>palette</b> sets text and background in one click, and the box and band fill too when it has a block color. Click the active palette again to roll a new color match from its colors (text that stays readable on the background, and a block color that shows on it); ⌘Z goes back. The palette list starts as a row of chips; open it with the arrow next to Palettes to see the names, and Mixweight remembers your choice. Black on white goes back to the start. Selected letters get their own color under Fill in the right panel (Use text color removes it); outline letters stroke in their color. Box style has Fill and Stroke colors and a <b>blend</b> mode (Normal, Multiply, Screen, Overlay, Difference), which mixes a box with the background and the boxes under it, never with the text. The background fills the text block plus a margin, the same area the PNG crops to. The guidelines' color is under <b>Guides</b> in the bar above the canvas. Random letter boxes have a <b>Box color</b>: Single gives every box its own fill; From palette gives each randomly placed box a color from the active palette's block and extra colors, picked by the seed, so Reroll boxes changes placement and colors together. A box whose fill you set by hand keeps it, and Reroll leaves it in place. From palette needs a palette with a block color. Everything exports: text color per letter, RGB fills and strokes (neutral greys stay greys, a Black tint in InDesign), blend modes, and the guideline color. A background that isn't white becomes a rectangle at the very back, named Mixweight background, on its own layer (Illustrator, InDesign) or as the bottom shape layer (Photoshop). InDesign adds each RGB color as a swatch named Mixweight #RRGGBB.</p></section>
       <section><h4>Outline and rotation</h4><p>Outline letters export as live text with no fill and a stroke in the letter's color; rotation as character rotation, about the centre of the em box. Photoshop can do neither per letter inside one type layer, so those letters become their own type layers (outline as a layer-style stroke) and the main layer keeps a space of the same width.</p></section>
@@ -2812,12 +2814,18 @@ function renderSelPanel(gs) {
   summary('sum-rot', rots.size > 1 ? 'Mixed' + (ra ? ` · ±${ra}°` : '') : rot0 || ra ? `${num(rot0)}°` + (ra ? ` · ±${ra}°` : '') : 'None');
 
   // fill
-  const fills = new Set(gs.map(g => ovOf(g).fill || ''));
+  // Random shows only while Random outline is on; without it a letter with no fill edit is simply solid.
+  const rndOn = S.outlineAmt > 0;
+  $('#sel-fill-rnd').hidden = !rndOn;
+  const fills = new Set(gs.map(g => ovOf(g).fill || (rndOn ? '' : 'solid')));
   press('#sel-fill', fills.size === 1 ? [...fills][0] : null);
   const nOut = gs.filter(g => g.sw).length;
   $('#sel-fill-r').textContent = nOut ? `${nOut} outline` : 'All solid';
+  // Stroke weight only shows on outline letters, so it is greyed while none is selected.
   const swg = gs.find(g => g.sw);
-  setRange('sel-sw', swg ? swg.sw : S.strokeW, ptTxt(swg ? swg.sw : S.strokeW));
+  setRange('sel-sw', swg ? swg.sw : S.strokeW, nOut ? ptTxt(swg.sw) : '–');
+  $('#sel-sw').disabled = !nOut;
+  $('#sel-sw-wrap').classList.toggle('off', !nOut);
   colCtl.sel?.sync();
   $('#col-sel-auto').disabled = !gs.some(g => g.col);
 
@@ -4419,8 +4427,13 @@ async function boot() {
   $('#rot-reset').onclick = () => { record(); eachSel(o => { delete o.rot; delete o.ra; delete o.ru; }); };
   // fill
   optClick('#sel-case', v => { record(); eachSel(o => { if (v) o.cs = v; else delete o.cs; }); });
-  optClick('#sel-fill', v => { record(); eachSel(o => { if (v) o.fill = v; else delete o.fill; }); });
-  $('#sel-sw').addEventListener('input', e => { record('sel-sw'); const v = +e.target.value; eachSel(o => { o.sw = v; }); });
+  // Solid without Random outline is no edit at all: it just clears an outline.
+  optClick('#sel-fill', v => { record(); eachSel(o => { if (v && !(v === 'solid' && !S.outlineAmt)) o.fill = v; else delete o.fill; }); });
+  // Stroke weight is set on the selection's outline letters only.
+  $('#sel-sw').addEventListener('input', e => {
+    record('sel-sw'); const v = +e.target.value;
+    eachSel((o, g) => { if (g.sw) o.sw = v; });
+  });
   // boxes
   $('#lb-add').onclick = () => { record(); bxSelTarget = 'letters'; eachSel((o, g) => { if (g.inkTop != null && !o.box) o.box = structuredClone(S.boxStyle); }); };
   // Box color for random letter boxes: Single or From palette (needs a palette with a block color).
