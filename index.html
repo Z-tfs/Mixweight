@@ -2645,7 +2645,9 @@ function render() {
   // again. Styles, sizes and tracking never depend on the wrap, so it never needs a second round.
   S.wrapAt = wrapWidth();
   if (S.wrapAt) {
-    const wrapped = wrapLines(lines, S.wrapAt);
+    // Motion frames keep the still's line breaks, so letters that grow or change weight never jump lines mid-video.
+    const wrapped = MOTION && S.wrapCut ? cutLines(lines, S.wrapCut) : wrapLines(lines, S.wrapAt);
+    if (!MOTION) S.wrapCut = new Set(wrapped.filter((l, k) => l.length && k && wrapped[k - 1].length && !(lines.some(h => h[0] === l[0]))).map(l => l[0].i));
     if (wrapped.length > lines.length) {
       for (const line of wrapped) {
         if (S.gaps) { for (const g of line) g.tr = g.tr0; evenGaps(line); }
@@ -2762,6 +2764,19 @@ function wrapLines(lines, w) {
         while (s < line.length && isSp(line[s])) s++;
       } else { res.push(line.slice(s, j)); s = j; }
     }
+  }
+  return res;
+}
+// Split the text's own lines before the letters in cut (where the still wrapped), dropping the spaces at each break.
+function cutLines(lines, cut) {
+  const res = [];
+  for (const line of lines) {
+    let cur = [];
+    for (const g of line) {
+      if (cut.has(g.i) && cur.length) { while (cur.length && /\s/.test(cur[cur.length - 1].ch)) cur.pop(); res.push(cur); cur = []; }
+      cur.push(g);
+    }
+    res.push(cur);
   }
   return res;
 }
