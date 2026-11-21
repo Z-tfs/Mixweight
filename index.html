@@ -251,6 +251,26 @@ textarea:focus { background: var(--g2); outline: none; }
 .selmarks .halo { stroke: #fff; stroke-width: 3; }
 .selmarks .tick { stroke: #000; stroke-width: 1; }
 .sheet.adjusting .selmarks { visibility: hidden; }
+/* Typing on the canvas: the caret, and the hidden field that takes the keys (placed at the caret for IME). */
+.selmarks .caret { stroke: #000; stroke-width: 1.5; animation: blink 1.06s steps(1) infinite; }
+.selmarks .caret-halo { stroke: #fff; stroke-width: 3.5; animation: blink 1.06s steps(1) infinite; }
+@keyframes blink { 50% { visibility: hidden; } }
+.type-in { position: fixed; left: 0; top: 0; width: 2px; height: 20px; padding: 0; border: 0; margin: 0; opacity: 0; resize: none; overflow: hidden;
+  font-size: 16px; line-height: 20px; white-space: pre; pointer-events: none; z-index: -1; }
+#out.typing { cursor: text; }
+/* Width: the overflow mark and the handle on the wrap edge, in the selection's neutral black and white. */
+.wrapmarks { position: absolute; left: 0; top: 0; overflow: visible; pointer-events: none; z-index: 2; }
+.wrapmarks path { fill: none; vector-effect: non-scaling-stroke; }
+.wrapmarks .halo { stroke: #fff; stroke-width: 3; }
+.wrapmarks .edge { stroke: #000; stroke-width: 1; }
+.wrapmarks .wline { stroke: var(--g3); stroke-width: 1; stroke-dasharray: 4 3; }
+.wrapmarks .ov { fill: url(#wrap-hatch); stroke: #000; stroke-width: 1; vector-effect: non-scaling-stroke; }
+.wrap-h { position: absolute; z-index: 3; width: calc(7px / var(--z, 1)); height: calc(26px / var(--z, 1)); transform: translate(-50%, -50%);
+  background: #000; border: calc(1px / var(--z, 1)) solid #fff; outline: calc(1px / var(--z, 1)) solid #000; cursor: ew-resize; touch-action: none; }
+.wrap-h:hover, .wrap-h.on { background: #fff; }
+.wrap-guide { position: fixed; z-index: 4; width: 0; border-left: 1px dashed #000; pointer-events: none; }
+.wrap-note { display: flex; gap: 14px; align-items: baseline; }
+.wrap-note button { color: inherit; text-decoration: underline; text-transform: uppercase; letter-spacing: inherit; font-size: inherit; padding: 0; background: none; border: 0; cursor: pointer; }
 /* Boxes and guides: drawn under the text in the same coordinates (px = pt). */
 .deco { position: absolute; left: 0; top: 0; overflow: visible; pointer-events: none; z-index: 0; }
 .deco .gd { fill: none; stroke: var(--guide); stroke-width: .75; vector-effect: non-scaling-stroke; }
@@ -530,6 +550,13 @@ body.resizing, body.resizing * { cursor: col-resize !important; user-select: non
         <button type="button" data-v="center">Center</button>
         <button type="button" data-v="right">Right</button>
       </div>
+      <div class="ctl"><label>Width</label><output id="wrap-o"></output></div>
+      <div class="opts" id="wrap" role="group" aria-label="Paragraph width">
+        <button type="button" data-v="off">Off</button>
+        <button type="button" data-v="canvas">Canvas</button>
+        <button type="button" data-v="fixed">Fixed</button>
+      </div>
+      <div class="ctl" id="wrap-w-c"><label for="wrap-w">Fixed width</label><output id="wrap-w-o"></output><input type="range" id="wrap-w" min="40" max="2400" step="1"></div>
       <div class="ctl"><label>Letter align</label><output></output></div>
       <div class="opts" id="valign" role="group" aria-label="Letter alignment">
         <button type="button" data-v="baseline">Baseline</button>
@@ -537,7 +564,7 @@ body.resizing, body.resizing * { cursor: col-resize !important; user-select: non
         <button type="button" data-v="middle">Middle</button>
         <button type="button" data-v="bottom">Bottom</button>
       </div>
-      <p class="hint">Tracking is in ‰: thousandths of an em, as in Adobe apps. Match size scales each font so its x-height or cap height meets the base style's; it exports as per-letter size. Letter align is measured by each glyph's outline: top, middle and bottom line up the actual ink of each letter within its line. They export as baseline shift, so the text stays editable.</p>
+      <p class="hint">Tracking is in ‰: thousandths of an em, as in Adobe apps. Match size scales each font so its x-height or cap height meets the base style's; it exports as per-letter size. Width wraps long lines at spaces: Canvas at the width of the canvas, Fixed at the width you set (or drag the handle at the edge of the text). Each wrapped line exports as its own line. Letter align is measured by each glyph's outline: top, middle and bottom line up the actual ink of each letter within its line. They export as baseline shift, so the text stays editable.</p>
     </section>
 
     <section class="cell" data-tab="type">
@@ -657,7 +684,7 @@ body.resizing, body.resizing * { cursor: col-resize !important; user-select: non
     <div class="split r" id="split-r" role="separator" aria-orientation="vertical" aria-label="Resize the right panel" title="Drag to resize · double-click for the default width"></div>
     <div class="insp" id="insp">
       <span class="count" id="sel-count">No selection</span>
-      <span class="lab" id="sel-hint">Click a letter, or drag across letters, to edit them. Shift extends, ⌘ adds.</span>
+      <span class="lab" id="sel-hint">Click a letter, or drag across letters, to edit them. Shift extends, ⌘ adds. Double-click to type.</span>
     </div>
     <div class="field">
       <span class="corner tl" id="c-tl"></span>
@@ -665,7 +692,7 @@ body.resizing, body.resizing * { cursor: col-resize !important; user-select: non
       <span class="corner bl" id="c-bl"></span>
       <span class="corner br" id="c-br">⌘Z undo · R reroll · Esc deselect</span>
       <div class="stage" id="stage">
-        <div class="sheet" id="sheet"><svg class="deco" id="deco" aria-hidden="true"></svg><div id="out"></div><svg class="selmarks" id="selmarks" aria-hidden="true"></svg></div>
+        <div class="sheet" id="sheet"><svg class="deco" id="deco" aria-hidden="true"></svg><div id="out"></div><svg class="selmarks" id="selmarks" aria-hidden="true"></svg><svg class="wrapmarks" id="wrapmarks" aria-hidden="true"></svg><div class="wrap-h" id="wrap-h" hidden></div></div>
       </div>
     </div>
   </main>
@@ -806,7 +833,10 @@ body.resizing, body.resizing * { cursor: col-resize !important; user-select: non
 
 <div class="ctxmenu" id="ctxmenu" role="menu" hidden></div>
 <div class="drop" id="drop" hidden>Drop to add fonts</div>
+<textarea class="type-in" id="type-in" wrap="off" spellcheck="false" autocomplete="off" autocapitalize="off" aria-label="Type on the canvas" tabindex="-1"></textarea>
 <div class="toast" id="toast" role="status" hidden></div>
+<div class="toast wrap-note" id="wrap-note" role="status" hidden><span>Some letters reach past the width (rotation or jitter).</span><button type="button" id="wrap-note-off">Don’t show again</button></div>
+<div class="wrap-guide" id="wrap-guide" hidden></div>
 
 <dialog id="picker">
   <form method="dialog" class="dlg">
@@ -833,6 +863,8 @@ body.resizing, body.resizing * { cursor: col-resize !important; user-select: non
       <section><h4>Distribution</h4><p>Ramp sets light → heavy from the start of the text to the end; Ramp per line restarts on every line. Alternate switches between the lighter and heavier half of the pool. Wave has a Period. Weight mix still decides how many letters leave the base style.</p></section>
       <section><h4>Even gaps</h4><p>Where neighbouring letters come from different fonts, their sidebearings differ and the gaps look uneven. Even gaps adjusts the left letter's tracking so the gap moves halfway between the spacing of the two fonts it joins, instead of jumping from one to the other. It exports as tracking.</p></section>
       <section><h4>Match size</h4><p>Different families at the same point size look different sizes. x-height or Cap height scales each letter's font so its lowercase x or capital H is as tall as in the base style (limited to 60–160%). It is written as the letter's point size, so it stays editable; leading follows the nominal size.</p></section>
+      <section><h4>Typing on the canvas</h4><p><b>Double-click</b> a letter to type into the text right there (the caret goes to the nearer side of the letter); double-click empty canvas to type at the end. When the text is empty, a single click on the canvas starts typing. Arrows, Home / End, Shift to select, Backspace / Delete, Return, ⌘A, and copy, cut and paste as plain text work as in a text field, and input methods (Chinese, Japanese) too. Up / Down and Home / End follow the lines as they show, wrapped lines included. Esc, or a click outside the text, stops typing; single clicks and drags select letters as before. It is the same as typing in the Text field, which follows along: letter edits stay with their letters, and a burst of typing is one undo step. Styles are picked letter by letter along the text, so typing changes the random style of the letters after the caret, just as in the Text field.</p></section>
+      <section><h4>Width</h4><p><b>Width</b> in the Type group wraps long lines at spaces. While it is on, a light dashed line on the canvas shows the paragraph width. <b>Canvas</b> wraps at the width of the canvas at 100% zoom, so it follows the window and the panels but not zoom; <b>Fixed</b> wraps at the width you set, the same on every screen. Drag the small handle at the edge of the text to set a Fixed width. A word longer than the width breaks between letters, and the space at a break is dropped; returns still break as before. <b>Off</b> breaks only at returns. Wrapped lines are real lines: letter align, even gaps, bands, Height Line and the paragraph band follow them, and the .jsx gets one line of point text per wrapped line, not an area text box. A specimen saved with Canvas keeps the width it wrapped at and loads as Fixed. Rotated or jittered letters can reach a little past the width: the canvas then draws the edge and hatches the part that sticks out, never in the PNG or the .jsx. When a Fixed width you set (by the handle or the slider) runs past the canvas, a dialog offers <b>Fit to canvas</b>, which switches Width back to Canvas. <button type="button" class="tbtn" id="wrap-note-on">Show the width reminders again</button></p></section>
       <section><h4>Letter align</h4><p>Top, middle and bottom alignment are written as baseline shift values. If you change a letter or its font afterwards, export again to re-align.</p></section>
       <section><h4>Group titles</h4><p>Click a group title in the left panel to fold the group to its title row (▸) or open it again (▾); each group remembers its own state. Folding Font pool hides every family; a family's name folds that family to one row, which still shows its share of mix. The left panel has two tabs: <b>Type</b> (font pool, text, mix, type with letter align, jitter) and <b>Style</b> (look, color, paragraph band, random letter boxes, pattern, registration marks, random outline). On a first visit Jitter and the palette list start folded; once you fold or open them yourself, your choice stays. Paragraph band, Pattern and Registration marks show only Off / On until you switch them on. The right side of each title row sums up what the group is set to, and follows every change; hover it for the full text if it is cut short. Groups with a short note have a <b>?</b> next to their title: click it to show the note, again to hide it. <b>Clear</b>, next to the tabs, sets everything in the left panel (both tabs) back to its default, including the style new boxes and bands get, and removes the boxes Random letter boxes placed; your text, fonts, seed, guides and right-panel edits stay.</p></section>
       <section><h4>Right panel</h4><p>Selecting letters opens it with their font, size, shift and tracking at the top, then weight, align, <b>rotation</b>, <b>fill</b> and <b>boxes</b>. With nothing selected it folds to a narrow <b>Selection</b> strip on the right edge, and the canvas takes the room; deselecting folds it again. Close › folds it while letters stay selected, until you select other letters; the strip's ‹ opens it. <b>Fill</b> sets selected letters Solid or Outline; Stroke sets the weight of the selected outline letters and is greyed while none is selected. While Random outline is on, a third choice, Random, hands the letters back to it. Settings for the whole text are in the left panel's <b>Style</b> tab: Random outline (with Stroke), the Paragraph band and Random letter boxes. Clear edits removes what you set on selected letters, and bands; the left panel's Clear resets the left panel's settings and removes the boxes Random letter boxes placed. A drag that starts on empty canvas selects the letters it sweeps over. The panel keeps its place: selecting other letters, or deselecting and reselecting, brings back the group you were using. <b>Hover info</b> in the bar above the canvas switches the hover tag on and off.</p></section>
@@ -857,6 +889,20 @@ body.resizing, body.resizing * { cursor: col-resize !important; user-select: non
         <button class="btn" value="script">Just the script</button>
       </div>
       <label class="chk"><input type="checkbox" id="ask-stop"> I know what a .jsx is. Stop asking.</label>
+    </div>
+  </form>
+</dialog>
+
+<dialog id="wide-ask">
+  <form method="dialog" class="dlg ask">
+    <header><span>Wider than the canvas</span><span class="hd-r"><span id="wide-w"></span><button class="x-close" value="cancel" aria-label="Close" title="Close">×</button></span></header>
+    <div class="ask-b">
+      <p class="hint" style="margin:0">Your text just walked off the canvas. Bold move. Want it back?</p>
+      <div class="btns">
+        <button class="btn solid" value="fit" autofocus>Fit to canvas</button>
+        <button class="btn" value="keep">Let it run wide</button>
+      </div>
+      <label class="chk"><input type="checkbox" id="wide-stop"> I know it’s wide. I meant it. Stop asking.</label>
     </div>
   </form>
 </dialog>
@@ -1659,6 +1705,9 @@ const DEFAULTS = {
   mix: 70, dist: 'uniform', wavePeriod: 13, gran: 'glyph', valign: 'baseline',
   size: 44, leading: 92, sizeVar: 18, baseJit: 4, trackJit: 30, rotJit: 0, track: -10, match: 'off', gaps: 0,
   align: 'left', seed: 1952,
+  wrap: 'canvas', wrapW: 600,              // line wrapping: 'off', 'canvas' (the canvas width) or 'fixed' (wrapW pt)
+  wrapNote: true,                         // show the overflow mark and note; view state, not in undo
+  wideAsk: true,                          // ask when a Fixed width runs past the canvas; view state, not in undo
   outlineAmt: 0, outlineSeed: 7, strokeW: 1,
   guides: { base: false, x: false, cap: false, asc: false },
   hoverInfo: true,
@@ -2143,7 +2192,7 @@ function compute() {
     // From palette: a randomly placed box whose fill wasn't set by hand takes a block or extra color.
     if (box && box.auto && !box.hand && boxInks) box = Object.assign({}, box, { fill: boxInks[Math.floor(rnd(S.boxSeed, i, 10) * boxInks.length)] });
     const col = ov && ov.col || null;
-    lines[lines.length - 1].push({ i, ch, st, size, jit, tr, va, bs: 0, sw, rot, box, col, ov: !ovEmpty(ov) });
+    lines[lines.length - 1].push({ i, ch, st, size, jit, tr, tr0: tr, va, bs: 0, sw, rot, box, col, ov: !ovEmpty(ov) });
     pos++; linePos++;
   });
   for (const line of lines) { if (S.gaps) evenGaps(line); alignLine(line); }
@@ -2192,17 +2241,44 @@ const out = $('#out'), deco = $('#deco');
 const ROT_PIVOT = 0.38;
 const r2 = v => Math.round(v * 100) / 100;
 function render() {
-  const lines = compute();
+  let lines = compute();
   S.lines = lines;
   S.gmap = new Map(lines.flat().map(g => [g.i, g]));
-  const lead = r1(S.size * S.leading / 100);
   out.style.textAlign = S.align;
   out.style.color = S.textCol;
   if (!S.styles.size) {
     out.innerHTML = '<p class="placeholder">Add fonts to start: Installed fonts in the top bar, or drop font files on the page.</p>';
-    S.lb = []; deco.replaceChildren();
+    S.lb = []; deco.replaceChildren(); S.wrapAt = 0; drawWrap();
     corners(); renderInspector(); return;
   }
+  paintLines(lines);
+  layout();
+  // Width: measured once on the text's own lines, then the letters are regrouped into wrapped lines and laid out
+  // again. Styles, sizes and tracking never depend on the wrap, so it never needs a second round.
+  S.wrapAt = wrapWidth();
+  if (S.wrapAt) {
+    const wrapped = wrapLines(lines, S.wrapAt);
+    if (wrapped.length > lines.length) {
+      for (const line of wrapped) {
+        if (S.gaps) { for (const g of line) g.tr = g.tr0; evenGaps(line); }
+        alignLine(line);
+      }
+      lines = wrapped;
+      S.lines = lines;
+      S.gmap = new Map(lines.flat().map(g => [g.i, g]));
+      paintLines(lines);
+      layout();
+    }
+  }
+  drawDeco();
+  drawSelMarks();
+  drawWrap();
+  corners();
+  renderInspector();
+  refreshHover();
+}
+function paintLines(lines) {
+  const lead = r1(S.size * S.leading / 100);
   const frag = document.createDocumentFragment();
   for (const line of lines) {
     const div = document.createElement('div');
@@ -2230,12 +2306,6 @@ function render() {
     frag.appendChild(div);
   }
   out.replaceChildren(frag);
-  layout();
-  drawDeco();
-  drawSelMarks();
-  corners();
-  renderInspector();
-  refreshHover();
 }
 
 // Measure every letter as laid out (unzoomed px = pt): x from the text block's left edge, its advance, its line's
@@ -2262,6 +2332,126 @@ function layout() {
     sp.style.transformOrigin = `${r2(g.adv / 2)}px ${r2(S.lb[g.k] - g.bs - ROT_PIVOT * g.size - g.y)}px`;
     sp.style.transform = `rotate(${-g.rot}deg)`; // positive = counterclockwise, as in Illustrator and InDesign
   }
+}
+
+/* ---------------- line wrapping ---------------- */
+const WRAP_MIN = 40, WRAP_MAX = 2400;
+// The width lines wrap at, in pt (0: Off). Canvas: the canvas as it is at 100% zoom, less its padding and the
+// frame's margin, measured as if the selection panel were open, so selecting letters never rewraps the text.
+function wrapWidth() {
+  if (S.wrap === 'fixed') return S.wrapW;
+  if (S.wrap !== 'canvas') return 0;
+  return canvasWidth();
+}
+function canvasWidth(visible) {
+  const st = $('#stage'), cs = getComputedStyle(st), strip = $('#side-strip');
+  let w = st.getBoundingClientRect().width - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
+  const sw = strip.hidden ? 0 : strip.getBoundingClientRect().width;
+  if (!visible && !side.open && sw) w -= panelWidth('r', S.panelW.r) - sw; // visible: the canvas as it is now
+  if (frameShown()) w -= exportMargin() * 2;
+  return clamp(Math.floor(w), WRAP_MIN, WRAP_MAX);
+}
+// Split each line where it runs past w pt, measured with the advances and tracking layout() just found. Breaks at
+// spaces; the spaces at a break belong to neither line. A word wider than w breaks between letters. A line's width
+// runs to its last letter's advance (its tracking after it doesn't count).
+function wrapLines(lines, w) {
+  const res = [], isSp = g => /\s/.test(g.ch);
+  for (const line of lines) {
+    let s = 0;
+    if (!line.length) { res.push(line); continue; }
+    while (s < line.length) {
+      let j = s, cut = -1, over = false;
+      for (; j < line.length; j++) {
+        const g = line[j];
+        if (isSp(g)) { if (j > s && !isSp(line[j - 1])) cut = j; continue; }
+        if (j > s && g.x + g.adv - line[s].x > w + 0.01) { over = true; break; }
+      }
+      if (!over) { res.push(line.slice(s)); break; }
+      if (cut > s) {
+        res.push(line.slice(s, cut));
+        s = cut;
+        while (s < line.length && isSp(line[s])) s++;
+      } else { res.push(line.slice(s, j)); s = j; }
+    }
+  }
+  return res;
+}
+// The wrap edges in block coordinates: where a line may start and end. Left text starts at 0, right text ends at
+// the block's right edge, centred text sits around its middle.
+function wrapEdges(w) {
+  if (S.align === 'right') return { l: S.W - w, r: S.W };
+  if (S.align === 'center') return { l: (S.W - w) / 2, r: (S.W + w) / 2 };
+  return { l: 0, r: w };
+}
+// Letters whose ink (rotation and shift included) reaches past the wrap edge on the ragged side(s):
+// [{x0, x1, y0, y1}] in sheet coordinates, the part that sticks out.
+function wrapOverflow() {
+  const w = S.wrapAt, res = [];
+  if (!w || !S.lb || !S.lb.length) return res;
+  const E = wrapEdges(w), tol = 0.5;
+  const checkL = S.align !== 'left', checkR = S.align !== 'right';
+  for (const line of S.lines) for (const g of line) {
+    const e = inkExt(g), k = ink(g.st, g.ch);
+    if (!e || !k || g.x == null) continue;
+    const by = S.lb[g.k];
+    let c = [[g.x + k.lsb * g.size, e.t], [g.x + g.adv - k.rsb * g.size, e.t], [g.x + g.adv - k.rsb * g.size, e.b], [g.x + k.lsb * g.size, e.b]];
+    if (g.rot) c = c.map(q => rotPt(q, pivotOf(g), g.rot));
+    const xs = c.map(q => q[0]), ys = c.map(q => q[1] + by);
+    const x0 = Math.min(...xs), x1 = Math.max(...xs), y0 = Math.min(...ys), y1 = Math.max(...ys);
+    if (checkR && x1 > E.r + tol) res.push({ x0: E.r, x1, y0, y1 });
+    if (checkL && x0 < E.l - tol) res.push({ x0, x1: E.l, y0, y1 });
+  }
+  return res;
+}
+// Canvas only, never in an export: the handle on the wrap edge (on the ragged side) and, where letters reach past
+// the width, the edge as a line with the part that sticks out hatched. Neutral, like the selection ticks.
+let wrapWasOver = false;
+function drawWrap() {
+  const svg = $('#wrapmarks'), h = $('#wrap-h'), z = S.zoom || 1, w = S.wrapAt;
+  const on = !!w && S.lines.some(l => l.length) && !!(S.lb && S.lb.length);
+  unitText($('#wrap-o'), S.wrap === 'canvas' && w ? ptTxt(Math.round(w)) : '');
+  h.hidden = !on;
+  if (!on) { svg.innerHTML = ''; wrapNote(false); wrapWasOver = false; return; }
+  const H = out.getBoundingClientRect().height / z, E = wrapEdges(w), x = S.align === 'right' ? E.l : E.r;
+  h.style.left = r2(x) + 'px';
+  h.style.top = r2(H / 2) + 'px';
+  h.style.setProperty('--z', z);
+  h.title = `Width ${Math.round(w)} pt: drag to set a fixed width`;
+  const over = S.wrapNote ? wrapOverflow() : [];
+  svg.setAttribute('width', Math.ceil(S.W || 0));
+  svg.setAttribute('height', Math.ceil(H));
+  const f = v => r2(v);
+  // The paragraph width, always shown while Width is on: a light dashed line at each wrap edge on the ragged side(s).
+  const edges = S.align === 'center' ? [E.l, E.r] : [x];
+  const width = edges.map(ex => `<path class="wline" d="M${f(ex)} 0V${f(H)}"/>`).join('');
+  if (!over.length) { svg.innerHTML = width; wrapNote(false); wrapWasOver = false; return; }
+  const sides = new Set(over.map(o => o.x0 === E.r ? E.r : E.l));
+  let s = width + `<defs><pattern id="wrap-hatch" width="${f(4 / z)}" height="${f(4 / z)}" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="${f(1 / z)}" height="${f(4 / z)}" fill="#000"/></pattern></defs>`;
+  for (const o of over) s += `<rect class="ov" x="${f(o.x0)}" y="${f(o.y0)}" width="${f(o.x1 - o.x0)}" height="${f(o.y1 - o.y0)}"/>`;
+  const y0 = Math.min(0, ...over.map(o => o.y0)), y1 = Math.max(H, ...over.map(o => o.y1));
+  for (const ex of sides) s += `<path class="halo" d="M${f(ex)} ${f(y0)}V${f(y1)}"/><path class="edge" d="M${f(ex)} ${f(y0)}V${f(y1)}"/>`;
+  svg.innerHTML = s;
+  if (!wrapWasOver) wrapNote(true);
+  wrapWasOver = true;
+}
+// Fixed wider than the visible canvas: asked once per width the user sets (handle released, slider let go), never
+// mid-drag or on a window resize. Fit to canvas switches Width back to Canvas (one undo step).
+let wideAsked = null;
+function askWide() {
+  if (!S.wideAsk || S.wrap !== 'fixed' || wideAsked === S.wrapW || !(S.W > canvasWidth(true) + 0.5)) return;
+  wideAsked = S.wrapW;
+  const d = $('#wide-ask');
+  unitText($('#wide-w'), 'Width ' + ptTxt(S.wrapW));
+  $('#wide-stop').checked = false;
+  d.returnValue = '';
+  d.showModal();
+}
+// The one-line note that comes with the overflow mark; Don't show again turns off both (view state, kept).
+function wrapNote(show) {
+  const n = $('#wrap-note');
+  clearTimeout(wrapNote._t);
+  n.hidden = !show;
+  if (show) wrapNote._t = setTimeout(() => { n.hidden = true; }, 7000);
 }
 
 /* ---------------- boxes and guides: geometry ---------------- */
@@ -2444,13 +2634,13 @@ function drawSelMarks() {
     for (const g of line) {
       if (g.x == null) continue;
       if (/\s/.test(g.ch)) continue; // spaces can't be selected, so they neither split a run nor widen it
-      if (S.sel.has(g.i)) run.push(g); else flush();
+      if ((TY.on ? TY.sel : S.sel).has(g.i)) run.push(g); else flush();
     }
     flush();
   }
   svg.setAttribute('width', Math.ceil(S.W || 0));
   svg.setAttribute('height', Math.ceil(out.getBoundingClientRect().height / z));
-  svg.innerHTML = d ? `<path class="halo" d="${d}"/><path class="tick" d="${d}"/>` : '';
+  svg.innerHTML = (d ? `<path class="halo" d="${d}"/><path class="tick" d="${d}"/>` : '') + caretMarkup();
 }
 // The frame: the text block plus the export margin, in block coordinates. The background fills it, the PNG crops
 // to it.
@@ -2591,7 +2781,8 @@ function leftSummaries() {
   summary('sum-mix', `${S.mix}% · ${dist} · ${unit}`);
   const al = { left: 'Left', center: 'Center', right: 'Right' }[S.align];
   const va = { baseline: 'Baseline', top: 'Top', middle: 'Middle', bottom: 'Bottom' }[S.valign];
-  summary('sum-type', `${S.size} pt · ${S.leading}% lead · ${num(S.track)} track · ${al}` + (S.valign !== 'baseline' ? ` · ${va}` : ''));
+  summary('sum-type', `${S.size} pt · ${S.leading}% lead · ${num(S.track)} track · ${al}` + (S.valign !== 'baseline' ? ` · ${va}` : '') +
+    (S.wrap === 'fixed' ? ` · ${S.wrapW} pt wide` : S.wrap === 'canvas' ? ' · Canvas width' : ''));
   summary('sum-jitter', S.sizeVar || S.baseJit || S.trackJit || S.rotJit ? `±${S.sizeVar}% · ±${num(S.baseJit)} pt · ±${S.trackJit}` + (S.rotJit ? ` · ±${S.rotJit}°` : '') : 'Off');
   syncGuidesBtn();
   const pt = S.patType === 'dots' ? `${S.patCell} pt · ${S.patDot}%` : `${S.patCell} pt · ${ptTxt(S.patW)}`;
@@ -2635,7 +2826,7 @@ function cleanOv(i) {
   if (ovEmpty(v)) S.overrides.delete(i);
 }
 
-let selFamily = null, dragging = false;
+let selFamily = null, dragging = false, selOpenT = 0;
 const side = { open: false, shut: false, prev: new Set() }; // shut: closed by hand while letters are selected
 function syncSide() {
   const sel = S.sel.size > 0;
@@ -2658,8 +2849,8 @@ function syncHov() { const b = $('#hov-btn'); b.setAttribute('aria-pressed', S.h
 function renderInspector() {
   const gs = selectedGlyphs();
   const on = gs.length > 0;
-  $('#sel-count').textContent = on ? `${gs.length} letter${gs.length > 1 ? 's' : ''} selected` : 'No selection';
-  $('#sel-hint').textContent = on ? 'Edit them in the right panel. Esc deselects.' : 'Click a letter, or drag across letters, to edit them. Shift extends, ⌘ adds.';
+  $('#sel-count').textContent = TY.on ? 'Typing' : on ? `${gs.length} letter${gs.length > 1 ? 's' : ''} selected` : 'No selection';
+  $('#sel-hint').textContent = TY.on ? 'Type into the text. Esc, or a click outside it, stops.' : on ? 'Edit them in the right panel. Esc deselects.' : 'Click a letter, or drag across letters, to edit them. Shift extends, ⌘ adds. Double-click to type.';
   syncSide();
   renderColor();
   for (const c of colorCtls) c.syncPal();
@@ -2694,6 +2885,179 @@ function restoreSideScroll() {
   if (el.hidden) return;
   if (!mem || !mem.cell.offsetParent) { el.scrollTop = 0; return; }
   el.scrollTop += mem.cell.getBoundingClientRect().top - el.getBoundingClientRect().top - mem.off;
+}
+
+/* ---------------- typing on the canvas ---------------- */
+// Double-click to type into the text where it stands. A hidden textarea holds S.text and takes the keys (IME,
+// clipboard, Backspace…); every change goes through setText(), the same path as the Text field. Positions are
+// letter indices (code points, like g.i); the textarea counts UTF-16 units, so cu() / cp() convert.
+const TY = { on: false, sel: new Set(), drag: false };
+const typeIn = $('#type-in');
+const cu = (t, c) => Array.from(t).slice(0, c).join('').length;
+const cp = (t, u) => Array.from(t.slice(0, u)).length;
+function setText(v, key) {
+  if (v === S.text) return;
+  record(key);
+  remapOverrides(S.text, v);
+  S.text = v; S.sel.clear(); side.prev.clear(); side.open = side.shut = false; render(); save();
+  const f = $('#text'); if (f.value !== v) f.value = v;
+}
+// Caret range in letter indices: a (anchor), f (focus, where the caret shows).
+function tySel() {
+  const t = typeIn.value, a = cp(t, typeIn.selectionStart), b = cp(t, typeIn.selectionEnd);
+  return typeIn.selectionDirection === 'backward' ? { a: b, f: a } : { a, f: b };
+}
+function tySet(a, f) {
+  const t = typeIn.value, lo = Math.min(a, f), hi = Math.max(a, f);
+  typeIn.setSelectionRange(cu(t, lo), cu(t, hi), f < a ? 'backward' : 'forward');
+  tyShow();
+}
+// The hard line (the text's own paragraph) of every shown line, and where each hard line starts in the text.
+function tyLines() {
+  const chars = Array.from(S.text), starts = [0];
+  chars.forEach((c, i) => { if (c === '\n') starts.push(i + 1); });
+  const nlBefore = i => { let n = 0; while (n + 1 < starts.length && starts[n + 1] <= i) n++; return n; };
+  let prev = -1;
+  const hard = S.lines.map((line, k) => (prev = line.length ? nlBefore(line[0].i) : (k ? prev + 1 : 0)));
+  return { chars, starts, hard };
+}
+// Caret position for letter index c: {k, x} in block coordinates.
+function tyPos(c) {
+  const { chars, starts, hard } = tyLines();
+  const g = S.gmap.get(c);
+  if (g && chars[c] !== '\n' && g.x != null) return { k: g.k, x: g.x };
+  let j = c - 1;
+  while (j >= 0 && chars[j] !== '\n' && !(S.gmap.get(j) && S.gmap.get(j).x != null)) j--;
+  if (j >= 0 && chars[j] !== '\n') { const q = S.gmap.get(j); return { k: q.k, x: q.x + q.w }; }
+  // An empty line (or empty text): its own line, at the alignment's start.
+  let n = 0; while (n + 1 < starts.length && starts[n + 1] <= c) n++;
+  const k = Math.max(0, hard.indexOf(n));
+  return { k, x: S.align === 'right' ? S.W : S.align === 'center' ? S.W / 2 : 0 };
+}
+// Letter index nearest to x on shown line k (for Up / Down and clicks).
+function tyAt(k, x) {
+  const line = S.lines[k];
+  const { starts, hard } = tyLines();
+  if (!line || !line.length) return starts[hard[k]] != null ? starts[hard[k]] : Array.from(S.text).length;
+  let best = line[0].i, d = Math.abs(line[0].x - x);
+  for (const g of line) {
+    const r = g.x + g.w;
+    if (Math.abs(r - x) < d) { d = Math.abs(r - x); best = g.i + 1; }
+    if (Math.abs(g.x - x) < d) { d = Math.abs(g.x - x); best = g.i; }
+  }
+  return best;
+}
+function tyLineEnds(k) {
+  const line = S.lines[k];
+  if (!line || !line.length) { const c = tyAt(k, 0); return [c, c]; }
+  return [line[0].i, line[line.length - 1].i + 1];
+}
+function caretMarkup() {
+  if (!TY.on || !S.lb || !S.lb.length) return '';
+  const { f } = tySel(), P = tyPos(f), by = S.lb[P.k];
+  if (by == null) return '';
+  const d = `M${r2(P.x)} ${r2(by - S.size * 0.78)}V${r2(by + S.size * 0.2)}`;
+  return `<path class="caret-halo" d="${d}"/><path class="caret" d="${d}"/>`;
+}
+// Redraw the caret and the typed selection; keep the hidden field at the caret so an IME's candidates show there.
+function tyShow() {
+  if (!TY.on) return;
+  const { a, f } = tySel(), lo = Math.min(a, f), hi = Math.max(a, f);
+  TY.sel = new Set(glyphList().filter(g => g.i >= lo && g.i < hi && !/\s/.test(g.ch)).map(g => g.i));
+  drawSelMarks();
+  const P = tyPos(f), o = out.getBoundingClientRect(), z = S.zoom || 1;
+  if (S.lb && S.lb[P.k] != null) Object.assign(typeIn.style, { left: (o.left + P.x * z) + 'px', top: (o.top + (S.lb[P.k] - S.size * 0.78) * z) + 'px' });
+}
+function tyStart(c) {
+  if (!S.styles.size) return;
+  clearTimeout(selOpenT);
+  if (S.sel.size) { S.sel.clear(); paintSelection(); }
+  TY.on = true;
+  out.classList.add('typing');
+  renderInspector();
+  typeIn.value = S.text;
+  typeIn.focus({ preventScroll: true });
+  tySet(c, c);
+}
+function tyStop() {
+  if (!TY.on) return;
+  TY.on = false; TY.sel = new Set(); TY.drag = false;
+  out.classList.remove('typing');
+  renderInspector();
+  if (document.activeElement === typeIn) typeIn.blur();
+  drawSelMarks();
+}
+// The letter index on the near side of a letter span, from the pointer.
+function tyHit(sp, e) {
+  const i = +sp.dataset.i, r = sp.getBoundingClientRect();
+  return e.clientX > (r.left + r.right) / 2 ? i + 1 : i;
+}
+function setupTyping() {
+  typeIn.addEventListener('input', () => { setText(typeIn.value, 'type'); tyShow(); });
+  typeIn.addEventListener('keydown', e => {
+    if (e.isComposing) return;
+    if (e.key === 'Escape') { e.preventDefault(); tyStop(); return; }
+    const mod = e.metaKey || e.ctrlKey;
+    // Up / Down and Home / End follow the lines as they show, wrapped lines included.
+    if (['ArrowUp', 'ArrowDown', 'Home', 'End'].includes(e.key) && !e.altKey && !(mod && /Arrow/.test(e.key))) {
+      e.preventDefault();
+      const { a, f } = tySel(), P = tyPos(f);
+      let c;
+      if (e.key === 'Home' || e.key === 'End') c = tyLineEnds(P.k)[e.key === 'Home' ? 0 : 1];
+      else {
+        const k = P.k + (e.key === 'ArrowUp' ? -1 : 1);
+        c = k < 0 ? 0 : k >= S.lines.length ? Array.from(S.text).length : tyAt(k, P.x);
+      }
+      tySet(e.shiftKey ? a : c, c);
+      return;
+    }
+    requestAnimationFrame(tyShow); // left / right, ⌘A and the rest: the field moves, the caret follows
+  });
+  typeIn.addEventListener('select', tyShow);
+  // Leaving the field (a click in the panels, another app) ends typing; a click on the canvas keeps it.
+  typeIn.addEventListener('blur', () => setTimeout(() => { if (TY.on && document.hasFocus() && document.activeElement !== typeIn) tyStop(); }, 0));
+  syncers.push(() => {
+    if (!TY.on) return;
+    const { a, f } = tySel(), n = Array.from(S.text).length;
+    if (typeIn.value !== S.text) typeIn.value = S.text;
+    tySet(Math.min(a, n), Math.min(f, n));
+  });
+  // Double-click: a letter puts the caret on its nearer side, empty canvas at the end of the text.
+  const dbl = e => {
+    if (e.button !== 0) return false;
+    const sp = e.target.closest('.g');
+    if (sp) { tyStart(tyHit(sp, e)); return true; }
+    if (e.target.closest('#stage') && !e.target.closest('#wrap-h')) { tyStart(Array.from(S.text).length); return true; }
+    return false;
+  };
+  // While typing: clicks and drags in the text move the caret and select; outside the text block they stop typing.
+  $('#stage').addEventListener('pointerdown', e => {
+    if (e.button !== 0) return;
+    // Blank text: nothing to select, so a single click on the canvas starts typing.
+    if (!TY.on && !S.text.trim() && S.styles.size && !e.target.closest('#wrap-h') && !(e.target.closest('.stage') && e.offsetX > e.target.clientWidth)) {
+      e.preventDefault(); e.stopImmediatePropagation(); dragging = false;
+      tyStart(Array.from(S.text).length);
+      return;
+    }
+    if (!TY.on) return;
+    const sp = e.target.closest('.g'), o = out.getBoundingClientRect();
+    const inside = e.clientX >= o.left && e.clientX <= o.right && e.clientY >= o.top && e.clientY <= o.bottom;
+    if (sp) {
+      const c = tyHit(sp, e);
+      tySet(e.shiftKey ? tySel().a : c, c);
+      TY.drag = true;
+    } else if (!inside) { tyStop(); return; }
+    e.preventDefault(); e.stopImmediatePropagation();
+    typeIn.focus({ preventScroll: true });
+  }, true);
+  $('#stage').addEventListener('mousedown', e => { if (TY.on) e.preventDefault(); }, true); // keep the focus in the field
+  $('#stage').addEventListener('dblclick', e => { if (!TY.on && dbl(e)) { dragging = false; e.preventDefault(); } });
+  out.addEventListener('pointerover', e => {
+    if (!TY.on || !TY.drag) return;
+    const sp = e.target.closest('.g'); if (!sp) return;
+    tySet(tySel().a, tyHit(sp, e));
+  });
+  window.addEventListener('pointerup', () => { TY.drag = false; });
 }
 
 /* ---------------- hover info / selection info ---------------- */
@@ -3814,6 +4178,7 @@ function resolveFont(f) {
 function buildSpecimen(meta) {
   const settings = {};
   for (const k of SAVE_KEYS) settings[k] = structuredClone(S[k]);
+  if (S.wrap === 'canvas' && S.wrapAt) settings.wrapW = S.wrapAt; // the width it wrapped at, so it loads exact as Fixed
   const used = new Set([S.baseId]);
   const pool = S.families.filter(f => f.on.size).map(f => {
     for (const id of f.on) used.add(id);
@@ -3860,6 +4225,9 @@ function loadSpecimen(src) {
       const v = k in o.settings ? specValue(k, o.settings[k]) : undefined;
       S[k] = v !== undefined ? v : structuredClone(DEFAULTS[k]);
     }
+    // Width: older specimens had no wrapping; Canvas loads as Fixed at the width it was saved with.
+    if (!('wrap' in o.settings)) S.wrap = 'off';
+    else if (S.wrap === 'canvas') S.wrap = 'fixed';
     if (DEFAULTS.dist !== undefined && !$$('#dist option').some(op => op.value === S.dist)) S.dist = DEFAULTS.dist;
     // Pool: the specimen's styles on, other families' styles off, so the mix draws from the same styles. If none of
     // its families are here, the pool stays as it is.
@@ -3898,14 +4266,14 @@ function loadSpecimen(src) {
 /* ---------------- persistence ---------------- */
 // Settings that live in the left panel, both tabs (Clear there resets these, plus the font pool's mix).
 const LEFT_KEYS = ['caseMode', 'caseAmt', 'mix', 'dist', 'wavePeriod', 'gran', 'valign', 'size', 'leading', 'sizeVar', 'baseJit',
-  'trackJit', 'rotJit', 'track', 'gaps', 'match', 'align', 'patOn', 'patType', 'patCell', 'patW', 'patCol', 'patDot',
+  'trackJit', 'rotJit', 'track', 'gaps', 'match', 'align', 'wrap', 'wrapW', 'patOn', 'patType', 'patCell', 'patW', 'patCol', 'patDot',
   'regOn', 'regSize', 'regW', 'regInset', 'regCol', 'textCol', 'bgCol', 'palette', 'palSeed',
   'para', 'boxAmt', 'boxCol', 'boxSeed', 'boxStyle', 'outlineAmt', 'outlineSeed', 'strokeW']; // boxStyle: the style new boxes get
 // A letter box placed by Random letter boxes (left panel) and not colored by hand: left Clear removes it, Clear edits keeps it.
 const autoBox = v => !!(v && v.box && v.box.auto && !byHand(v.box));
 const SAVE_KEYS = ['text', 'caseMode', 'caseAmt', 'mix', 'dist', 'gran', 'valign', 'size', 'leading', 'sizeVar', 'baseJit', 'trackJit', 'rotJit', 'track', 'align', 'seed', 'match', 'wavePeriod', 'gaps',
   'outlineAmt', 'outlineSeed', 'strokeW', 'guides', 'boxAmt', 'boxSeed', 'boxStyle', 'bandFit', 'bands', 'para', 'textCol', 'bgCol', 'guideCol', 'palette', 'palSeed', 'boxCol',
-  'patOn', 'patType', 'patCell', 'patW', 'patCol', 'patDot', 'regOn', 'regSize', 'regW', 'regInset', 'regCol'];
+  'patOn', 'patType', 'patCell', 'patW', 'patCol', 'patDot', 'regOn', 'regSize', 'regW', 'regInset', 'regCol', 'wrap', 'wrapW'];
 // Saved state from older versions, or edited by hand: keep only well-formed decoration settings.
 function fixDeco() {
   const g = S.guides && typeof S.guides === 'object' ? S.guides : {};
@@ -3935,6 +4303,8 @@ function fixDeco() {
   S.regOn = S.regOn === 'on' ? 'on' : 'off';
   for (const [k, a, b] of [['regSize', 4, 60], ['regW', 0.25, 4], ['regInset', 0, 60]]) S[k] = Number.isFinite(S[k]) ? clamp(S[k], a, b) : DEFAULTS[k];
   S.regCol = hexOf(S.regCol) || DEFAULTS.regCol;
+  if (!['off', 'canvas', 'fixed'].includes(S.wrap)) S.wrap = 'off';
+  S.wrapW = Number.isFinite(S.wrapW) ? clamp(Math.round(S.wrapW), WRAP_MIN, WRAP_MAX) : DEFAULTS.wrapW;
 }
 function save() {
   try {
@@ -3954,6 +4324,8 @@ function save() {
     o.panelW = S.panelW;
     o.groupsClosed = [...S.groupsClosed];
     o.palsOpen = S.palsOpen;
+    o.wrapNote = S.wrapNote;
+    o.wideAsk = S.wideAsk;
     o.leftTab = S.leftTab;
     o.gbxOpen = S.gbxOpen;
     o.foldsSet = [...S.foldsSet];
@@ -4048,7 +4420,7 @@ function setZoom(z, fit = false) {
   S.zoom = clamp(Math.round(z * 100) / 100, 0.25, 4);
   $('#sheet').style.zoom = S.zoom;
   $('#zoom-v').textContent = Math.round(S.zoom * 100) + '%';
-  if (S.lines && S.lines.length) drawSelMarks(); // ticks keep their screen length
+  if (S.lines && S.lines.length) { drawSelMarks(); drawWrap(); } // ticks and the Width handle keep their screen size
 }
 function fitZoom() {
   const stage = $('#stage'), sheet = $('#sheet');
@@ -4086,6 +4458,42 @@ function bindSplit(k) {
     el.addEventListener('pointermove', move); el.addEventListener('pointerup', up); el.addEventListener('pointercancel', up);
   });
   el.addEventListener('dblclick', () => { S.panelW[k] = PANEL[k].def; applyPanelWidths(); save(); });
+}
+
+// The Width handle: dragging it sets a Fixed width, one undo step per drag. The width follows the pointer from
+// where the block stood when the drag began. The canvas would recentre the block as lines rewrap, so during the drag
+// the sheet is shifted to hold the block's fixed side (left, centre or right) still; it recentres on release.
+function bindWrapHandle(sync) {
+  const h = $('#wrap-h'), guide = $('#wrap-guide');
+  h.addEventListener('pointerdown', e => {
+    if (e.button !== 0) return;
+    e.preventDefault(); e.stopPropagation();
+    h.setPointerCapture(e.pointerId);
+    h.classList.add('on'); hideTag();
+    const z = S.zoom || 1, o = out.getBoundingClientRect(), W0 = S.W, sheet = $('#sheet');
+    const anchor = r => S.align === 'right' ? r.right : S.align === 'center' ? (r.left + r.right) / 2 : r.left;
+    const a0 = anchor(o);
+    let off = 0;
+    const at = x => S.align === 'right' ? (o.left + W0 * z - x) / z : S.align === 'center' ? 2 * (x - (o.left + W0 * z / 2)) / z : (x - o.left) / z;
+    Object.assign(guide.style, { top: o.top + 'px', height: Math.max(o.height, 24) + 'px' });
+    let moved = false;
+    const move = ev => {
+      const w = clamp(Math.round(at(ev.clientX)), WRAP_MIN, WRAP_MAX);
+      guide.style.left = ev.clientX + 'px'; guide.hidden = false;
+      if (w === S.wrapW && S.wrap === 'fixed') return;
+      if (!moved) { record('wrap-handle'); moved = true; }
+      S.wrap = 'fixed'; S.wrapW = w;
+      syncControls(); render();
+      off += a0 - anchor(out.getBoundingClientRect());
+      sheet.style.translate = r2(off / z) + 'px 0';
+    };
+    const up = () => {
+      h.classList.remove('on'); guide.hidden = true; sheet.style.translate = '';
+      h.removeEventListener('pointermove', move); h.removeEventListener('pointerup', up); h.removeEventListener('pointercancel', up);
+      if (moved) { save(); askWide(); }
+    };
+    h.addEventListener('pointermove', move); h.addEventListener('pointerup', up); h.addEventListener('pointercancel', up);
+  });
 }
 
 /* ---------------- boot ---------------- */
@@ -4183,6 +4591,9 @@ async function boot() {
     if (Array.isArray(saved.collapsed)) S.collapsed = new Set(saved.collapsed.filter(n => typeof n === 'string'));
     if (Array.isArray(saved.groupsClosed)) S.groupsClosed = new Set(saved.groupsClosed.filter(n => typeof n === 'string'));
     if (saved.palsOpen === false) S.palsOpen = false;
+    if (saved.wrapNote === false) S.wrapNote = false;
+    if (saved.wideAsk === false) S.wideAsk = false;
+    if (saved.wrap === undefined) S.wrap = 'off'; // saved before wrapping existed: lines break only at returns, as then
     if (Array.isArray(saved.foldsSet)) S.foldsSet = new Set(saved.foldsSet.filter(n => typeof n === 'string'));
     if (saved.leftTab === 'style') S.leftTab = 'style';
     if (saved.gbxOpen === true) S.gbxOpen = true;
@@ -4227,6 +4638,27 @@ async function boot() {
   bindOpts('case', 'caseMode', syncCaseAmt); syncCaseAmt();
   bindOpts('gran', 'gran');
   bindOpts('align', 'align');
+  // Width: switching from Canvas to Fixed starts at the width it was wrapping at, so nothing jumps.
+  let wrapFrom = null;
+  $('#wrap').addEventListener('click', () => { wrapFrom = S.wrap; }, true);
+  const syncWrap = () => {
+    $('#wrap-w-c').hidden = S.wrap !== 'fixed';
+    if (S.wrap === 'fixed' && wrapFrom === 'canvas' && S.wrapAt) S.wrapW = clamp(Math.round(S.wrapAt), WRAP_MIN, WRAP_MAX);
+    wrapFrom = null;
+    $('#wrap-w').value = S.wrapW; unitText($('#wrap-w-o'), ptTxt(S.wrapW));
+  };
+  bindOpts('wrap', 'wrap', syncWrap);
+  bindRange('wrap-w', 'wrapW', ptTxt);
+  $('#wrap-w').addEventListener('change', askWide); // the slider let go
+  $('#wide-ask').addEventListener('close', () => {
+    const d = $('#wide-ask');
+    if ($('#wide-stop').checked) { S.wideAsk = false; save(); }
+    if (d.returnValue === 'fit') { record(); S.wrap = 'canvas'; syncControls(); render(); save(); }
+  });
+  syncWrap(); syncers.push(syncWrap);
+  bindWrapHandle(syncWrap);
+  $('#wrap-note-on').onclick = () => { S.wrapNote = S.wideAsk = true; wrapWasOver = false; wideAsked = null; drawWrap(); save(); toast('The width reminders are back on.'); };
+  $('#wrap-note-off').onclick = () => { S.wrapNote = false; wrapNote(false); drawWrap(); save(); };
   bindOpts('valign', 'valign');
   bindOpts('match', 'match');
   bindRange('gaps', 'gaps', v => v + '%');
@@ -4239,11 +4671,8 @@ async function boot() {
   bindRange('wave-period', 'wavePeriod', v => v + ' letters'); syncPeriod();
   const text = $('#text'); text.value = S.text;
   syncers.push(() => { if (text.value !== S.text) text.value = S.text; });
-  text.addEventListener('input', () => {
-    record('text');
-    remapOverrides(S.text, text.value);
-    S.text = text.value; S.sel.clear(); side.prev.clear(); side.open = side.shut = false; render(); save();
-  });
+  text.addEventListener('input', () => setText(text.value, 'text'));
+  setupTyping();
   $('#base').onchange = e => { record(); S.baseId = e.target.value; renderPool(); render(); save(); };
 
   // Right-click a style chip: make it the base, adding it to the mix first if it is off. One undo step either way.
@@ -4601,7 +5030,8 @@ async function boot() {
     selectRange(S.anchor, +sp.dataset.i);
     paintSelection();
   });
-  window.addEventListener('pointerup', () => { if (dragging) { dragging = false; paintSelection(); } });
+  // The right panel opens a moment after the click, so the second click of a double-click lands where the first did.
+  window.addEventListener('pointerup', () => { if (dragging) { dragging = false; clearTimeout(selOpenT); selOpenT = setTimeout(paintSelection, 260); } });
   // Empty canvas: a click deselects; a drag selects the letters it sweeps over.
   $('#stage').addEventListener('pointerdown', e => {
     if (e.target.closest('.g') || e.button !== 0) return;
@@ -4619,9 +5049,12 @@ async function boot() {
   $('#zoom-fit').onclick = fitZoom;
   bindSplit('l'); bindSplit('r');
   window.addEventListener('resize', applyPanelWidths);
-  // The text's layout never depends on the canvas size (lines break only where the text does), so a resize
-  // only changes what is visible; in Fit mode the zoom follows.
-  new ResizeObserver(() => { if (zoomFit) fitZoom(); }).observe($('#stage'));
+  // A resize rewraps text set to Width Canvas (zoom never does); otherwise it only changes what is visible.
+  // In Fit mode the zoom follows.
+  new ResizeObserver(() => {
+    if (S.wrap === 'canvas' && S.styles.size && canvasWidth() !== S.wrapAt) render();
+    if (zoomFit) fitZoom();
+  }).observe($('#stage'));
 
   // drag & drop font files
   let depth = 0;
