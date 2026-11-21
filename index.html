@@ -854,7 +854,7 @@ body.resizing, body.resizing * { cursor: col-resize !important; user-select: non
       <section><h4>Distribution</h4><p>Ramp sets light → heavy from the start of the text to the end; Ramp per line restarts on every line. Alternate switches between the lighter and heavier half of the pool. Wave has a Period. Weight mix still decides how many letters leave the base style.</p></section>
       <section><h4>Even gaps</h4><p>Where neighbouring letters come from different fonts, their sidebearings differ and the gaps look uneven. Even gaps adjusts the left letter's tracking so the gap moves halfway between the spacing of the two fonts it joins, instead of jumping from one to the other. It exports as tracking.</p></section>
       <section><h4>Match size</h4><p>Different families at the same point size look different sizes. x-height or Cap height scales each letter's font so its lowercase x or capital H is as tall as in the base style (limited to 60–160%). It is written as the letter's point size, so it stays editable; leading follows the nominal size.</p></section>
-      <section><h4>Width</h4><p><b>Width</b> in the Type group wraps long lines at spaces. <b>Canvas</b> wraps at the width of the canvas at 100% zoom, so it follows the window and the panels but not zoom; <b>Fixed</b> wraps at the width you set, the same on every screen. Drag the small handle at the edge of the text to set a Fixed width. A word longer than the width breaks between letters, and the space at a break is dropped; returns still break as before. <b>Off</b> breaks only at returns. Wrapped lines are real lines: letter align, even gaps, bands, Height Line and the paragraph band follow them, and the .jsx gets one line of point text per wrapped line, not an area text box. A specimen saved with Canvas keeps the width it wrapped at and loads as Fixed. Rotated or jittered letters can reach a little past the width: the canvas then draws the edge and hatches the part that sticks out, never in the PNG or the .jsx. <button type="button" class="tbtn" id="wrap-note-on">Show the overflow reminder again</button></p></section>
+      <section><h4>Width</h4><p><b>Width</b> in the Type group wraps long lines at spaces. <b>Canvas</b> wraps at the width of the canvas at 100% zoom, so it follows the window and the panels but not zoom; <b>Fixed</b> wraps at the width you set, the same on every screen. Drag the small handle at the edge of the text to set a Fixed width. A word longer than the width breaks between letters, and the space at a break is dropped; returns still break as before. <b>Off</b> breaks only at returns. Wrapped lines are real lines: letter align, even gaps, bands, Height Line and the paragraph band follow them, and the .jsx gets one line of point text per wrapped line, not an area text box. A specimen saved with Canvas keeps the width it wrapped at and loads as Fixed. Rotated or jittered letters can reach a little past the width: the canvas then draws the edge and hatches the part that sticks out, never in the PNG or the .jsx. A Fixed width wider than the canvas brings a reminder too. <button type="button" class="tbtn" id="wrap-note-on">Show the overflow reminder again</button></p></section>
       <section><h4>Letter align</h4><p>Top, middle and bottom alignment are written as baseline shift values. If you change a letter or its font afterwards, export again to re-align.</p></section>
       <section><h4>Group titles</h4><p>Click a group title in the left panel to fold the group to its title row (▸) or open it again (▾); each group remembers its own state. Folding Font pool hides every family; a family's name folds that family to one row, which still shows its share of mix. The left panel has two tabs: <b>Type</b> (font pool, text, mix, type with letter align, jitter) and <b>Style</b> (look, color, paragraph band, random letter boxes, pattern, registration marks, random outline). On a first visit Jitter and the palette list start folded; once you fold or open them yourself, your choice stays. Paragraph band, Pattern and Registration marks show only Off / On until you switch them on. The right side of each title row sums up what the group is set to, and follows every change; hover it for the full text if it is cut short. Groups with a short note have a <b>?</b> next to their title: click it to show the note, again to hide it. <b>Clear</b>, next to the tabs, sets everything in the left panel (both tabs) back to its default, including the style new boxes and bands get, and removes the boxes Random letter boxes placed; your text, fonts, seed, guides and right-panel edits stay.</p></section>
       <section><h4>Right panel</h4><p>Selecting letters opens it with their font, size, shift and tracking at the top, then weight, align, <b>rotation</b>, <b>fill</b> and <b>boxes</b>. With nothing selected it folds to a narrow <b>Selection</b> strip on the right edge, and the canvas takes the room; deselecting folds it again. Close › folds it while letters stay selected, until you select other letters; the strip's ‹ opens it. <b>Fill</b> sets selected letters Solid or Outline; Stroke sets the weight of the selected outline letters and is greyed while none is selected. While Random outline is on, a third choice, Random, hands the letters back to it. Settings for the whole text are in the left panel's <b>Style</b> tab: Random outline (with Stroke), the Paragraph band and Random letter boxes. Clear edits removes what you set on selected letters, and bands; the left panel's Clear resets the left panel's settings and removes the boxes Random letter boxes placed. A drag that starts on empty canvas selects the letters it sweeps over. The panel keeps its place: selecting other letters, or deselecting and reselecting, brings back the group you were using. <b>Hover info</b> in the bar above the canvas switches the hover tag on and off.</p></section>
@@ -2318,11 +2318,11 @@ function wrapWidth() {
   if (S.wrap !== 'canvas') return 0;
   return canvasWidth();
 }
-function canvasWidth() {
+function canvasWidth(visible) {
   const st = $('#stage'), cs = getComputedStyle(st), strip = $('#side-strip');
   let w = st.getBoundingClientRect().width - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
   const sw = strip.hidden ? 0 : strip.getBoundingClientRect().width;
-  if (!side.open && sw) w -= panelWidth('r', S.panelW.r) - sw;
+  if (!visible && !side.open && sw) w -= panelWidth('r', S.panelW.r) - sw; // visible: the canvas as it is now
   if (frameShown()) w -= exportMargin() * 2;
   return clamp(Math.floor(w), WRAP_MIN, WRAP_MAX);
 }
@@ -2395,7 +2395,15 @@ function drawWrap() {
   const over = S.wrapNote ? wrapOverflow() : [];
   svg.setAttribute('width', Math.ceil(S.W || 0));
   svg.setAttribute('height', Math.ceil(H));
-  if (!over.length) { svg.innerHTML = ''; wrapNote(false); wrapWasOver = false; return; }
+  // Fixed wider than the canvas: the text runs past the canvas edge, which wrapping alone never flags.
+  const wide = S.wrapNote && S.wrap === 'fixed' && S.W > canvasWidth(true) + 0.5;
+  if (!over.length) {
+    svg.innerHTML = '';
+    if (wide && wrapWasOver !== 'wide') wrapNote(true, 'The text is wider than the canvas (Fixed width).');
+    else if (!wide) wrapNote(false);
+    wrapWasOver = wide ? 'wide' : false;
+    return;
+  }
   const sides = new Set(over.map(o => o.x0 === E.r ? E.r : E.l));
   const f = v => r2(v);
   let s = `<defs><pattern id="wrap-hatch" width="${f(4 / z)}" height="${f(4 / z)}" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="${f(1 / z)}" height="${f(4 / z)}" fill="#000"/></pattern></defs>`;
@@ -2403,13 +2411,14 @@ function drawWrap() {
   const y0 = Math.min(0, ...over.map(o => o.y0)), y1 = Math.max(H, ...over.map(o => o.y1));
   for (const ex of sides) s += `<path class="halo" d="M${f(ex)} ${f(y0)}V${f(y1)}"/><path class="edge" d="M${f(ex)} ${f(y0)}V${f(y1)}"/>`;
   svg.innerHTML = s;
-  if (!wrapWasOver) wrapNote(true);
-  wrapWasOver = true;
+  if (wrapWasOver !== 'over') wrapNote(true, 'Some letters reach past the width (rotation or jitter).');
+  wrapWasOver = 'over';
 }
 // The one-line note that comes with the overflow mark; Don't show again turns off both (view state, kept).
-function wrapNote(show) {
+function wrapNote(show, msg) {
   const n = $('#wrap-note');
   clearTimeout(wrapNote._t);
+  if (msg) n.firstChild.textContent = msg;
   n.hidden = !show;
   if (show) wrapNote._t = setTimeout(() => { n.hidden = true; }, 7000);
 }
@@ -4247,7 +4256,8 @@ function bindSplit(k) {
 }
 
 // The Width handle: dragging it sets a Fixed width, one undo step per drag. The width follows the pointer from
-// where the block stood when the drag began (it recentres as lines rewrap), shown by a dashed guide.
+// where the block stood when the drag began. The canvas would recentre the block as lines rewrap, so during the drag
+// the sheet is shifted to hold the block's fixed side (left, centre or right) still; it recentres on release.
 function bindWrapHandle(sync) {
   const h = $('#wrap-h'), guide = $('#wrap-guide');
   h.addEventListener('pointerdown', e => {
@@ -4255,7 +4265,10 @@ function bindWrapHandle(sync) {
     e.preventDefault(); e.stopPropagation();
     h.setPointerCapture(e.pointerId);
     h.classList.add('on'); hideTag();
-    const z = S.zoom || 1, o = out.getBoundingClientRect(), W0 = S.W;
+    const z = S.zoom || 1, o = out.getBoundingClientRect(), W0 = S.W, sheet = $('#sheet');
+    const anchor = r => S.align === 'right' ? r.right : S.align === 'center' ? (r.left + r.right) / 2 : r.left;
+    const a0 = anchor(o);
+    let off = 0;
     const at = x => S.align === 'right' ? (o.left + W0 * z - x) / z : S.align === 'center' ? 2 * (x - (o.left + W0 * z / 2)) / z : (x - o.left) / z;
     Object.assign(guide.style, { top: o.top + 'px', height: Math.max(o.height, 24) + 'px' });
     let moved = false;
@@ -4266,9 +4279,11 @@ function bindWrapHandle(sync) {
       if (!moved) { record('wrap-handle'); moved = true; }
       S.wrap = 'fixed'; S.wrapW = w;
       syncControls(); render();
+      off += a0 - anchor(out.getBoundingClientRect());
+      sheet.style.translate = r2(off / z) + 'px 0';
     };
     const up = () => {
-      h.classList.remove('on'); guide.hidden = true;
+      h.classList.remove('on'); guide.hidden = true; sheet.style.translate = '';
       h.removeEventListener('pointermove', move); h.removeEventListener('pointerup', up); h.removeEventListener('pointercancel', up);
       if (moved) save();
     };
