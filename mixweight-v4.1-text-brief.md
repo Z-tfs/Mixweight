@@ -60,4 +60,4 @@ Check: double-click in the middle of a word and type, delete, Return; Shift-sele
 ## Progress (update after each step)
 
 - [x] 1 Line wrapping and paragraph width (branch `feature/line-wrap`; Width sits in the Type group, after Line align)
-- [ ] 2 Typing on the canvas
+- [x] 2 Typing on the canvas (same branch and PR as step 1, at the owner's request)

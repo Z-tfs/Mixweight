@@ -251,6 +251,13 @@ textarea:focus { background: var(--g2); outline: none; }
 .selmarks .halo { stroke: #fff; stroke-width: 3; }
 .selmarks .tick { stroke: #000; stroke-width: 1; }
 .sheet.adjusting .selmarks { visibility: hidden; }
+/* Typing on the canvas: the caret, and the hidden field that takes the keys (placed at the caret for IME). */
+.selmarks .caret { stroke: #000; stroke-width: 1.5; animation: blink 1.06s steps(1) infinite; }
+.selmarks .caret-halo { stroke: #fff; stroke-width: 3.5; animation: blink 1.06s steps(1) infinite; }
+@keyframes blink { 50% { visibility: hidden; } }
+.type-in { position: fixed; left: 0; top: 0; width: 2px; height: 20px; padding: 0; border: 0; margin: 0; opacity: 0; resize: none; overflow: hidden;
+  font-size: 16px; line-height: 20px; white-space: pre; pointer-events: none; z-index: -1; }
+#out.typing { cursor: text; }
 /* Width: the overflow mark and the handle on the wrap edge, in the selection's neutral black and white. */
 .wrapmarks { position: absolute; left: 0; top: 0; overflow: visible; pointer-events: none; z-index: 2; }
 .wrapmarks path { fill: none; vector-effect: non-scaling-stroke; }
@@ -676,7 +683,7 @@ body.resizing, body.resizing * { cursor: col-resize !important; user-select: non
     <div class="split r" id="split-r" role="separator" aria-orientation="vertical" aria-label="Resize the right panel" title="Drag to resize · double-click for the default width"></div>
     <div class="insp" id="insp">
       <span class="count" id="sel-count">No selection</span>
-      <span class="lab" id="sel-hint">Click a letter, or drag across letters, to edit them. Shift extends, ⌘ adds.</span>
+      <span class="lab" id="sel-hint">Click a letter, or drag across letters, to edit them. Shift extends, ⌘ adds. Double-click to type.</span>
     </div>
     <div class="field">
       <span class="corner tl" id="c-tl"></span>
@@ -825,6 +832,7 @@ body.resizing, body.resizing * { cursor: col-resize !important; user-select: non
 
 <div class="ctxmenu" id="ctxmenu" role="menu" hidden></div>
 <div class="drop" id="drop" hidden>Drop to add fonts</div>
+<textarea class="type-in" id="type-in" wrap="off" spellcheck="false" autocomplete="off" autocapitalize="off" aria-label="Type on the canvas" tabindex="-1"></textarea>
 <div class="toast" id="toast" role="status" hidden></div>
 <div class="toast wrap-note" id="wrap-note" role="status" hidden><span>Some letters reach past the width (rotation or jitter).</span><button type="button" id="wrap-note-off">Don’t show again</button></div>
 <div class="wrap-guide" id="wrap-guide" hidden></div>
@@ -854,6 +862,7 @@ body.resizing, body.resizing * { cursor: col-resize !important; user-select: non
       <section><h4>Distribution</h4><p>Ramp sets light → heavy from the start of the text to the end; Ramp per line restarts on every line. Alternate switches between the lighter and heavier half of the pool. Wave has a Period. Weight mix still decides how many letters leave the base style.</p></section>
       <section><h4>Even gaps</h4><p>Where neighbouring letters come from different fonts, their sidebearings differ and the gaps look uneven. Even gaps adjusts the left letter's tracking so the gap moves halfway between the spacing of the two fonts it joins, instead of jumping from one to the other. It exports as tracking.</p></section>
       <section><h4>Match size</h4><p>Different families at the same point size look different sizes. x-height or Cap height scales each letter's font so its lowercase x or capital H is as tall as in the base style (limited to 60–160%). It is written as the letter's point size, so it stays editable; leading follows the nominal size.</p></section>
+      <section><h4>Typing on the canvas</h4><p><b>Double-click</b> a letter to type into the text right there (the caret goes to the nearer side of the letter); double-click empty canvas to type at the end. Arrows, Home / End, Shift to select, Backspace / Delete, Return, ⌘A, and copy, cut and paste as plain text work as in a text field, and input methods (Chinese, Japanese) too. Up / Down and Home / End follow the lines as they show, wrapped lines included. Esc, or a click outside the text, stops typing; single clicks and drags select letters as before. It is the same as typing in the Text field, which follows along: letter edits stay with their letters, and a burst of typing is one undo step. Styles are picked letter by letter along the text, so typing changes the random style of the letters after the caret, just as in the Text field.</p></section>
       <section><h4>Width</h4><p><b>Width</b> in the Type group wraps long lines at spaces. <b>Canvas</b> wraps at the width of the canvas at 100% zoom, so it follows the window and the panels but not zoom; <b>Fixed</b> wraps at the width you set, the same on every screen. Drag the small handle at the edge of the text to set a Fixed width. A word longer than the width breaks between letters, and the space at a break is dropped; returns still break as before. <b>Off</b> breaks only at returns. Wrapped lines are real lines: letter align, even gaps, bands, Height Line and the paragraph band follow them, and the .jsx gets one line of point text per wrapped line, not an area text box. A specimen saved with Canvas keeps the width it wrapped at and loads as Fixed. Rotated or jittered letters can reach a little past the width: the canvas then draws the edge and hatches the part that sticks out, never in the PNG or the .jsx. When a Fixed width you set (by the handle or the slider) runs past the canvas, a dialog offers <b>Fit to canvas</b>, which switches Width back to Canvas. <button type="button" class="tbtn" id="wrap-note-on">Show the width reminders again</button></p></section>
       <section><h4>Letter align</h4><p>Top, middle and bottom alignment are written as baseline shift values. If you change a letter or its font afterwards, export again to re-align.</p></section>
       <section><h4>Group titles</h4><p>Click a group title in the left panel to fold the group to its title row (▸) or open it again (▾); each group remembers its own state. Folding Font pool hides every family; a family's name folds that family to one row, which still shows its share of mix. The left panel has two tabs: <b>Type</b> (font pool, text, mix, type with letter align, jitter) and <b>Style</b> (look, color, paragraph band, random letter boxes, pattern, registration marks, random outline). On a first visit Jitter and the palette list start folded; once you fold or open them yourself, your choice stays. Paragraph band, Pattern and Registration marks show only Off / On until you switch them on. The right side of each title row sums up what the group is set to, and follows every change; hover it for the full text if it is cut short. Groups with a short note have a <b>?</b> next to their title: click it to show the note, again to hide it. <b>Clear</b>, next to the tabs, sets everything in the left panel (both tabs) back to its default, including the style new boxes and bands get, and removes the boxes Random letter boxes placed; your text, fonts, seed, guides and right-panel edits stay.</p></section>
@@ -2621,13 +2630,13 @@ function drawSelMarks() {
     for (const g of line) {
       if (g.x == null) continue;
       if (/\s/.test(g.ch)) continue; // spaces can't be selected, so they neither split a run nor widen it
-      if (S.sel.has(g.i)) run.push(g); else flush();
+      if ((TY.on ? TY.sel : S.sel).has(g.i)) run.push(g); else flush();
     }
     flush();
   }
   svg.setAttribute('width', Math.ceil(S.W || 0));
   svg.setAttribute('height', Math.ceil(out.getBoundingClientRect().height / z));
-  svg.innerHTML = d ? `<path class="halo" d="${d}"/><path class="tick" d="${d}"/>` : '';
+  svg.innerHTML = (d ? `<path class="halo" d="${d}"/><path class="tick" d="${d}"/>` : '') + caretMarkup();
 }
 // The frame: the text block plus the export margin, in block coordinates. The background fills it, the PNG crops
 // to it.
@@ -2813,7 +2822,7 @@ function cleanOv(i) {
   if (ovEmpty(v)) S.overrides.delete(i);
 }
 
-let selFamily = null, dragging = false;
+let selFamily = null, dragging = false, selOpenT = 0;
 const side = { open: false, shut: false, prev: new Set() }; // shut: closed by hand while letters are selected
 function syncSide() {
   const sel = S.sel.size > 0;
@@ -2836,8 +2845,8 @@ function syncHov() { const b = $('#hov-btn'); b.setAttribute('aria-pressed', S.h
 function renderInspector() {
   const gs = selectedGlyphs();
   const on = gs.length > 0;
-  $('#sel-count').textContent = on ? `${gs.length} letter${gs.length > 1 ? 's' : ''} selected` : 'No selection';
-  $('#sel-hint').textContent = on ? 'Edit them in the right panel. Esc deselects.' : 'Click a letter, or drag across letters, to edit them. Shift extends, ⌘ adds.';
+  $('#sel-count').textContent = TY.on ? 'Typing' : on ? `${gs.length} letter${gs.length > 1 ? 's' : ''} selected` : 'No selection';
+  $('#sel-hint').textContent = TY.on ? 'Type into the text. Esc, or a click outside it, stops.' : on ? 'Edit them in the right panel. Esc deselects.' : 'Click a letter, or drag across letters, to edit them. Shift extends, ⌘ adds. Double-click to type.';
   syncSide();
   renderColor();
   for (const c of colorCtls) c.syncPal();
@@ -2872,6 +2881,173 @@ function restoreSideScroll() {
   if (el.hidden) return;
   if (!mem || !mem.cell.offsetParent) { el.scrollTop = 0; return; }
   el.scrollTop += mem.cell.getBoundingClientRect().top - el.getBoundingClientRect().top - mem.off;
+}
+
+/* ---------------- typing on the canvas ---------------- */
+// Double-click to type into the text where it stands. A hidden textarea holds S.text and takes the keys (IME,
+// clipboard, Backspace…); every change goes through setText(), the same path as the Text field. Positions are
+// letter indices (code points, like g.i); the textarea counts UTF-16 units, so cu() / cp() convert.
+const TY = { on: false, sel: new Set(), drag: false };
+const typeIn = $('#type-in');
+const cu = (t, c) => Array.from(t).slice(0, c).join('').length;
+const cp = (t, u) => Array.from(t.slice(0, u)).length;
+function setText(v, key) {
+  if (v === S.text) return;
+  record(key);
+  remapOverrides(S.text, v);
+  S.text = v; S.sel.clear(); side.prev.clear(); side.open = side.shut = false; render(); save();
+  const f = $('#text'); if (f.value !== v) f.value = v;
+}
+// Caret range in letter indices: a (anchor), f (focus, where the caret shows).
+function tySel() {
+  const t = typeIn.value, a = cp(t, typeIn.selectionStart), b = cp(t, typeIn.selectionEnd);
+  return typeIn.selectionDirection === 'backward' ? { a: b, f: a } : { a, f: b };
+}
+function tySet(a, f) {
+  const t = typeIn.value, lo = Math.min(a, f), hi = Math.max(a, f);
+  typeIn.setSelectionRange(cu(t, lo), cu(t, hi), f < a ? 'backward' : 'forward');
+  tyShow();
+}
+// The hard line (the text's own paragraph) of every shown line, and where each hard line starts in the text.
+function tyLines() {
+  const chars = Array.from(S.text), starts = [0];
+  chars.forEach((c, i) => { if (c === '\n') starts.push(i + 1); });
+  const nlBefore = i => { let n = 0; while (n + 1 < starts.length && starts[n + 1] <= i) n++; return n; };
+  let prev = -1;
+  const hard = S.lines.map((line, k) => (prev = line.length ? nlBefore(line[0].i) : (k ? prev + 1 : 0)));
+  return { chars, starts, hard };
+}
+// Caret position for letter index c: {k, x} in block coordinates.
+function tyPos(c) {
+  const { chars, starts, hard } = tyLines();
+  const g = S.gmap.get(c);
+  if (g && chars[c] !== '\n' && g.x != null) return { k: g.k, x: g.x };
+  let j = c - 1;
+  while (j >= 0 && chars[j] !== '\n' && !(S.gmap.get(j) && S.gmap.get(j).x != null)) j--;
+  if (j >= 0 && chars[j] !== '\n') { const q = S.gmap.get(j); return { k: q.k, x: q.x + q.w }; }
+  // An empty line (or empty text): its own line, at the alignment's start.
+  let n = 0; while (n + 1 < starts.length && starts[n + 1] <= c) n++;
+  const k = Math.max(0, hard.indexOf(n));
+  return { k, x: S.align === 'right' ? S.W : S.align === 'center' ? S.W / 2 : 0 };
+}
+// Letter index nearest to x on shown line k (for Up / Down and clicks).
+function tyAt(k, x) {
+  const line = S.lines[k];
+  const { starts, hard } = tyLines();
+  if (!line || !line.length) return starts[hard[k]] != null ? starts[hard[k]] : Array.from(S.text).length;
+  let best = line[0].i, d = Math.abs(line[0].x - x);
+  for (const g of line) {
+    const r = g.x + g.w;
+    if (Math.abs(r - x) < d) { d = Math.abs(r - x); best = g.i + 1; }
+    if (Math.abs(g.x - x) < d) { d = Math.abs(g.x - x); best = g.i; }
+  }
+  return best;
+}
+function tyLineEnds(k) {
+  const line = S.lines[k];
+  if (!line || !line.length) { const c = tyAt(k, 0); return [c, c]; }
+  return [line[0].i, line[line.length - 1].i + 1];
+}
+function caretMarkup() {
+  if (!TY.on || !S.lb || !S.lb.length) return '';
+  const { f } = tySel(), P = tyPos(f), by = S.lb[P.k];
+  if (by == null) return '';
+  const d = `M${r2(P.x)} ${r2(by - S.size * 0.78)}V${r2(by + S.size * 0.2)}`;
+  return `<path class="caret-halo" d="${d}"/><path class="caret" d="${d}"/>`;
+}
+// Redraw the caret and the typed selection; keep the hidden field at the caret so an IME's candidates show there.
+function tyShow() {
+  if (!TY.on) return;
+  const { a, f } = tySel(), lo = Math.min(a, f), hi = Math.max(a, f);
+  TY.sel = new Set(glyphList().filter(g => g.i >= lo && g.i < hi && !/\s/.test(g.ch)).map(g => g.i));
+  drawSelMarks();
+  const P = tyPos(f), o = out.getBoundingClientRect(), z = S.zoom || 1;
+  if (S.lb && S.lb[P.k] != null) Object.assign(typeIn.style, { left: (o.left + P.x * z) + 'px', top: (o.top + (S.lb[P.k] - S.size * 0.78) * z) + 'px' });
+}
+function tyStart(c) {
+  if (!S.styles.size) return;
+  clearTimeout(selOpenT);
+  if (S.sel.size) { S.sel.clear(); paintSelection(); }
+  TY.on = true;
+  out.classList.add('typing');
+  renderInspector();
+  typeIn.value = S.text;
+  typeIn.focus({ preventScroll: true });
+  tySet(c, c);
+}
+function tyStop() {
+  if (!TY.on) return;
+  TY.on = false; TY.sel = new Set(); TY.drag = false;
+  out.classList.remove('typing');
+  renderInspector();
+  if (document.activeElement === typeIn) typeIn.blur();
+  drawSelMarks();
+}
+// The letter index on the near side of a letter span, from the pointer.
+function tyHit(sp, e) {
+  const i = +sp.dataset.i, r = sp.getBoundingClientRect();
+  return e.clientX > (r.left + r.right) / 2 ? i + 1 : i;
+}
+function setupTyping() {
+  typeIn.addEventListener('input', () => { setText(typeIn.value, 'type'); tyShow(); });
+  typeIn.addEventListener('keydown', e => {
+    if (e.isComposing) return;
+    if (e.key === 'Escape') { e.preventDefault(); tyStop(); return; }
+    const mod = e.metaKey || e.ctrlKey;
+    // Up / Down and Home / End follow the lines as they show, wrapped lines included.
+    if (['ArrowUp', 'ArrowDown', 'Home', 'End'].includes(e.key) && !e.altKey && !(mod && /Arrow/.test(e.key))) {
+      e.preventDefault();
+      const { a, f } = tySel(), P = tyPos(f);
+      let c;
+      if (e.key === 'Home' || e.key === 'End') c = tyLineEnds(P.k)[e.key === 'Home' ? 0 : 1];
+      else {
+        const k = P.k + (e.key === 'ArrowUp' ? -1 : 1);
+        c = k < 0 ? 0 : k >= S.lines.length ? Array.from(S.text).length : tyAt(k, P.x);
+      }
+      tySet(e.shiftKey ? a : c, c);
+      return;
+    }
+    requestAnimationFrame(tyShow); // left / right, ⌘A and the rest: the field moves, the caret follows
+  });
+  typeIn.addEventListener('select', tyShow);
+  // Leaving the field (a click in the panels, another app) ends typing; a click on the canvas keeps it.
+  typeIn.addEventListener('blur', () => setTimeout(() => { if (TY.on && document.hasFocus() && document.activeElement !== typeIn) tyStop(); }, 0));
+  syncers.push(() => {
+    if (!TY.on) return;
+    const { a, f } = tySel(), n = Array.from(S.text).length;
+    if (typeIn.value !== S.text) typeIn.value = S.text;
+    tySet(Math.min(a, n), Math.min(f, n));
+  });
+  // Double-click: a letter puts the caret on its nearer side, empty canvas at the end of the text.
+  const dbl = e => {
+    if (e.button !== 0) return false;
+    const sp = e.target.closest('.g');
+    if (sp) { tyStart(tyHit(sp, e)); return true; }
+    if (e.target.closest('#stage') && !e.target.closest('#wrap-h')) { tyStart(Array.from(S.text).length); return true; }
+    return false;
+  };
+  // While typing: clicks and drags in the text move the caret and select; outside the text block they stop typing.
+  $('#stage').addEventListener('pointerdown', e => {
+    if (e.button !== 0) return;
+    if (!TY.on) return;
+    const sp = e.target.closest('.g'), o = out.getBoundingClientRect();
+    const inside = e.clientX >= o.left && e.clientX <= o.right && e.clientY >= o.top && e.clientY <= o.bottom;
+    if (sp) {
+      const c = tyHit(sp, e);
+      tySet(e.shiftKey ? tySel().a : c, c);
+      TY.drag = true;
+    } else if (!inside) { tyStop(); return; }
+    e.preventDefault(); e.stopImmediatePropagation();
+    typeIn.focus({ preventScroll: true });
+  }, true);
+  $('#stage').addEventListener('mousedown', e => { if (TY.on) e.preventDefault(); }, true); // keep the focus in the field
+  $('#stage').addEventListener('dblclick', e => { if (!TY.on && dbl(e)) { dragging = false; e.preventDefault(); } });
+  out.addEventListener('pointerover', e => {
+    if (!TY.on || !TY.drag) return;
+    const sp = e.target.closest('.g'); if (!sp) return;
+    tySet(tySel().a, tyHit(sp, e));
+  });
+  window.addEventListener('pointerup', () => { TY.drag = false; });
 }
 
 /* ---------------- hover info / selection info ---------------- */
@@ -4485,11 +4661,8 @@ async function boot() {
   bindRange('wave-period', 'wavePeriod', v => v + ' letters'); syncPeriod();
   const text = $('#text'); text.value = S.text;
   syncers.push(() => { if (text.value !== S.text) text.value = S.text; });
-  text.addEventListener('input', () => {
-    record('text');
-    remapOverrides(S.text, text.value);
-    S.text = text.value; S.sel.clear(); side.prev.clear(); side.open = side.shut = false; render(); save();
-  });
+  text.addEventListener('input', () => setText(text.value, 'text'));
+  setupTyping();
   $('#base').onchange = e => { record(); S.baseId = e.target.value; renderPool(); render(); save(); };
 
   // Right-click a style chip: make it the base, adding it to the mix first if it is off. One undo step either way.
@@ -4847,7 +5020,8 @@ async function boot() {
     selectRange(S.anchor, +sp.dataset.i);
     paintSelection();
   });
-  window.addEventListener('pointerup', () => { if (dragging) { dragging = false; paintSelection(); } });
+  // The right panel opens a moment after the click, so the second click of a double-click lands where the first did.
+  window.addEventListener('pointerup', () => { if (dragging) { dragging = false; clearTimeout(selOpenT); selOpenT = setTimeout(paintSelection, 260); } });
   // Empty canvas: a click deselects; a drag selects the letters it sweeps over.
   $('#stage').addEventListener('pointerdown', e => {
     if (e.target.closest('.g') || e.button !== 0) return;
